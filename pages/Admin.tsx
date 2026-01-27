@@ -1,58 +1,259 @@
+
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Layout from '../components/Layout';
-import { getProjects } from '../data';
-import { Project } from '../types';
+import { api } from '../services/api';
+import { authService } from '../services/auth'; // Import authService
+import { Project, ProfileInfo, JourneyItem, Competency, TechnicalSkill } from '../types';
 import { useI18n } from '../i18n';
 
+type AdminTab = 'profile' | 'projects' | 'journey' | 'skills' | 'tech';
+
+// Interface para o estado do Modal de Exclusão
+interface DeleteModalState {
+  isOpen: boolean;
+  id: string | null;
+  itemName: string; // Nome do item para exibição (ex: "Projeto X")
+  typeLabel: string; // Rótulo do tipo (ex: "Projeto", "Habilidade")
+  deleteFn: ((id: string) => Promise<void>) | null; // Função da API injetada
+  setListFn: React.Dispatch<React.SetStateAction<any[]>> | null; // Setter do React injetado
+}
+
+// --- Componentes de UI Reutilizáveis (Movidos para fora para evitar re-renderização e perda de foco) ---
+const FormInput = ({ label, value, onChange, placeholder, type = "text", min, max }: any) => (
+  <div className="space-y-2">
+    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>
+    <input 
+      type={type}
+      min={min}
+      max={max}
+      className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+      placeholder={placeholder}
+      value={value || ''} 
+      onChange={onChange} 
+    />
+  </div>
+);
+
+const FormTextArea = ({ label, value, onChange, placeholder, rows = 3 }: any) => (
+  <div className="space-y-2">
+    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>
+    <textarea 
+      rows={rows}
+      className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-y min-h-[100px]"
+      placeholder={placeholder}
+      value={value || ''} 
+      onChange={onChange} 
+    />
+  </div>
+);
+
 const Admin: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'projects' | 'messages' | 'settings'>('projects');
+  const [activeTab, setActiveTab] = useState<AdminTab>('profile');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
   
-  const { t, language } = useI18n();
+  // Data States
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [journey, setJourney] = useState<JourneyItem[]>([]);
+  const [competencies, setCompetencies] = useState<Competency[]>([]);
+  const [techSkills, setTechSkills] = useState<TechnicalSkill[]>([]);
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
 
-  // Update projects when language changes
+  // Editing States
+  const [editingItem, setEditingItem] = useState<any>(null);
+  
+  // UI States
+  const [isSaving, setIsSaving] = useState(false);
+  const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  
+  // Delete Modal State (Genérico)
+  const [deleteModal, setDeleteModal] = useState<DeleteModalState>({
+    isOpen: false,
+    id: null,
+    itemName: '',
+    typeLabel: '',
+    deleteFn: null,
+    setListFn: null
+  });
+
+  const { t } = useI18n();
+  const navigate = useNavigate(); // Hook for navigation
+
   useEffect(() => {
-    setProjects(getProjects(language));
-  }, [language]);
+    fetchAllData();
+  }, []);
 
-  const handleEdit = (project: Project) => {
-    setEditingProject(project);
-    setIsDrawerOpen(true);
+  const fetchAllData = async () => {
+    const [pData, jData, cData, tData, profData] = await Promise.all([
+      api.getProjects(),
+      api.getJourney(),
+      api.getCompetencies(),
+      api.getTechnicalSkills(),
+      api.getProfile()
+    ]);
+    // Ordenar localmente para garantir consistência visual imediata
+    setProjects(pData?.sort((a, b) => a.display_order - b.display_order) || []);
+    setJourney(jData?.sort((a, b) => a.display_order - b.display_order) || []);
+    setCompetencies(cData?.sort((a, b) => a.display_order - b.display_order) || []);
+    setTechSkills(tData?.sort((a, b) => a.display_order - b.display_order) || []);
+    setProfile(profData);
   };
 
-  const handleAddNew = () => {
-    setEditingProject(null);
+  // --- Helper de Notificação ---
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  // --- Logout Handler ---
+  const handleLogout = async () => {
+    try {
+      await authService.signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      showNotification('Erro ao sair do sistema.', 'error');
+    }
+  };
+
+  // --- Handlers do Drawer de Edição ---
+  const handleOpenDrawer = (item: any = {}) => {
+    setEditingItem(item);
     setIsDrawerOpen(true);
   };
 
   const closeDrawer = () => {
     setIsDrawerOpen(false);
-    setEditingProject(null);
+    setEditingItem(null);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (profile) {
+      setIsSaving(true);
+      try {
+        await api.updateProfile(profile.id, profile);
+        showNotification('Perfil atualizado com sucesso!', 'success');
+        fetchAllData();
+      } catch (err) {
+        console.error(err);
+        showNotification('Erro ao atualizar perfil', 'error');
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  const handleSaveItem = async () => {
+    setIsSaving(true);
+    try {
+      // Helper para garantir display_order numérico
+      const getOrder = (currentOrder: any, listLength: number) => {
+        return currentOrder ? parseInt(currentOrder) : listLength + 1;
+      };
+
+      if (activeTab === 'projects') {
+        const proj = editingItem as Project;
+        const payload = { ...proj, display_order: getOrder(proj.display_order, projects.length) };
+        
+        if (proj.id) await api.updateProject(proj.id, payload);
+        else await api.createProject(payload as any);
+
+      } else if (activeTab === 'journey') {
+        const jour = editingItem as JourneyItem;
+        const payload = { ...jour, display_order: getOrder(jour.display_order, journey.length) };
+
+        if (jour.id) await api.updateJourney(jour.id, payload);
+        else await api.createJourney(payload as any);
+
+      } else if (activeTab === 'skills') {
+        const comp = editingItem as Competency;
+        const payload = { ...comp, display_order: getOrder(comp.display_order, competencies.length) };
+
+        if (comp.id) await api.updateCompetency(comp.id, payload);
+        else await api.createCompetency(payload as any);
+
+      } else if (activeTab === 'tech') {
+        const tech = editingItem as TechnicalSkill;
+        const payload = { ...tech, display_order: getOrder(tech.display_order, techSkills.length) };
+
+        if (tech.id) await api.updateTechnicalSkill(tech.id, payload);
+        else await api.createTechnicalSkill(payload as any);
+      }
+      
+      showNotification('Item salvo com sucesso!', 'success');
+      fetchAllData();
+      closeDrawer();
+    } catch (error) {
+      console.error("Error saving:", error);
+      showNotification('Erro ao salvar item', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // --- Handlers de Exclusão Genérica ---
+  const handleDeleteRequest = (
+    id: string, 
+    itemName: string,
+    typeLabel: string,
+    deleteFn: (id: string) => Promise<void>,
+    setListFn: React.Dispatch<React.SetStateAction<any[]>>
+  ) => {
+    setDeleteModal({
+      isOpen: true,
+      id,
+      itemName,
+      typeLabel,
+      deleteFn,
+      setListFn
+    });
+  };
+
+  const confirmDelete = async () => {
+    const { id, deleteFn, setListFn } = deleteModal;
+
+    if (!id || !deleteFn || !setListFn) return;
+
+    try {
+      setListFn((prev: any[]) => prev.filter(item => item.id !== id));
+      setDeleteModal({ ...deleteModal, isOpen: false });
+      await deleteFn(id);
+      showNotification('Item removido com sucesso!', 'success');
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      showNotification('Ocorreu um erro ao excluir o item.', 'error');
+      fetchAllData(); 
+    }
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModal(prev => ({ ...prev, isOpen: false }));
   };
 
   const menuItems = [
+    { id: 'profile', label: t('admin.profile'), icon: 'fa-solid fa-user' },
     { id: 'projects', label: t('admin.projects'), icon: 'fa-solid fa-layer-group' },
-    { id: 'messages', label: t('admin.messages'), icon: 'fa-solid fa-inbox' },
-    { id: 'settings', label: t('admin.settings'), icon: 'fa-solid fa-gear' },
+    { id: 'journey', label: t('admin.journey'), icon: 'fa-solid fa-road' },
+    { id: 'skills', label: t('admin.skills'), icon: 'fa-solid fa-code' },
+    { id: 'tech', label: t('admin.tech'), icon: 'fa-solid fa-microchip' },
   ];
 
   return (
     <Layout>
       <div className="flex min-h-[calc(100vh-80px)] bg-slate-900">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-slate-800 bg-slate-950 hidden md:flex flex-col">
-          <div className="p-6">
-            <h2 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-4">{t('admin.dashboard')}</h2>
+        <aside className="w-64 border-r border-slate-800 bg-slate-950 hidden md:flex flex-col sticky top-20 h-[calc(100vh-80px)]">
+          <div className="p-6 flex-1">
+            <h2 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-6">{t('admin.dashboard')}</h2>
             <nav className="space-y-2">
               {menuItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
+                  onClick={() => setActiveTab(item.id as AdminTab)}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
                     activeTab === item.id 
-                      ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' 
+                      ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-900/20' 
                       : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                   }`}
                 >
@@ -62,16 +263,16 @@ const Admin: React.FC = () => {
               ))}
             </nav>
           </div>
-          <div className="mt-auto p-6 border-t border-slate-900">
-             <div className="flex items-center space-x-3">
-               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-green-500 flex items-center justify-center text-white font-bold">
-                 AD
-               </div>
-               <div>
-                 <p className="text-sm font-bold text-white">Alex Dev</p>
-                 <p className="text-xs text-slate-500">Admin</p>
-               </div>
-             </div>
+
+          {/* Logout Button in Sidebar */}
+          <div className="p-6 border-t border-slate-800">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all group"
+            >
+              <i className="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
+              <span className="font-medium">Sair do Sistema</span>
+            </button>
           </div>
         </aside>
 
@@ -82,144 +283,452 @@ const Admin: React.FC = () => {
               <h1 className="text-3xl font-bold text-slate-50 capitalize">{menuItems.find(i => i.id === activeTab)?.label}</h1>
               <p className="text-slate-500 mt-1">{t('admin.manage')}</p>
             </div>
-            {activeTab === 'projects' && (
+            {activeTab !== 'profile' && (
               <button 
-                onClick={handleAddNew}
-                className="mt-4 md:mt-0 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium flex items-center shadow-lg shadow-indigo-600/20 transition-all"
+                onClick={() => handleOpenDrawer({})}
+                className="mt-4 md:mt-0 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium flex items-center shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 <i className="fa-solid fa-plus mr-2"></i> {t('admin.add')}
               </button>
             )}
+            
+            {/* Mobile Logout Button (Only visible on small screens) */}
+            <div className="md:hidden mt-4 w-full">
+               <button
+                  onClick={handleLogout}
+                  className="w-full py-2 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/10"
+               >
+                 Sair do Sistema
+               </button>
+            </div>
           </div>
 
           {/* Content Area */}
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-             {activeTab === 'projects' ? (
-               <div className="overflow-x-auto">
-                 <table className="w-full text-left">
-                   <thead className="bg-slate-900 border-b border-slate-800">
-                     <tr>
-                       <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">{t('admin.table.name')}</th>
-                       <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">{t('admin.table.stack')}</th>
-                       <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">{t('admin.table.actions')}</th>
-                     </tr>
-                   </thead>
-                   <tbody className="divide-y divide-slate-800">
-                     {projects.map((proj) => (
-                       <tr key={proj.id} className="hover:bg-slate-900/50 transition-colors group">
-                         <td className="px-6 py-4">
-                           <div className="flex items-center space-x-4">
-                             <div className="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden">
-                               <img src={proj.image} alt={proj.title} className="w-full h-full object-cover" />
-                             </div>
-                             <div>
-                               <p className="font-semibold text-white">{proj.title}</p>
-                               <p className="text-xs text-slate-500 truncate max-w-[200px]">{proj.description}</p>
-                             </div>
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-8 relative min-h-[500px]">
+             
+             {/* PROFILE TAB */}
+             {activeTab === 'profile' && profile && (
+               <form onSubmit={handleSaveProfile} className="max-w-4xl space-y-8">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <FormInput label="Nome de Exibição" value={profile.display_name} onChange={(e: any) => setProfile({...profile, display_name: e.target.value})} />
+                   <FormInput label="Headline (Cargo)" value={profile.headline} onChange={(e: any) => setProfile({...profile, headline: e.target.value})} />
+                   
+                   <div className="md:col-span-2">
+                      <FormTextArea label="Biografia (Resumo)" value={profile.bio} onChange={(e: any) => setProfile({...profile, bio: e.target.value})} />
+                   </div>
+
+                   <FormInput label="Texto do Badge (Status)" value={profile.badge} onChange={(e: any) => setProfile({...profile, badge: e.target.value})} placeholder="Ex: Disponível para projetos" />
+                   <FormInput label="Frase de Impacto (Gradiente)" value={profile.action_phrase} onChange={(e: any) => setProfile({...profile, action_phrase: e.target.value})} placeholder="Ex: Futuro da Web" />
+                   
+                   <FormInput label="Email de Contato" value={profile.email_contact} onChange={(e: any) => setProfile({...profile, email_contact: e.target.value})} />
+                   <FormInput label="WhatsApp (apenas números)" value={profile.whatsapp} onChange={(e: any) => setProfile({...profile, whatsapp: e.target.value})} placeholder="5511999999999" />
+                   
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:col-span-2">
+                     <FormInput label="LinkedIn URL" value={profile.linkedin_url} onChange={(e: any) => setProfile({...profile, linkedin_url: e.target.value})} />
+                     <FormInput label="GitHub URL" value={profile.git_url} onChange={(e: any) => setProfile({...profile, git_url: e.target.value})} placeholder="https://github.com/..." />
+                   </div>
+                 </div>
+                 
+                 <div className="pt-4 border-t border-slate-900 flex justify-end">
+                    <button 
+                      type="submit" 
+                      disabled={isSaving}
+                      className="px-8 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-green-900/20 transition-all flex items-center gap-2"
+                    >
+                      {isSaving ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
+                      {t('admin.save')}
+                    </button>
+                 </div>
+               </form>
+             )}
+
+             {/* GRID VIEW (CARDS) */}
+             {activeTab !== 'profile' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  
+                  {/* PROJECTS CARDS */}
+                  {activeTab === 'projects' && projects.map(p => (
+                    <div key={p.id} className="group bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col hover:border-indigo-500/50 transition-all duration-300 relative">
+                      {/* Badge Ordem */}
+                      <span className="absolute top-2 left-2 z-10 bg-slate-950/80 backdrop-blur text-xs font-bold text-slate-400 border border-slate-800 px-2 py-1 rounded">
+                         #{p.display_order}
+                      </span>
+
+                      <div className="h-40 w-full overflow-hidden relative">
+                         <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors z-10"></div>
+                         {p.image_url ? (
+                           <img src={p.image_url} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                         ) : (
+                           <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600">
+                             <i className="fa-regular fa-image text-3xl"></i>
                            </div>
-                         </td>
-                         <td className="px-6 py-4">
-                           <div className="flex flex-wrap gap-1">
-                             {proj.tags.slice(0, 3).map(t => (
-                               <span key={t} className="px-2 py-0.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-400">{t}</span>
-                             ))}
-                             {proj.tags.length > 3 && <span className="text-xs text-slate-500 self-center">+{proj.tags.length - 3}</span>}
+                         )}
+                      </div>
+                      
+                      <div className="p-5 flex-1 flex flex-col">
+                        <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
+                        <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide mb-3">{p.role}</p>
+                        
+                        <div className="flex flex-wrap gap-2 mb-4">
+                           {p.technologies.split(',').slice(0, 3).map((t, i) => (
+                             <span key={i} className="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">{t.trim()}</span>
+                           ))}
+                           {p.technologies.split(',').length > 3 && <span className="text-[10px] text-slate-500 py-1">+mais</span>}
+                        </div>
+
+                        <div className="mt-auto flex justify-between items-center pt-4 border-t border-slate-800">
+                           <div className="flex gap-3">
+                              {p.live_url && <i className="fa-solid fa-globe text-slate-500 hover:text-white" title="Live"></i>}
+                              {p.github_url && <i className="fa-brands fa-github text-slate-500 hover:text-white" title="Code"></i>}
                            </div>
-                         </td>
-                         <td className="px-6 py-4 text-right">
-                           <button onClick={() => handleEdit(proj)} className="text-indigo-400 hover:text-indigo-300 mr-4 transition-colors">
-                             <i className="fa-solid fa-pen"></i>
-                           </button>
-                           <button className="text-slate-500 hover:text-red-400 transition-colors">
-                             <i className="fa-solid fa-trash"></i>
-                           </button>
-                         </td>
-                       </tr>
-                     ))}
-                   </tbody>
-                 </table>
-               </div>
-             ) : (
-               <div className="p-12 text-center text-slate-500">
-                 <i className="fa-solid fa-person-digging text-4xl mb-4 text-slate-700"></i>
-                 <p>{t('admin.construction')}</p>
-               </div>
+                           <div className="flex gap-2">
+                              <button onClick={() => handleOpenDrawer(p)} className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all">
+                                <i className="fa-solid fa-pen text-xs"></i>
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteRequest(p.id, p.title, 'Projeto', api.deleteProject, setProjects)}
+                                className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all"
+                              >
+                                <i className="fa-solid fa-trash text-xs"></i>
+                              </button>
+                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* JOURNEY CARDS */}
+                  {activeTab === 'journey' && journey.map(j => (
+                    <div key={j.id} className="relative bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-slate-600 transition-all group flex flex-col">
+                       {/* Tipo Indicator */}
+                       <div className={`absolute top-0 left-0 bottom-0 w-1 rounded-l-2xl ${j.type === 'work' ? 'bg-indigo-500' : 'bg-green-500'}`}></div>
+                       
+                       <div className="flex justify-between items-start mb-4 pl-3">
+                          <span className={`text-xs font-bold px-2 py-1 rounded border ${j.type === 'work' ? 'bg-indigo-900/20 text-indigo-400 border-indigo-500/20' : 'bg-green-900/20 text-green-400 border-green-500/20'}`}>
+                             {j.type === 'work' ? 'TRABALHO' : 'EDUCAÇÃO'}
+                          </span>
+                          <span className="text-xs font-bold text-slate-500 border border-slate-800 px-2 py-1 rounded bg-slate-950">
+                             #{j.display_order}
+                          </span>
+                       </div>
+
+                       <div className="pl-3 mb-4 flex-1">
+                          <h3 className="text-lg font-bold text-white mb-1 leading-snug">{j.title}</h3>
+                          <p className="text-slate-400 text-sm font-medium mb-2">{j.company}</p>
+                          <p className="text-slate-500 text-xs flex items-center gap-2">
+                             <i className="fa-regular fa-calendar"></i> {j.period}
+                          </p>
+                       </div>
+
+                       <div className="pl-3 flex justify-end gap-2 mt-auto pt-4 border-t border-slate-800/50">
+                          <button onClick={() => handleOpenDrawer(j)} className="text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-all">
+                             Editar
+                          </button>
+                          <button onClick={() => handleDeleteRequest(j.id, j.title, 'Jornada', api.deleteJourney, setJourney)} className="text-sm font-medium text-slate-400 hover:text-red-400 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/10 transition-all">
+                             Excluir
+                          </button>
+                       </div>
+                    </div>
+                  ))}
+
+                  {/* SKILLS CARDS */}
+                  {activeTab === 'skills' && competencies.map(c => (
+                    <div key={c.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 relative group">
+                       <span className="absolute top-4 right-4 text-xs font-bold text-slate-600 bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                         #{c.display_order}
+                       </span>
+
+                       <div className="flex items-center gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 text-xl group-hover:text-indigo-400 group-hover:bg-indigo-500/10 transition-all">
+                             <i className={c.icon}></i>
+                          </div>
+                          <div>
+                             <h3 className="font-bold text-white text-lg">{c.title}</h3>
+                             {c.subtitle && <p className="text-xs text-slate-500">{c.subtitle}</p>}
+                          </div>
+                       </div>
+                       
+                       <div className="flex flex-wrap gap-2 mb-6 min-h-[60px] content-start">
+                          {Array.isArray(c.items) && c.items.slice(0, 6).map((item, idx) => (
+                             <span key={idx} className="px-2 py-1 text-[10px] font-semibold bg-slate-950 text-slate-400 rounded border border-slate-800">
+                                {item}
+                             </span>
+                          ))}
+                          {Array.isArray(c.items) && c.items.length > 6 && (
+                             <span className="px-2 py-1 text-[10px] text-slate-600">+{c.items.length - 6}</span>
+                          )}
+                       </div>
+
+                       <div className="flex gap-2">
+                          <button onClick={() => handleOpenDrawer(c)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-all">
+                             Editar
+                          </button>
+                          <button onClick={() => handleDeleteRequest(c.id, c.title, 'Habilidade', api.deleteCompetency, setCompetencies)} className="w-10 flex items-center justify-center bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all">
+                             <i className="fa-solid fa-trash text-xs"></i>
+                          </button>
+                       </div>
+                    </div>
+                  ))}
+
+                  {/* TECH SKILLS CARDS */}
+                  {activeTab === 'tech' && techSkills.map(t => (
+                    <div key={t.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center hover:border-indigo-500/50 transition-all relative group">
+                        <span className="absolute top-2 left-2 text-[10px] font-bold text-slate-600 bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                         #{t.display_order}
+                       </span>
+
+                       <div className="w-12 h-12 mb-3 flex items-center justify-center text-2xl text-slate-300">
+                         <i className={t.icon}></i>
+                       </div>
+                       <h3 className="text-white font-bold mb-2">{t.name}</h3>
+                       
+                       {/* Level Bar */}
+                       <div className="w-full h-1.5 bg-slate-800 rounded-full mb-4">
+                          <div className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full" style={{ width: `${t.level}%`}}></div>
+                       </div>
+                       <span className="text-xs text-slate-500 mb-4">{t.level}% Proficiência</span>
+
+                       <div className="flex gap-2 w-full mt-auto">
+                          <button onClick={() => handleOpenDrawer(t)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition-all">
+                             EDITAR
+                          </button>
+                          <button onClick={() => handleDeleteRequest(t.id, t.name, 'Tecnologia', api.deleteTechnicalSkill, setTechSkills)} className="w-8 flex items-center justify-center bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all">
+                             <i className="fa-solid fa-trash text-xs"></i>
+                          </button>
+                       </div>
+                    </div>
+                  ))}
+
+                  {/* Empty State */}
+                  {((activeTab === 'projects' && projects.length === 0) || 
+                    (activeTab === 'journey' && journey.length === 0) ||
+                    (activeTab === 'skills' && competencies.length === 0) ||
+                    (activeTab === 'tech' && techSkills.length === 0)) && (
+                    <div className="col-span-full text-center py-16 border-2 border-dashed border-slate-800 rounded-2xl">
+                      <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center mx-auto mb-4 text-slate-600">
+                        <i className="fa-regular fa-folder-open text-2xl"></i>
+                      </div>
+                      <p className="text-slate-500 font-medium">Nenhum item encontrado.</p>
+                      <button onClick={() => handleOpenDrawer({})} className="mt-4 text-indigo-400 hover:text-indigo-300 font-medium text-sm">
+                        Criar o primeiro item
+                      </button>
+                    </div>
+                  )}
+                </div>
              )}
           </div>
         </div>
       </div>
 
-      {/* Slide-over Drawer */}
+      {/* --- NOTIFICATIONS (Toast) --- */}
+      {notification && (
+        <div className={`fixed bottom-6 right-6 z-[70] px-6 py-4 rounded-xl shadow-2xl text-white font-bold flex items-center gap-3 animate-in slide-in-from-bottom-5 ${notification.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`}>
+            <i className={`fa-solid ${notification.type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'}`}></i>
+            {notification.message}
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" onClick={closeDeleteModal} />
+          <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl animate-[float_0.3s_ease-out]">
+            
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
+                <i className="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
+              </div>
+              
+              <h3 className="text-xl font-bold text-white mb-2">Excluir {deleteModal.typeLabel}?</h3>
+              <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+                Você está prestes a remover <span className="font-semibold text-white">"{deleteModal.itemName}"</span>. Esta ação não pode ser desfeita.
+              </p>
+              
+              <div className="flex gap-3 w-full">
+                <button 
+                  onClick={closeDeleteModal}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-lg shadow-red-900/20 transition-all hover:scale-[1.02]"
+                >
+                  Sim, Excluir
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Styled Drawer (Edição) */}
       {isDrawerOpen && (
         <div className="fixed inset-0 z-[60] flex justify-end">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity duration-300" 
             onClick={closeDrawer}
           ></div>
           
           {/* Drawer Panel */}
-          <div className="relative w-full max-w-md bg-slate-900 h-full shadow-2xl border-l border-slate-800 flex flex-col animate-slide-in-right">
-            <div className="flex items-center justify-between p-6 border-b border-slate-800">
-              <h3 className="text-xl font-bold text-white">
-                {editingProject ? t('admin.edit') : t('admin.create')}
-              </h3>
-              <button onClick={closeDrawer} className="text-slate-400 hover:text-white transition-colors">
-                <i className="fa-solid fa-xmark text-xl"></i>
+          <div className="relative w-full max-w-lg bg-slate-900 h-full shadow-2xl border-l border-slate-800 flex flex-col animate-slide-in-right">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md z-10">
+              <div>
+                <h3 className="text-xl font-bold text-white">
+                  {editingItem?.id ? t('admin.edit') : t('admin.create')}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">
+                  {activeTab === 'projects' ? 'Detalhes do Projeto' : 
+                   activeTab === 'journey' ? 'Item de Jornada' : 
+                   activeTab === 'skills' ? 'Competência Técnica' : 'Tecnologia'}
+                </p>
+              </div>
+              <button onClick={closeDrawer} className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white flex items-center justify-center transition-all">
+                <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">{t('admin.form.title')}</label>
-                <input 
-                  type="text" 
-                  defaultValue={editingProject?.title}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-all" 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">{t('admin.form.desc')}</label>
-                <textarea 
-                  rows={4}
-                  defaultValue={editingProject?.description}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-all" 
-                ></textarea>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">{t('admin.form.image')}</label>
-                <input 
-                  type="text" 
-                  defaultValue={editingProject?.image}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-all" 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">{t('admin.form.tags')}</label>
-                <input 
-                  type="text" 
-                  defaultValue={editingProject?.tags.join(', ')}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-all" 
-                />
-              </div>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+              
+              {/* Campo de ORDEM genérico para todos */}
+              {activeTab !== 'profile' && (
+                 <div className="p-4 bg-slate-950/50 border border-slate-800 rounded-xl mb-6">
+                    <FormInput 
+                       label="Ordem de Exibição" 
+                       type="number"
+                       placeholder="Ex: 1"
+                       value={editingItem.display_order} 
+                       onChange={(e: any) => setEditingItem({...editingItem, display_order: e.target.value})} 
+                    />
+                    <p className="text-[10px] text-slate-500 mt-2 ml-1">
+                       * Define a posição do card na tela inicial (menor número aparece primeiro).
+                    </p>
+                 </div>
+              )}
+
+              {activeTab === 'projects' && (
+                <>
+                  <FormInput label="Título do Projeto" value={editingItem.title} onChange={(e: any) => setEditingItem({...editingItem, title: e.target.value})} placeholder="Ex: E-commerce Platform" />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                     <FormInput label="Papel / Role" value={editingItem.role} onChange={(e: any) => setEditingItem({...editingItem, role: e.target.value})} placeholder="Ex: Lead Developer" />
+                     <FormInput label="Tech Stack" value={editingItem.technologies} onChange={(e: any) => setEditingItem({...editingItem, technologies: e.target.value})} placeholder="React, Node, AWS..." />
+                  </div>
+
+                  <FormTextArea label="Descrição" value={editingItem.description} onChange={(e: any) => setEditingItem({...editingItem, description: e.target.value})} />
+                  
+                  <FormInput label="URL da Imagem (Supabase/Ext)" value={editingItem.image_url} onChange={(e: any) => setEditingItem({...editingItem, image_url: e.target.value})} placeholder="https://..." />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormInput label="Github URL" value={editingItem.github_url} onChange={(e: any) => setEditingItem({...editingItem, github_url: e.target.value})} placeholder="https://github.com/..." />
+                    <FormInput label="Live Demo URL" value={editingItem.live_url} onChange={(e: any) => setEditingItem({...editingItem, live_url: e.target.value})} placeholder="https://..." />
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'journey' && (
+                <>
+                  <FormInput label="Título / Cargo" value={editingItem.title} onChange={(e: any) => setEditingItem({...editingItem, title: e.target.value})} />
+                  <FormInput label="Empresa / Instituição" value={editingItem.company} onChange={(e: any) => setEditingItem({...editingItem, company: e.target.value})} />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormInput label="Período" value={editingItem.period} onChange={(e: any) => setEditingItem({...editingItem, period: e.target.value})} placeholder="2020 - Presente" />
+                    
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tipo</label>
+                      <select 
+                        className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none"
+                        value={editingItem.type || 'work'} 
+                        onChange={e => setEditingItem({...editingItem, type: e.target.value})}
+                      >
+                        <option value="work">Experiência Profissional</option>
+                        <option value="education">Formação Acadêmica</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <FormTextArea label="Descrição das Atividades" value={editingItem.description} onChange={(e: any) => setEditingItem({...editingItem, description: e.target.value})} />
+                </>
+              )}
+
+              {activeTab === 'skills' && (
+                <>
+                  <FormInput label="Nome da Categoria" value={editingItem.title} onChange={(e: any) => setEditingItem({...editingItem, title: e.target.value})} placeholder="Ex: Backend" />
+                  <FormInput label="Subtítulo (Opcional)" value={editingItem.subtitle} onChange={(e: any) => setEditingItem({...editingItem, subtitle: e.target.value})} />
+                  <FormInput label="Ícone (FontAwesome)" value={editingItem.icon} onChange={(e: any) => setEditingItem({...editingItem, icon: e.target.value})} placeholder="fa-solid fa-code" />
+                  
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Lista de Skills</label>
+                     <p className="text-[10px] text-slate-500 mb-1">Separe os itens por vírgula</p>
+                     <textarea 
+                         rows={4} 
+                         className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                         value={Array.isArray(editingItem.items) ? editingItem.items.join(', ') : (editingItem.items || '')} 
+                         onChange={e => setEditingItem({...editingItem, items: e.target.value.split(',').map((s: string) => s.trim())})} 
+                     />
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'tech' && (
+                <>
+                  <FormInput label="Nome da Tecnologia" value={editingItem.name} onChange={(e: any) => setEditingItem({...editingItem, name: e.target.value})} placeholder="Ex: React, Docker" />
+                  <FormInput label="Ícone (FontAwesome)" value={editingItem.icon} onChange={(e: any) => setEditingItem({...editingItem, icon: e.target.value})} placeholder="fa-brands fa-react" />
+                  
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                        Nível de Proficiência: {editingItem.level}%
+                     </label>
+                     <div className="flex items-center gap-4">
+                        <input 
+                           type="range" 
+                           min="0" 
+                           max="100" 
+                           className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                           value={editingItem.level || 0}
+                           onChange={(e) => setEditingItem({...editingItem, level: parseInt(e.target.value)})}
+                        />
+                        <input 
+                           type="number" 
+                           min="0" 
+                           max="100" 
+                           className="w-20 bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-center"
+                           value={editingItem.level || 0}
+                           onChange={(e) => setEditingItem({...editingItem, level: parseInt(e.target.value)})}
+                        />
+                     </div>
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="p-6 border-t border-slate-800 bg-slate-900">
+            {/* Footer Actions */}
+            <div className="p-6 border-t border-slate-800 bg-slate-900 z-10">
               <div className="flex space-x-4">
                 <button 
                   onClick={closeDrawer}
-                  className="flex-1 px-4 py-3 border border-slate-700 rounded-xl text-slate-300 font-medium hover:bg-slate-800 transition-all"
+                  disabled={isSaving}
+                  className="flex-1 py-3.5 border border-slate-700 rounded-xl text-slate-300 font-semibold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('admin.cancel')}
                 </button>
                 <button 
-                  onClick={closeDrawer}
-                  className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/20 transition-all"
+                  onClick={handleSaveItem}
+                  disabled={isSaving}
+                  className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:bg-slate-700 disabled:shadow-none disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                 >
+                  {isSaving ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
                   {t('admin.save')}
                 </button>
               </div>
             </div>
+
           </div>
         </div>
       )}

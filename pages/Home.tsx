@@ -1,77 +1,124 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
-import { skills, getExperience, getProjects, getServices } from '../data';
 import { useI18n } from '../i18n';
+import { api } from '../services/api';
+import { ProfileInfo, Project, JourneyItem, Competency, TechnicalSkill } from '../types';
 
 const HeroSection = () => {
   const { t } = useI18n();
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+
+  useEffect(() => {
+    api.getProfile().then(setProfile);
+  }, []);
+
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden py-20 lg:py-0">
-      {/* Background Decor - Adjusted for better centering */}
+      {/* Background Decor */}
       <div className="absolute top-1/4 left-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-green-600/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
         
         {/* Text Content */}
-        <div className="space-y-8 order-2 lg:order-1 pt-10 lg:pt-0">
+        <div className="flex flex-col items-start space-y-6 order-2 lg:order-1 pt-10 lg:pt-0">
+          
+          {/* 1. Badge de Status */}
           <div className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-full backdrop-blur-sm shadow-lg shadow-black/20">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </span>
-            <span className="text-sm font-medium text-slate-300 tracking-wide">{t('hero.badge')}</span>
+            <span className="text-sm font-medium text-slate-300 tracking-wide">
+              {profile?.badge || t('hero.badge')}
+            </span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold leading-tight text-slate-50 tracking-tight">
-            {t('hero.title.prefix')} <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-blue-400 to-green-400">
-              {t('hero.title.highlight')}
-            </span>
+          {/* 2. Título Principal (H1) */}
+          <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
+            {t('hero.greeting')} {profile?.display_name || "..."}
           </h1>
 
-          <p className="text-lg md:text-xl text-slate-400 max-w-xl leading-relaxed font-light">
-            {t('hero.description')}
+          {/* 3. Manchete / Headline (H2) - Gradiente */}
+          <h2 className="text-3xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-blue-400 to-green-400 leading-tight">
+            {profile?.headline || t('hero.title.highlight')}
+          </h2>
+
+          {/* 4. Divisor Visual */}
+          <div className="h-1.5 w-24 bg-gradient-to-r from-indigo-500 to-green-500 rounded-full my-4"></div>
+
+          {/* 5. Proposta de Valor (H3) */}
+          <h3 className="text-xl md:text-2xl text-slate-100 font-medium">
+             {profile?.action_phrase}
+          </h3>
+
+          {/* 6. Bio / Resumo (P) */}
+          <p className="text-lg text-slate-300 mb-12 max-w-xl leading-relaxed">
+            {profile?.bio || t('hero.description')}
           </p>
 
-          <div className="flex flex-wrap gap-4 pt-2">
-            <a href="#contact" className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-1">
-              {t('hero.cta.primary')}
+          {/* 7. Botões de Chamada (CTA) */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
+            {/* Botão Conhecer Mais */}
+            <a 
+              href="#skills" 
+              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-1 text-center"
+            >
+              {t('hero.cta.more')}
             </a>
-            <a href="#projects" className="px-8 py-4 bg-transparent border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white rounded-xl font-medium transition-all hover:-translate-y-1">
-              {t('hero.cta.secondary')}
-            </a>
+            
+            {/* Botões Sociais */}
+            <div className="flex gap-4">
+               {profile?.linkedin_url && (
+                 <a 
+                   href={profile.linkedin_url} 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   className="flex-1 sm:flex-none px-6 py-4 bg-transparent border border-slate-700 hover:border-blue-500 text-slate-300 hover:text-white hover:bg-blue-600/10 rounded-xl font-medium transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
+                   title="LinkedIn"
+                 >
+                   <i className="fa-brands fa-linkedin-in text-xl"></i>
+                   <span className="sm:hidden">LinkedIn</span>
+                 </a>
+               )}
+               {profile?.git_url && (
+                 <a 
+                   href={profile.git_url} 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   className="flex-1 sm:flex-none px-6 py-4 bg-transparent border border-slate-700 hover:border-slate-400 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-xl font-medium transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
+                   title="GitHub"
+                 >
+                   <i className="fa-brands fa-github text-xl"></i>
+                   <span className="sm:hidden">GitHub</span>
+                 </a>
+               )}
+            </div>
           </div>
         </div>
 
         {/* Image Composition */}
         <div className="order-1 lg:order-2 flex justify-center lg:justify-end relative">
           
-          {/* Central Glow behind image */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
 
           <div className="relative w-full max-w-md mx-auto">
-             {/* Decorative Frame Back */}
              <div className="absolute inset-0 border-2 border-slate-700/50 rounded-3xl rotate-6 transform translate-x-4 translate-y-4 z-0"></div>
              
-             {/* Decorative Fill Back */}
              <div className="absolute inset-0 bg-slate-800/40 backdrop-blur-sm rounded-3xl -rotate-3 transform -translate-x-2 -translate-y-2 z-0"></div>
 
-             {/* Main Image Container */}
              <div className="relative rounded-2xl overflow-hidden shadow-2xl z-10 bg-slate-900 border border-slate-700/50 group">
                 <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-green-500/10 z-20 group-hover:opacity-0 transition-opacity duration-500"></div>
                 
                 <img 
                   src="https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/image/Matos_sem_fundo.png" 
-                  alt="Alex Avatar" 
+                  alt="Avatar" 
                   className="relative w-full h-auto object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-in-out transform group-hover:scale-105"
                 />
                 
-                {/* Bottom Fade Gradient - Crucial for blending */}
                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent z-20"></div>
              </div>
 
-             {/* Floating Glass Card (Badge) */}
              <div className="absolute -bottom-8 -left-8 md:-left-12 z-30 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-float max-w-[200px]">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg">
                    <i className="fa-solid fa-code text-lg"></i>
@@ -82,7 +129,6 @@ const HeroSection = () => {
                 </div>
              </div>
 
-             {/* Top Right Decorative Icon */}
              <div className="absolute -top-6 -right-6 z-0 text-slate-800/50 text-6xl animate-pulse">
                 <i className="fa-brands fa-react"></i>
              </div>
@@ -93,32 +139,83 @@ const HeroSection = () => {
   );
 };
 
-const SkillsSection = () => {
+const CompetenciesSection = () => {
   const { t } = useI18n();
+  const [competencies, setCompetencies] = useState<Competency[]>([]);
+
+  useEffect(() => {
+    api.getCompetencies().then(setCompetencies);
+  }, []);
+
   return (
-    <section id="skills" className="py-24 bg-slate-900 relative">
+    <section id="skills" className="py-24 bg-slate-900 relative border-b border-slate-800/50">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('skills.title')}</h2>
           <p className="text-slate-400 max-w-2xl mx-auto">{t('skills.subtitle')}</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {competencies.map((comp) => (
+            <div 
+              key={comp.id}
+              className="group bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:-translate-y-1 hover:border-indigo-500 transition-all duration-300 flex flex-col items-start"
+            >
+              <div className="w-14 h-14 rounded-xl bg-slate-800/50 flex items-center justify-center mb-4 group-hover:bg-indigo-500/10 transition-colors">
+                <i className={`${comp.icon} text-2xl text-slate-400 group-hover:text-indigo-400 transition-colors`}></i>
+              </div>
+              <h3 className="text-lg font-bold text-slate-200 mb-1">{comp.title}</h3>
+              {comp.subtitle && <p className="text-sm text-slate-500 mb-4">{comp.subtitle}</p>}
+              
+              <div className="mt-auto pt-4 flex flex-wrap gap-2 w-full">
+                {comp.items?.map((item, idx) => (
+                   <span key={idx} className="px-2 py-1 text-[10px] font-semibold bg-slate-800 text-slate-300 rounded border border-slate-700">
+                     {item}
+                   </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const TechStackSection = () => {
+  const { t } = useI18n();
+  const [skills, setSkills] = useState<TechnicalSkill[]>([]);
+
+  useEffect(() => {
+    api.getTechnicalSkills().then(setSkills);
+  }, []);
+
+  return (
+    <section className="py-24 bg-slate-950 relative">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('tech.title')}</h2>
+          <p className="text-slate-400 max-w-2xl mx-auto">{t('tech.subtitle')}</p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {skills.map((skill) => (
             <div 
               key={skill.id}
-              className="group bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:-translate-y-1 hover:border-indigo-500 transition-all duration-300"
+              className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300"
             >
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl bg-slate-800/50 flex items-center justify-center mb-4 group-hover:bg-indigo-500/10 transition-colors">
-                  <i className={`${skill.icon} text-3xl text-slate-400 group-hover:text-indigo-400 transition-colors`}></i>
-                </div>
-                <h3 className="text-lg font-semibold text-slate-200 mb-3">{skill.name}</h3>
-                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full" 
-                    style={{ width: `${skill.level}%` }}
-                  ></div>
+              <div className="w-16 h-16 mb-4 flex items-center justify-center text-3xl text-slate-300">
+                <i className={skill.icon}></i>
+              </div>
+              
+              <h3 className="text-lg font-bold text-white mb-6">{skill.name}</h3>
+              
+              <div className="w-full mt-auto">
+                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                   <div 
+                     className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full"
+                     style={{ width: `${skill.level}%` }}
+                   ></div>
                 </div>
               </div>
             </div>
@@ -130,11 +227,15 @@ const SkillsSection = () => {
 };
 
 const ExperienceSection = () => {
-  const { t, language } = useI18n();
-  const experience = getExperience(language);
+  const { t } = useI18n();
+  const [experience, setExperience] = useState<JourneyItem[]>([]);
+
+  useEffect(() => {
+    api.getJourney().then(setExperience);
+  }, []);
 
   return (
-    <section id="experience" className="py-24 bg-slate-955">
+    <section id="experience" className="py-24 bg-slate-900">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-1">
@@ -152,7 +253,7 @@ const ExperienceSection = () => {
                   <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 md:p-8 hover:bg-slate-900 transition-colors">
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-xl font-bold text-white">{item.role}</h3>
+                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
                         <p className="text-indigo-400 font-medium mt-1">{item.company}</p>
                       </div>
                       <span className="mt-2 md:mt-0 inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-semibold text-slate-400 border border-slate-700">
@@ -177,129 +278,232 @@ const ExperienceSection = () => {
 };
 
 const ProjectsSection = () => {
-  const { t, language } = useI18n();
-  const projects = getProjects(language);
+  const { t } = useI18n();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsPerScreen, setItemsPerScreen] = useState(3);
+
+  useEffect(() => {
+    api.getProjects().then(setProjects);
+
+    const handleResize = () => {
+      if (window.innerWidth < 768) setItemsPerScreen(1);
+      else if (window.innerWidth < 1024) setItemsPerScreen(2);
+      else setItemsPerScreen(3);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const parseTech = (tech: string) => {
+    if (!tech) return [];
+    return tech.split(',').map(s => s.trim());
+  };
+
+  const nextSlide = () => {
+    const maxIndex = Math.max(0, projects.length - itemsPerScreen);
+    setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex(prev => Math.max(prev - 1, 0));
+  };
+
+  const isAtStart = currentIndex === 0;
+  const isAtEnd = currentIndex >= projects.length - itemsPerScreen;
 
   return (
-    <section id="projects" className="py-24 bg-slate-900">
+    <section id="projects" className="py-24 bg-slate-950">
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-end mb-16">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('projects.title')}</h2>
             <p className="text-slate-400 max-w-xl">{t('projects.subtitle')}</p>
           </div>
-          <a href="#" className="hidden md:inline-flex items-center text-indigo-400 hover:text-indigo-300 font-medium mt-4 md:mt-0">
-            {t('projects.viewGithub')} <i className="fa-brands fa-github ml-2"></i>
-          </a>
+          
+          <div className="flex items-center gap-4 mt-4 md:mt-0">
+             {/* Navigation Buttons */}
+             <button 
+               onClick={prevSlide}
+               disabled={isAtStart}
+               className={`w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center transition-all ${isAtStart ? 'text-slate-700 cursor-not-allowed' : 'text-slate-300 hover:bg-indigo-600 hover:border-indigo-600 hover:text-white'}`}
+             >
+               <i className="fa-solid fa-chevron-left"></i>
+             </button>
+             <button 
+               onClick={nextSlide}
+               disabled={isAtEnd || projects.length <= itemsPerScreen}
+               className={`w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center transition-all ${isAtEnd || projects.length <= itemsPerScreen ? 'text-slate-700 cursor-not-allowed' : 'text-slate-300 hover:bg-indigo-600 hover:border-indigo-600 hover:text-white'}`}
+             >
+               <i className="fa-solid fa-chevron-right"></i>
+             </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project) => (
-            <div key={project.id} className="group bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300 flex flex-col">
-              <div className="relative h-48 overflow-hidden">
-                <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent z-10 transition-colors"></div>
-                <img 
-                  src={project.image} 
-                  alt={project.title} 
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-xl font-bold text-slate-100 mb-2">{project.title}</h3>
-                <p className="text-slate-400 text-sm mb-4 line-clamp-3">{project.description}</p>
-                
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {project.tags.map(tag => (
-                    <span key={tag} className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded-md border border-slate-700">
-                      {tag}
-                    </span>
-                  ))}
+        {/* Carousel Container */}
+        <div className="relative overflow-hidden -mx-2 p-2">
+          <div 
+            className="flex transition-transform duration-500 ease-in-out gap-8"
+            style={{ transform: `translateX(-${currentIndex * (100 / itemsPerScreen)}%)` }}
+          >
+            {projects.map((project) => (
+              <div 
+                key={project.id} 
+                className="flex-shrink-0 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.33rem)]"
+              >
+                <div className="h-full group bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300 flex flex-col">
+                  <div className="relative h-48 overflow-hidden">
+                    <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent z-10 transition-colors"></div>
+                    <img 
+                      src={project.image_url || "https://picsum.photos/800/600"} 
+                      alt={project.title} 
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="mb-2">
+                       <h3 className="text-xl font-bold text-slate-100">{project.title}</h3>
+                       {project.role && <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide">{project.role}</p>}
+                    </div>
+                    <p className="text-slate-400 text-sm mb-4 line-clamp-3">{project.description}</p>
+                    
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {parseTech(project.technologies).map(tag => (
+                        <span key={tag} className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded-md border border-slate-700">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-auto flex gap-4 pt-4 border-t border-slate-900">
+                       {project.live_url && (
+                         <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white hover:text-indigo-400 flex items-center">
+                           <i className="fa-solid fa-arrow-up-right-from-square mr-2"></i> {t('projects.liveDemo')}
+                         </a>
+                       )}
+                       {project.github_url && (
+                         <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-slate-500 hover:text-white flex items-center">
+                           <i className="fa-brands fa-github mr-2"></i> {t('projects.code')}
+                         </a>
+                       )}
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="mt-auto flex gap-4 pt-4 border-t border-slate-900">
-                   <a href={project.demoLink} className="text-sm font-medium text-white hover:text-indigo-400 flex items-center">
-                     <i className="fa-solid fa-arrow-up-right-from-square mr-2"></i> {t('projects.liveDemo')}
-                   </a>
-                   <a href={project.codeLink} className="text-sm font-medium text-slate-500 hover:text-white flex items-center">
-                     <i className="fa-brands fa-github mr-2"></i> {t('projects.code')}
-                   </a>
-                </div>
               </div>
-            </div>
-          ))}
+            ))}
+            {projects.length === 0 && (
+                <div className="w-full text-center py-10 text-slate-500">
+                    Nenhum projeto cadastrado ainda.
+                </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
   );
 };
 
-const ServicesSection = () => {
-  const { t, language } = useI18n();
-  const services = getServices(language);
-
-  return (
-    <section id="services" className="py-24 bg-slate-950">
-       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('services.title')}</h2>
-          <p className="text-slate-400">{t('services.subtitle')}</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {services.map((service) => (
-             <div key={service.id} className="relative bg-slate-900 border border-slate-800 rounded-2xl p-8 overflow-hidden hover:border-indigo-500/50 transition-colors group">
-                <i className={`${service.icon} absolute -right-6 -top-6 text-9xl text-slate-800 opacity-10 group-hover:opacity-20 group-hover:text-indigo-500 transition-all duration-500`}></i>
-                
-                <div className="relative z-10">
-                  <div className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center mb-6 text-indigo-400 text-2xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <i className={service.icon}></i>
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{service.title}</h3>
-                  <p className="text-slate-400 text-sm mb-6 leading-relaxed">{service.description}</p>
-                  
-                  <div className="inline-flex items-center px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-lg">
-                    <span className="text-xs font-medium text-green-400 uppercase tracking-wide mr-2">{t('services.startsAt')}</span>
-                    <span className="text-lg font-bold text-green-400">${service.priceStart}</span>
-                  </div>
-                </div>
-             </div>
-          ))}
-        </div>
-       </div>
-    </section>
-  );
-};
-
 const ContactSection = () => {
   const { t } = useI18n();
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  
+  // State para o formulário de contato
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+
+  useEffect(() => {
+    api.getProfile().then(setProfile);
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setContactForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!profile?.whatsapp) {
+      alert("Número de WhatsApp não configurado pelo administrador.");
+      return;
+    }
+
+    // Formata a mensagem para o WhatsApp
+    const message = `Olá! Meu nome é *${contactForm.name}* (${contactForm.email}).\n\n*Assunto:* ${contactForm.subject}\n\n${contactForm.message}`;
+    
+    // Cria a URL do WhatsApp
+    const url = `https://wa.me/${profile.whatsapp}?text=${encodeURIComponent(message)}`;
+    
+    // Abre em nova aba
+    window.open(url, '_blank');
+  };
+
   return (
-    <section id="contact" className="py-24 bg-slate-900 relative overflow-hidden">
+    <section id="contact" className="py-24 bg-slate-950 relative overflow-hidden">
       <div className="container mx-auto px-6">
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
            {/* Form */}
-           <div className="bg-slate-950 p-8 md:p-10 rounded-3xl border border-slate-800">
+           <div className="bg-slate-900 p-8 md:p-10 rounded-3xl border border-slate-800">
              <h3 className="text-2xl font-bold text-white mb-6">{t('contact.title')}</h3>
-             <form className="space-y-6">
+             <form className="space-y-6" onSubmit={handleContactSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-400">{t('contact.name')}</label>
-                    <input type="text" className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" placeholder="John Doe" />
+                    <input 
+                      type="text" 
+                      name="name"
+                      value={contactForm.name}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" 
+                      placeholder="John Doe" 
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-400">{t('contact.email')}</label>
-                    <input type="email" className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" placeholder="john@example.com" />
+                    <input 
+                      type="email" 
+                      name="email"
+                      value={contactForm.email}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" 
+                      placeholder="john@example.com" 
+                      required
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                    <label className="text-sm font-medium text-slate-400">{t('contact.subject')}</label>
-                   <input type="text" className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" placeholder="Project Inquiry" />
+                   <input 
+                    type="text" 
+                    name="subject"
+                    value={contactForm.subject}
+                    onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" 
+                    placeholder="Project Inquiry" 
+                    required
+                   />
                 </div>
                 <div className="space-y-2">
                    <label className="text-sm font-medium text-slate-400">{t('contact.message')}</label>
-                   <textarea rows={4} className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" placeholder="Tell me about your project..."></textarea>
+                   <textarea 
+                    rows={4} 
+                    name="message"
+                    value={contactForm.message}
+                    onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" 
+                    placeholder="Tell me about your project..."
+                    required
+                   ></textarea>
                 </div>
                 <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-xl transition-all">
-                  {t('contact.send')}
+                  {t('contact.send')} (via WhatsApp)
                 </button>
              </form>
            </div>
@@ -322,25 +526,44 @@ const ContactSection = () => {
                     </div>
                     <div>
                       <h4 className="text-white font-medium text-lg">{t('contact.touch.email')}</h4>
-                      <p className="text-slate-400">hello@alexdev.com</p>
+                      <p className="text-slate-400">{profile?.email_contact || "hello@alexdev.com"}</p>
                     </div>
                  </div>
-                 <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-indigo-400 shrink-0">
-                      <i className="fa-solid fa-location-dot text-xl"></i>
-                    </div>
-                    <div>
-                      <h4 className="text-white font-medium text-lg">{t('contact.touch.location')}</h4>
-                      <p className="text-slate-400">San Francisco, CA</p>
-                    </div>
-                 </div>
+                 {profile?.linkedin_url && (
+                   <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-indigo-400 shrink-0">
+                        <i className="fa-brands fa-linkedin-in text-xl"></i>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-medium text-lg">LinkedIn</h4>
+                        <a href={profile.linkedin_url} target="_blank" className="text-slate-400 hover:text-white transition-colors">Ver perfil</a>
+                      </div>
+                   </div>
+                 )}
+                 {profile?.git_url && (
+                   <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-indigo-400 shrink-0">
+                        <i className="fa-brands fa-github text-xl"></i>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-medium text-lg">GitHub</h4>
+                        <a href={profile.git_url} target="_blank" className="text-slate-400 hover:text-white transition-colors">Ver perfil</a>
+                      </div>
+                   </div>
+                 )}
               </div>
 
-              <div className="pt-8">
-                 <a href="#" className="inline-flex items-center justify-center w-full md:w-auto px-8 py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg shadow-green-600/20">
-                   <i className="fa-brands fa-whatsapp mr-3 text-2xl"></i> {t('contact.touch.whatsapp')}
-                 </a>
-              </div>
+              {profile?.whatsapp && (
+                <div className="pt-8">
+                   <a 
+                    href={`https://wa.me/${profile.whatsapp}`}
+                    target="_blank"
+                    className="inline-flex items-center justify-center w-full md:w-auto px-8 py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg shadow-green-600/20"
+                   >
+                     <i className="fa-brands fa-whatsapp mr-3 text-2xl"></i> {t('contact.touch.whatsapp')}
+                   </a>
+                </div>
+              )}
            </div>
          </div>
       </div>
@@ -352,10 +575,10 @@ const Home: React.FC = () => {
   return (
     <Layout>
       <HeroSection />
-      <SkillsSection />
+      <CompetenciesSection />
+      <TechStackSection />
       <ExperienceSection />
       <ProjectsSection />
-      <ServicesSection />
       <ContactSection />
     </Layout>
   );

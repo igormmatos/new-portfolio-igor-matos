@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useI18n, Language } from '../i18n';
+import { api } from '../services/api';
+import { ProfileInfo } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -68,7 +70,11 @@ const LanguageSwitcher: React.FC = () => {
   );
 };
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  profile: ProfileInfo | null;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ profile }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const isAdmin = location.pathname.includes('admin');
@@ -90,6 +96,8 @@ const Navbar: React.FC = () => {
     { name: t('nav.contact'), href: '#contact' },
   ];
 
+  const logoAlt = profile?.display_name ? `${profile.display_name} Logo` : 'Logo';
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-900/90 backdrop-blur-md border-b border-slate-800 py-4' : 'bg-transparent py-6'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center">
@@ -97,7 +105,7 @@ const Navbar: React.FC = () => {
         <Link to="/" className="flex items-center gap-2 group">
           <img 
             src="https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/image/logo_sem_fundo.png" 
-            alt="AlexDev Logo" 
+            alt={logoAlt} 
             className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
@@ -139,8 +147,13 @@ const Navbar: React.FC = () => {
   );
 };
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  profile: ProfileInfo | null;
+}
+
+const Footer: React.FC<FooterProps> = ({ profile }) => {
   const { t } = useI18n();
+
   return (
     <footer className="bg-slate-950 border-t border-slate-900 pt-16 pb-8">
       <div className="container mx-auto px-6">
@@ -148,28 +161,28 @@ const Footer: React.FC = () => {
           <div className="mb-6 md:mb-0 flex flex-col items-start">
              <img 
                src="https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/image/logo_sem_fundo.png" 
-               alt="AlexDev Logo" 
+               alt={profile?.display_name ? `${profile.display_name} Logo` : 'Logo'} 
                className="h-10 w-auto object-contain mb-4 opacity-90" 
              />
              <p className="mt-2 text-slate-500 max-w-sm text-sm">
-               {t('footer.tagline')}
+               {profile?.action_phrase || t('footer.tagline')}
              </p>
           </div>
           <div className="flex space-x-6">
-            <a href="#" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all duration-300">
+            <a href={profile?.git_url || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all duration-300">
               <i className="fa-brands fa-github"></i>
             </a>
             <a href="#" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-blue-500 hover:text-white transition-all duration-300">
               <i className="fa-brands fa-twitter"></i>
             </a>
-            <a href="#" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-blue-700 hover:text-white transition-all duration-300">
+            <a href={profile?.linkedin_url || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-blue-700 hover:text-white transition-all duration-300">
               <i className="fa-brands fa-linkedin-in"></i>
             </a>
           </div>
         </div>
         <div className="border-t border-slate-900 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-600 text-xs">
-            © {new Date().getFullYear()} AlexDev Portfolio. {t('footer.rights')}
+            © {new Date().getFullYear()} {profile?.display_name || "Portfólio"}. {t('footer.rights')}
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-xs text-slate-600 hover:text-slate-400">{t('footer.privacy')}</a>
@@ -182,13 +195,37 @@ const Footer: React.FC = () => {
 };
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+
+  useEffect(() => {
+    // Busca o perfil uma vez no nível do layout para compartilhar entre Navbar e Footer
+    api.getProfile().then(setProfile);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <Navbar profile={profile} />
       <main className="flex-grow pt-20">
         {children}
       </main>
-      <Footer />
+      
+      {/* Botão Flutuante do WhatsApp (FAB) */}
+      {profile?.whatsapp && (
+        <a 
+          href={`https://wa.me/${profile.whatsapp}?text=${encodeURIComponent("Olá, vi o seu portfólio e gostaria de conversar um pouco mais!")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 animate-bounce-slow group"
+          aria-label="Conversar no WhatsApp"
+        >
+          <i className="fa-brands fa-whatsapp text-3xl"></i>
+          <span className="absolute right-full mr-4 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-700 pointer-events-none shadow-lg">
+             Fale Comigo
+          </span>
+        </a>
+      )}
+
+      <Footer profile={profile} />
     </div>
   );
 };

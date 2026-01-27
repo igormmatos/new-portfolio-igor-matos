@@ -261,14 +261,26 @@ export const getExperience = (lang: Language): ExperienceItem[] => {
 };
 
 export const getProjects = (lang: Language): Project[] => {
-  return projectsData[lang] as Project[];
+  // Map raw data to the Project interface
+  return projectsData[lang].map((p) => ({
+    id: p.id.toString(),
+    title: p.title,
+    description: p.description,
+    technologies: p.tags.join(', '),
+    image_url: p.image,
+    live_url: p.demoLink,
+    github_url: p.codeLink,
+    display_order: p.id,
+    // Add missing properties or optional ones
+    role: undefined 
+  }));
 };
 
 export const getServices = (lang: Language): Service[] => {
   return servicesData[lang] as Service[];
 };
 
-// Default export for Admin backward compatibility or initial state
-export const projects = projectsData['pt-BR'];
+// Exporting mapped data for backwards compatibility if needed
+export const projects = getProjects('pt-BR');
 export const experience = experienceData['pt-BR'];
 export const services = servicesData['pt-BR'];

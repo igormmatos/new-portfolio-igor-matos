@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'pt-BR' | 'en' | 'fr';
@@ -21,14 +22,16 @@ export const translations = {
     'nav.back': 'Voltar ao Site',
     
     'hero.badge': 'Disponível para contratação',
-    'hero.title.prefix': 'Construindo o',
-    'hero.title.highlight': 'Futuro da Web',
-    'hero.description': 'Olá, sou Alex. Um Arquiteto Frontend Sênior especializado em construir experiências digitais excepcionais. Unindo expertise técnica com design thinking.',
+    'hero.greeting': 'Olá, eu sou',
+    'hero.cta.more': 'Conhecer Mais',
     'hero.cta.primary': 'Iniciar Projeto',
     'hero.cta.secondary': 'Ver Trabalhos',
 
-    'skills.title': 'Expertise Técnica',
-    'skills.subtitle': 'As ferramentas e tecnologias que uso para dar vida às ideias.',
+    'skills.title': 'Áreas de Atuação Estratégica',
+    'skills.subtitle': 'As frentes em que aplico minha experiência para transformar desafios em soluções concretas.',
+
+    'tech.title': 'Tecnologias que Domino',
+    'tech.subtitle': 'Ferramentas, linguagens e frameworks que utilizo com proficiência para entregar soluções robustas e escaláveis.',
 
     'experience.title': 'Minha Jornada',
     'experience.subtitle': 'Uma linha do tempo da minha carreira profissional e formação educacional, mostrando meu crescimento e marcos.',
@@ -39,10 +42,6 @@ export const translations = {
     'projects.liveDemo': 'Demo Online',
     'projects.code': 'Código',
 
-    'services.title': 'Serviços',
-    'services.subtitle': 'Serviços de alta qualidade sob medida para suas necessidades específicas.',
-    'services.startsAt': 'A partir de',
-
     'contact.title': 'Vamos trabalhar juntos',
     'contact.name': 'Nome',
     'contact.email': 'Email',
@@ -52,7 +51,6 @@ export const translations = {
     'contact.touch.title': 'Entre em contato',
     'contact.touch.desc': 'Tem um projeto em mente ou apenas quer dar um oi? Estou sempre aberto a discutir novos projetos, ideias criativas ou oportunidades.',
     'contact.touch.email': 'Me envie um email',
-    'contact.touch.location': 'Localização',
     'contact.touch.whatsapp': 'Conversar no WhatsApp',
 
     'footer.rights': 'Todos os direitos reservados.',
@@ -61,23 +59,20 @@ export const translations = {
     'footer.tagline': 'Construindo produtos digitais que são tão performáticos quanto bonitos.',
 
     'admin.dashboard': 'Painel',
+    'admin.profile': 'Perfil',
     'admin.projects': 'Projetos',
-    'admin.messages': 'Mensagens',
-    'admin.settings': 'Configurações',
+    'admin.journey': 'Jornada',
+    'admin.skills': 'Habilidades',
+    'admin.tech': 'Tecnologias',
     'admin.manage': 'Gerencie o conteúdo do seu portfólio.',
-    'admin.add': 'Novo Projeto',
-    'admin.table.name': 'Nome do Projeto',
-    'admin.table.stack': 'Tech Stack',
-    'admin.table.actions': 'Ações',
-    'admin.construction': 'Este módulo está em construção.',
-    'admin.edit': 'Editar Projeto',
-    'admin.create': 'Criar Novo Projeto',
-    'admin.cancel': 'Cancelar',
+    'admin.add': 'Adicionar Novo',
     'admin.save': 'Salvar Alterações',
-    'admin.form.title': 'Título do Projeto',
+    'admin.cancel': 'Cancelar',
+    'admin.edit': 'Editar',
+    'admin.create': 'Criar',
+    'admin.table.actions': 'Ações',
+    'admin.form.title': 'Título',
     'admin.form.desc': 'Descrição',
-    'admin.form.image': 'URL da Imagem',
-    'admin.form.tags': 'Tags (separadas por vírgula)'
   },
   'en': {
     'nav.home': 'Home',
@@ -89,14 +84,16 @@ export const translations = {
     'nav.back': 'Back to Site',
 
     'hero.badge': 'Available for hire',
-    'hero.title.prefix': 'Building the',
-    'hero.title.highlight': 'Future of Web',
-    'hero.description': 'I\'m Alex, a Senior Frontend Architect specialized in building exceptional digital experiences. Merging technical expertise with design thinking.',
+    'hero.greeting': 'Hi, I am',
+    'hero.cta.more': 'Learn More',
     'hero.cta.primary': 'Start a Project',
     'hero.cta.secondary': 'View Work',
 
-    'skills.title': 'Technical Expertise',
-    'skills.subtitle': 'The tools and technologies I use to bring ideas to life.',
+    'skills.title': 'Strategic Areas of Expertise',
+    'skills.subtitle': 'The fronts where I apply my experience to transform challenges into concrete solutions.',
+
+    'tech.title': 'Technologies I Master',
+    'tech.subtitle': 'Tools, languages, and frameworks I use with proficiency to deliver robust and scalable solutions.',
 
     'experience.title': 'My Journey',
     'experience.subtitle': 'A timeline of my professional career and educational background, showcasing my growth and milestones.',
@@ -107,10 +104,6 @@ export const translations = {
     'projects.liveDemo': 'Live Demo',
     'projects.code': 'Code',
 
-    'services.title': 'Services',
-    'services.subtitle': 'High-quality services tailored to your specific needs.',
-    'services.startsAt': 'Starts at',
-
     'contact.title': 'Let\'s work together',
     'contact.name': 'Name',
     'contact.email': 'Email',
@@ -120,7 +113,6 @@ export const translations = {
     'contact.touch.title': 'Get in touch',
     'contact.touch.desc': 'Have a project in mind or just want to say hi? I\'m always open to discussing new projects, creative ideas or opportunities.',
     'contact.touch.email': 'Email me at',
-    'contact.touch.location': 'Location',
     'contact.touch.whatsapp': 'Chat on WhatsApp',
 
     'footer.rights': 'All rights reserved.',
@@ -129,23 +121,20 @@ export const translations = {
     'footer.tagline': 'Building digital products that are as performant as they are beautiful.',
 
     'admin.dashboard': 'Dashboard',
+    'admin.profile': 'Profile',
     'admin.projects': 'Projects',
-    'admin.messages': 'Messages',
-    'admin.settings': 'Settings',
+    'admin.journey': 'Journey',
+    'admin.skills': 'Skills',
+    'admin.tech': 'Technologies',
     'admin.manage': 'Manage your portfolio content.',
-    'admin.add': 'Add New Project',
-    'admin.table.name': 'Project Name',
-    'admin.table.stack': 'Tech Stack',
-    'admin.table.actions': 'Actions',
-    'admin.construction': 'This module is under construction.',
-    'admin.edit': 'Edit Project',
-    'admin.create': 'Create New Project',
-    'admin.cancel': 'Cancel',
+    'admin.add': 'Add New',
     'admin.save': 'Save Changes',
-    'admin.form.title': 'Project Title',
+    'admin.cancel': 'Cancel',
+    'admin.edit': 'Edit',
+    'admin.create': 'Create',
+    'admin.table.actions': 'Actions',
+    'admin.form.title': 'Title',
     'admin.form.desc': 'Description',
-    'admin.form.image': 'Image URL',
-    'admin.form.tags': 'Tags (comma separated)'
   },
   'fr': {
     'nav.home': 'Accueil',
@@ -157,14 +146,16 @@ export const translations = {
     'nav.back': 'Retour au site',
 
     'hero.badge': 'Disponible pour embauche',
-    'hero.title.prefix': 'Construire le',
-    'hero.title.highlight': 'Futur du Web',
-    'hero.description': 'Je suis Alex, Architecte Frontend Senior spécialisé dans la création d\'expériences numériques exceptionnelles. Alliant expertise technique et design thinking.',
+    'hero.greeting': 'Salut, je suis',
+    'hero.cta.more': 'En savoir plus',
     'hero.cta.primary': 'Lancer un projet',
     'hero.cta.secondary': 'Voir mon travail',
 
-    'skills.title': 'Expertise Technique',
-    'skills.subtitle': 'Les outils et technologies que j\'utilise pour donner vie aux idées.',
+    'skills.title': 'Domaines d\'Expertise Stratégique',
+    'skills.subtitle': 'Les domaines où j\'applique mon expérience pour transformer les défis en solutions concrètes.',
+
+    'tech.title': 'Technologies que je maîtrise',
+    'tech.subtitle': 'Outils, langages et frameworks que j\'utilise avec compétence pour livrer des solutions robustes et évolutives.',
 
     'experience.title': 'Mon Parcours',
     'experience.subtitle': 'Une chronologie de ma carrière professionnelle et de ma formation, montrant ma croissance et mes étapes clés.',
@@ -175,10 +166,6 @@ export const translations = {
     'projects.liveDemo': 'Démo Live',
     'projects.code': 'Code',
 
-    'services.title': 'Services',
-    'services.subtitle': 'Services de haute qualité adaptés à vos besoins spécifiques.',
-    'services.startsAt': 'À partir de',
-
     'contact.title': 'Travaillons ensemble',
     'contact.name': 'Nom',
     'contact.email': 'Email',
@@ -188,7 +175,6 @@ export const translations = {
     'contact.touch.title': 'Contactez-moi',
     'contact.touch.desc': 'Vous avez un projet en tête ou voulez simplement dire bonjour ? Je suis toujours ouvert aux nouveaux projets et idées créatives.',
     'contact.touch.email': 'Envoyez-moi un email',
-    'contact.touch.location': 'Localisation',
     'contact.touch.whatsapp': 'Discuter sur WhatsApp',
 
     'footer.rights': 'Tous droits réservés.',
@@ -197,23 +183,20 @@ export const translations = {
     'footer.tagline': 'Création de produits numériques aussi performants que beaux.',
 
     'admin.dashboard': 'Tableau de bord',
+    'admin.profile': 'Profil',
     'admin.projects': 'Projets',
-    'admin.messages': 'Messages',
-    'admin.settings': 'Paramètres',
+    'admin.journey': 'Parcours',
+    'admin.skills': 'Compétences',
+    'admin.tech': 'Technologies',
     'admin.manage': 'Gérez le contenu de votre portfolio.',
-    'admin.add': 'Nouveau Projet',
-    'admin.table.name': 'Nom du Projet',
-    'admin.table.stack': 'Tech Stack',
-    'admin.table.actions': 'Actions',
-    'admin.construction': 'Ce module est en construction.',
-    'admin.edit': 'Modifier le Projet',
-    'admin.create': 'Créer un Projet',
-    'admin.cancel': 'Annuler',
+    'admin.add': 'Ajouter',
     'admin.save': 'Sauvegarder',
-    'admin.form.title': 'Titre du Projet',
+    'admin.cancel': 'Annuler',
+    'admin.edit': 'Modifier',
+    'admin.create': 'Créer',
+    'admin.table.actions': 'Actions',
+    'admin.form.title': 'Titre',
     'admin.form.desc': 'Description',
-    'admin.form.image': 'URL de l\'image',
-    'admin.form.tags': 'Tags (séparés par des virgules)'
   }
 };
 
