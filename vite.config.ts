@@ -1,15 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react()
-  ],
-  publicDir: '.', // Garante que arquivos na raiz (como load-importmap.js) sejam servidos
+  plugins: [react()],
+
+  publicDir: 'public', // ESTAVA '.' (raiz) - ERRADO!
+
   build: {
+    outDir: 'dist', // Adicione isso
+    emptyOutDir: true,
+
     rollupOptions: {
-      // Externaliza as dependências para usar o Import Map carregado via script
       external: [
         'react',
         'react-dom',
@@ -20,13 +21,7 @@ export default defineConfig({
       ],
       output: {
         format: 'es',
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
-          'react-router-dom': 'ReactRouterDOM',
-          '@supabase/supabase-js': 'supabase',
-          '@hello-pangea/dnd': 'HelloPangeaDnd'
-        }
+        // REMOVA 'globals' - não faz sentido com format: 'es'
       }
     }
   }
