@@ -4,9 +4,47 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- ⚡ CRÍTICO: Carregar o ImportMap antes de qualquer outra coisa -->
-    <!-- Carrega incondicionalmente para garantir que Vercel use o importmap.json correto -->
-    <script src="/load-importmap.js"></script>
+    <!-- 
+      ⚡ IMPORT MAP CRÍTICO (SÍNCRONO)
+      Define as versões exatas do React 18 e dependências antes que qualquer módulo carregue.
+      Isso previne conflitos com o React 19 do ambiente e corrige erros de resolução no Vercel.
+    -->
+    <script>
+      (function() {
+        // Definição do Import Map alinhada com package.json
+        const importMap = {
+          "imports": {
+            "react": "https://esm.sh/react@18.3.1",
+            "react-dom": "https://esm.sh/react-dom@18.3.1",
+            "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+            "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?external=react,react-dom",
+            "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.7",
+            "@hello-pangea/dnd": "https://esm.sh/@hello-pangea/dnd@16.6.0?external=react,react-dom"
+          }
+        };
+
+        // Injeção Síncrona
+        const imScript = document.createElement('script');
+        imScript.type = 'importmap';
+        imScript.textContent = JSON.stringify(importMap, null, 2);
+        imScript.setAttribute('data-injected', 'true');
+        document.head.appendChild(imScript);
+
+        // Proteção contra injeção de React 19 pelo ambiente (Google AI Studio/Outros)
+        // Remove qualquer outro importmap que tente ser inserido depois
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node.tagName === 'SCRIPT' && node.type === 'importmap' && !node.hasAttribute('data-injected')) {
+                console.warn('🛑 Bloqueando importmap conflitante do ambiente:', node);
+                node.remove();
+              }
+            });
+          });
+        });
+        observer.observe(document.head, { childList: true });
+      })();
+    </script>
 
     <title>AlexDev | Portfólio de Arquiteto Sênior</title>
     
@@ -84,7 +122,7 @@
 </head>
   <body class="bg-slate-900 text-slate-400 font-sans antialiased overflow-x-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
     <div id="root"></div>
-    <!-- CORREÇÃO: Apontar para o arquivo correto na raiz -->
+    <!-- ENTRY POINT CORRETO: Aponta para index.tsx na raiz -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
