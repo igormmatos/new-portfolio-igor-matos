@@ -78,17 +78,48 @@
             animation: {
               'float': 'float 6s ease-in-out infinite',
               'bounce-slow': 'bounce 3s infinite',
+              'gradient-shift': 'gradient-shift 6s ease infinite',
+              'pulse-soft': 'pulse-soft 3s ease-in-out infinite',
+              'blob-morph': 'blob-morph 10s ease-in-out infinite',
+              'shimmer': 'shimmer 1.5s linear infinite',
+              'border-rotate': 'border-rotate 5s ease infinite',
             },
             keyframes: {
               float: {
                 '0%, 100%': { transform: 'translateY(0)' },
                 '50%': { transform: 'translateY(-20px)' },
-              }
+              },
+              'gradient-shift': {
+                '0%, 100%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+              },
+              'pulse-soft': {
+                '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+              },
+              'blob-morph': {
+                '0%, 100%': { borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%', transform: 'translate(0, 0) scale(1)' },
+                '25%': { borderRadius: '30% 60% 70% 40% / 50% 60% 30% 60%', transform: 'translate(20px, -20px) scale(1.1)' },
+                '50%': { borderRadius: '70% 30% 50% 50% / 30% 50% 70% 60%', transform: 'translate(-20px, 20px) scale(0.9)' },
+                '75%': { borderRadius: '40% 60% 30% 60% / 70% 30% 50% 50%', transform: 'translate(10px, 10px) scale(1.05)' },
+              },
+              shimmer: {
+                '0%': { backgroundPosition: '-1000px 0' },
+                '100%': { backgroundPosition: '1000px 0' },
+              },
+              'border-rotate': {
+                '0%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+                '100%': { backgroundPosition: '0% 50%' },
+              },
             }
           }
         }
       }
     </script>
+    
+    <!-- Custom Animations CSS -->
+    <link rel="stylesheet" href="/custom-animations.css">
     
     <style>
       /* Custom scrollbar for webkit */

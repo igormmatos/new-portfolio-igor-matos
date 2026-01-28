@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { JourneyItem } from '../types';
 import { api } from '../services/api';
+import ScrollReveal from './ScrollReveal';
 
 // Dados de fallback caso a API não retorne nada
 const MOCK_JOURNEY: JourneyItem[] = [
@@ -104,13 +105,14 @@ const VerticalJourney: React.FC = () => {
   return (
     <section id="experience" className="relative bg-slate-950 overflow-hidden py-24 border-t border-slate-900">
       
-      {/* Background Decor Simétrico */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+      {/* Background Decor Simétrico com Blob Morphing */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none animate-blob-morph will-change-transform"></div>
 
       <div className="container mx-auto px-6 relative z-10 flex flex-col items-center">
 
         {/* --- HEADER CENTRALIZADO --- */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <ScrollReveal delay={0}>
+          <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="inline-block text-indigo-500 font-mono text-sm tracking-wider uppercase mb-3 px-3 py-1 bg-indigo-500/5 rounded-full border border-indigo-500/10">
                 Carreira & Educação
             </span>
@@ -121,13 +123,14 @@ const VerticalJourney: React.FC = () => {
             <p className="text-slate-400 text-lg leading-relaxed">
                 Uma linha do tempo da minha carreira profissional e formação educacional, mostrando meu crescimento e marcos importantes.
             </p>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* --- CONTEÚDO DA TIMELINE (Trilha + Card) --- */}
         <div className="w-full max-w-5xl flex flex-col md:flex-row md:items-start justify-center gap-8 md:gap-16">
             
-            {/* 1. TRILHA DA TIMELINE (Lateral Esquerda do Card) */}
-            <div className="flex flex-col items-center shrink-0 py-4 h-[350px] justify-between relative order-1 md:order-1 md:sticky md:top-24">
+            {/* 1. TRILHA DA TIMELINE (Lateral Esquerda do Card) - visível apenas em telas médias+ */}
+            <div className="hidden md:flex md:flex-col items-center shrink-0 py-4 h-[350px] justify-between relative order-1 md:order-1 md:sticky md:top-24">
                 
                 {/* Linha Vertical de Fundo */}
                 <div className="absolute top-10 bottom-10 left-1/2 -translate-x-1/2 w-0.5 border-l-2 border-dashed border-slate-700/50 z-0"></div>
@@ -135,7 +138,7 @@ const VerticalJourney: React.FC = () => {
                 {/* Botão Cima */}
                 <button 
                     onClick={handlePrev}
-                    className="z-10 w-10 h-10 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-lg"
+                    className="z-10 w-10 h-10 rounded-full glass-morphism border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-lg hover-scale glow-effect"
                     aria-label="Anterior"
                 >
                     <i className="fa-solid fa-chevron-up text-sm"></i>
@@ -180,7 +183,7 @@ const VerticalJourney: React.FC = () => {
                 {/* Botão Baixo */}
                 <button 
                     onClick={handleNext}
-                    className="z-10 w-10 h-10 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-lg"
+                    className="z-10 w-10 h-10 rounded-full glass-morphism border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-lg hover-scale glow-effect"
                     aria-label="Próximo"
                 >
                     <i className="fa-solid fa-chevron-down text-sm"></i>
@@ -191,8 +194,8 @@ const VerticalJourney: React.FC = () => {
             <div className="flex-1 w-full md:w-auto min-w-0 order-2 md:order-2">
                 <div 
                   className={`
-                     relative w-full bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-8 md:p-12 shadow-2xl
-                     transition-all duration-500 ease-out flex flex-col md:min-h-[350px] justify-center
+                     relative w-full glass-morphism border border-slate-800 rounded-3xl p-8 md:p-12 shadow-2xl
+                     transition-all duration-500 ease-out flex flex-col md:min-h-[350px] justify-center hover-3d
                      ${transformClass}
                   `}
                 >
@@ -240,11 +243,34 @@ const VerticalJourney: React.FC = () => {
                    <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${activeItem.type === 'work' ? 'from-indigo-600 via-blue-600 to-indigo-600' : 'from-emerald-600 via-green-600 to-emerald-600'} opacity-50`}></div>
                 </div>
 
-                {/* Paginação Mobile (Pequeno contador caso a timeline lateral fique oculta visualmente pelo layout responsivo, embora aqui mantivemos flex) */}
-                <div className="mt-6 text-center lg:hidden flex justify-center gap-2">
-                     {items.map((_, idx) => (
-                         <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentIndex ? 'w-6 bg-indigo-500' : 'w-1.5 bg-slate-800'}`}></div>
-                     ))}
+                {/* Navegação e paginação Mobile (quando a linha do tempo lateral não aparece) */}
+                <div className="mt-6 lg:hidden flex items-center justify-center gap-4">
+                  <button
+                    onClick={handlePrev}
+                    className="w-9 h-9 rounded-full glass-morphism border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-md hover-scale glow-effect"
+                    aria-label="Experiência anterior"
+                  >
+                    <i className="fa-solid fa-chevron-left text-xs"></i>
+                  </button>
+
+                  <div className="flex justify-center gap-2">
+                    {items.map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`h-1.5 rounded-full transition-all ${
+                          idx === currentIndex ? 'w-6 bg-indigo-500' : 'w-1.5 bg-slate-800'
+                        }`}
+                      ></div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleNext}
+                    className="w-9 h-9 rounded-full glass-morphism border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-md hover-scale glow-effect"
+                    aria-label="Próxima experiência"
+                  >
+                    <i className="fa-solid fa-chevron-right text-xs"></i>
+                  </button>
                 </div>
             </div>
 

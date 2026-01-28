@@ -1,0 +1,214 @@
+/* ============================================
+   SISTEMA DE ANIMAÇÕES CUSTOMIZADAS
+   ============================================ */
+
+/* Gradient Shift Animation - Gradiente animado */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+/* Pulse Soft - Pulse suave e elegante */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.03);
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+/* Blob Morphing - Formas orgânicas que mudam */
+@keyframes blob-morph {
+  0%, 100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+    transform: translate(15px, -15px) scale(1.08);
+  }
+  50% {
+    border-radius: 70% 30% 50% 50% / 30% 50% 70% 60%;
+    transform: translate(-15px, 15px) scale(0.95);
+  }
+  75% {
+    border-radius: 40% 60% 30% 60% / 70% 30% 50% 50%;
+    transform: translate(8px, 8px) scale(1.03);
+  }
+}
+
+.animate-blob-morph {
+  animation: blob-morph 10s ease-in-out infinite;
+}
+
+/* Shimmer Loading - Efeito de brilho para skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+/* Border Rotate - Borda com gradiente animado */
+@keyframes border-rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-border-rotate {
+  background: linear-gradient(
+    90deg,
+    #6366f1,
+    #8b5cf6,
+    #06b6d4,
+    #8b5cf6,
+    #6366f1
+  );
+  background-size: 300% 300%;
+  animation: border-rotate 5s ease infinite;
+}
+
+/* Hover 3D Effect - Rotação 3D sutil em hover */
+.hover-3d {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.hover-3d:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px);
+  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+}
+
+/* Glow Effect - Brilho expansivo */
+.glow-effect {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glow-effect::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(45deg, #6366f1, #8b5cf6, #06b6d4);
+  opacity: 0;
+  filter: blur(8px);
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+
+.glow-effect:hover::before {
+  opacity: 0.5;
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+}
+
+/* Glass Morphism - Efeito de vidro fosco */
+.glass-morphism {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Scroll Reveal - Animação de entrada suave */
+@keyframes scroll-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scroll-reveal {
+  opacity: 0;
+  animation: scroll-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.scroll-reveal-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.scroll-reveal-delay-2 {
+  animation-delay: 0.15s;
+}
+
+.scroll-reveal-delay-3 {
+  animation-delay: 0.22s;
+}
+
+.scroll-reveal-delay-4 {
+  animation-delay: 0.3s;
+}
+
+/* Hover Scale - Crescimento suave */
+.hover-scale {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.hover-scale:hover {
+  transform: scale(1.04);
+}
+
+/* Otimizações de Performance */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Desabilitar animações em dispositivos móveis (opcional, para performance) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

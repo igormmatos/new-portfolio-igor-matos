@@ -76,6 +76,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ profile }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isAdmin = location.pathname.includes('admin');
   const { t } = useI18n();
@@ -87,6 +88,11 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Fecha o menu mobile ao trocar de rota
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const navLinks = [
     { name: t('nav.home'), href: '#' },
@@ -126,21 +132,87 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
         )}
 
         {/* Action Button & Lang Switcher */}
-        <div className="flex items-center space-x-4">
-           <LanguageSwitcher />
-           
-           {isAdmin ? (
-             <Link to="/" className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden sm:block">
-               <i className="fa-solid fa-arrow-left mr-2"></i> {t('nav.back')}
-             </Link>
-           ) : (
-             <Link
+        <div className="flex items-center space-x-3">
+          <LanguageSwitcher />
+
+          {/* Ações em tela cheia / desktop */}
+          {isAdmin ? (
+            <Link
+              to="/"
+              className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden sm:block"
+            >
+              <i className="fa-solid fa-arrow-left mr-2"></i> {t('nav.back')}
+            </Link>
+          ) : (
+            <Link
               to="/admin"
               className="px-5 py-2 text-sm font-semibold rounded-full border border-slate-700 hover:border-indigo-500 hover:text-indigo-400 transition-all duration-300 hidden sm:block"
             >
               {t('nav.admin')}
             </Link>
-           )}
+          )}
+
+          {/* Botão de menu mobile (sempre visível em telas pequenas) */}
+          <button
+            type="button"
+            className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 bg-slate-900/70 backdrop-blur-sm transition-all"
+            onClick={() => setIsMobileMenuOpen(prev => !prev)}
+            aria-label="Menu"
+          >
+            <i className={`fa-solid ${isMobileMenuOpen ? 'fa-xmark' : 'fa-bars'} text-base`}></i>
+          </button>
+        </div>
+      </div>
+
+      {/* Menu Mobile */}
+      <div
+        className={`
+          md:hidden overflow-hidden transition-all duration-300 
+          ${isMobileMenuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}
+        `}
+      >
+        <div className="container mx-auto px-6 pb-4">
+          <div className="rounded-2xl border border-slate-800 glass-morphism shadow-2xl py-3 px-4">
+            {!isAdmin && (
+              <div className="flex flex-col space-y-2 mb-3">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    className="w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition-colors text-left"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            <div className="border-t border-slate-800 mt-2 pt-3 flex flex-col space-y-2">
+              {isAdmin ? (
+                <Link
+                  to="/"
+                  className="w-full px-3 py-2 rounded-lg text-sm font-semibold text-slate-100 bg-slate-800 hover:bg-slate-700 flex items-center justify-between"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span>
+                    <i className="fa-solid fa-arrow-left mr-2"></i>
+                    {t('nav.back')}
+                  </span>
+                  <span className="text-xs text-slate-400">Home</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/admin"
+                  className="w-full px-3 py-2 rounded-lg text-sm font-semibold text-slate-100 bg-slate-800 hover:bg-slate-700 flex items-center justify-between"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span>{t('nav.admin')}</span>
+                  <i className="fa-solid fa-lock text-xs text-slate-400"></i>
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -215,7 +287,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           href={`https://wa.me/${profile.whatsapp}?text=${encodeURIComponent("Olá, vi o seu portfólio e gostaria de conversar um pouco mais!")}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 animate-bounce-slow group"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 animate-bounce-slow group glow-effect hover-scale"
           aria-label="Conversar no WhatsApp"
         >
           <i className="fa-brands fa-whatsapp text-3xl"></i>

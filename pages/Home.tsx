@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
-import VerticalJourney from '../components/VerticalJourney'; // Importado Novo Componente
+import VerticalJourney from '../components/VerticalJourney';
+import ScrollReveal from '../components/ScrollReveal';
 import { useI18n } from '../i18n';
 import { api } from '../services/api';
 import { ProfileInfo, Project, Competency, TechnicalSkill } from '../types';
@@ -15,58 +16,71 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-x-hidden pt-20 pb-32 lg:py-28">
-      {/* Background Decor */}
-      <div className="absolute top-1/4 left-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-green-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+      {/* Background Decor com Blob Morphing */}
+      <div className="absolute top-1/4 left-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none animate-blob-morph will-change-transform"></div>
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-green-600/10 rounded-full blur-[120px] pointer-events-none animate-blob-morph will-change-transform" style={{ animationDelay: '2s' }}></div>
 
       <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
         
         {/* Text Content */}
         <div className="flex flex-col items-start space-y-6 order-2 lg:order-1 pt-10 lg:pt-0">
           
-          {/* 1. Badge de Status */}
-          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-full backdrop-blur-sm shadow-lg shadow-black/20">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            <span className="text-sm font-medium text-slate-300 tracking-wide">
-              {profile?.badge || t('hero.badge')}
-            </span>
-          </div>
+          {/* 1. Badge de Status com Pulse Soft */}
+          <ScrollReveal delay={0}>
+            <div className="inline-flex items-center space-x-2 px-4 py-2 glass-morphism border border-slate-700 rounded-full shadow-lg shadow-black/20 animate-pulse-soft">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" style={{ animationDuration: '2s' }}></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+              <span className="text-sm font-medium text-slate-300 tracking-wide">
+                {profile?.badge || t('hero.badge')}
+              </span>
+            </div>
+          </ScrollReveal>
 
           {/* 2. Título Principal (H1) */}
-          <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
-            {t('hero.greeting')} {profile?.display_name || "..."}
-          </h1>
+          <ScrollReveal delay={80}>
+            <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
+              {t('hero.greeting')} {profile?.display_name || "..."}
+            </h1>
+          </ScrollReveal>
 
-          {/* 3. Manchete / Headline (H2) - Gradiente */}
-          <h2 className="text-3xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-blue-400 to-green-400 leading-tight">
-            {profile?.headline || t('hero.title.highlight')}
-          </h2>
+          {/* 3. Manchete / Headline (H2) - Gradiente Animado */}
+          <ScrollReveal delay={160}>
+            <h2 className="text-3xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-blue-400 to-green-400 leading-tight animate-gradient-shift">
+              {profile?.headline || t('hero.title.highlight')}
+            </h2>
+          </ScrollReveal>
 
-          {/* 4. Divisor Visual */}
-          <div className="h-1.5 w-24 bg-gradient-to-r from-indigo-500 to-green-500 rounded-full my-4"></div>
+          {/* 4. Divisor Visual com Border Rotate */}
+          <ScrollReveal delay={240}>
+            <div className="h-1.5 w-24 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 rounded-full my-4 animate-border-rotate"></div>
+          </ScrollReveal>
 
           {/* 5. Proposta de Valor (H3) */}
-          <h3 className="text-xl md:text-2xl text-slate-100 font-medium">
-             {profile?.action_phrase}
-          </h3>
+          <ScrollReveal delay={320}>
+            <h3 className="text-xl md:text-2xl text-slate-100 font-medium">
+               {profile?.action_phrase}
+            </h3>
+          </ScrollReveal>
 
           {/* 6. Bio / Resumo (P) */}
-          <p className="text-lg text-slate-300 mb-12 max-w-xl leading-relaxed">
-            {profile?.bio || t('hero.description')}
-          </p>
+          <ScrollReveal delay={400}>
+            <p className="text-lg text-slate-300 mb-12 max-w-xl leading-relaxed">
+              {profile?.bio || t('hero.description')}
+            </p>
+          </ScrollReveal>
 
-          {/* 7. Botões de Chamada (CTA) */}
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
-            {/* Botão Conhecer Mais */}
-            <a 
-              href="#skills" 
-              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-1 text-center"
-            >
-              {t('hero.cta.more')}
-            </a>
+          {/* 7. Botões de Chamada (CTA) com Glow Effect */}
+          <ScrollReveal delay={480}>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
+              {/* Botão Conhecer Mais */}
+              <a 
+                href="#skills" 
+                className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-1 text-center glow-effect hover-scale"
+              >
+                {t('hero.cta.more')}
+              </a>
             
             {/* Botões Sociais */}
             <div className="flex gap-4">
@@ -96,6 +110,7 @@ const HeroSection = () => {
                )}
             </div>
           </div>
+          </ScrollReveal>
         </div>
 
         {/* Image Composition */}
@@ -108,7 +123,7 @@ const HeroSection = () => {
              
              <div className="absolute inset-0 bg-slate-800/40 backdrop-blur-sm rounded-3xl -rotate-3 transform -translate-x-2 -translate-y-2 z-0"></div>
 
-             <div className="relative rounded-2xl overflow-hidden shadow-2xl z-10 bg-slate-900 border border-slate-700/50 group">
+             <div className="relative rounded-2xl overflow-hidden shadow-2xl z-10 bg-slate-900 border border-slate-700/50 group hover-3d">
                 <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-green-500/10 z-20 group-hover:opacity-0 transition-opacity duration-500"></div>
                 
                 <img 
@@ -120,8 +135,8 @@ const HeroSection = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent z-20"></div>
              </div>
 
-             <div className="absolute -bottom-8 -left-8 md:-left-12 z-30 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-float max-w-[200px]">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg">
+             <div className="absolute -bottom-8 -left-8 md:-left-12 z-30 glass-morphism border border-slate-700/50 p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-float max-w-[200px] hover-scale">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg animate-pulse-soft">
                    <i className="fa-solid fa-code text-lg"></i>
                 </div>
                 <div>
@@ -130,7 +145,7 @@ const HeroSection = () => {
                 </div>
              </div>
 
-             <div className="absolute -top-6 -right-6 z-0 text-slate-800/50 text-6xl animate-pulse">
+             <div className="absolute -top-6 -right-6 z-0 text-slate-800/50 text-6xl animate-pulse-soft hover-scale">
                 <i className="fa-brands fa-react"></i>
              </div>
           </div>
@@ -154,21 +169,23 @@ const CompetenciesSection = () => {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/10 via-slate-950 to-slate-950 pointer-events-none"></div>
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-20">
-          <span className="text-indigo-500 font-semibold tracking-wider uppercase text-sm mb-2 block">{t('nav.skills')}</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">{t('skills.title')}</h2>
-          <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">{t('skills.subtitle')}</p>
-        </div>
+        <ScrollReveal delay={0}>
+          <div className="text-center mb-20">
+            <span className="text-indigo-500 font-semibold tracking-wider uppercase text-sm mb-2 block">{t('nav.skills')}</span>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">{t('skills.title')}</h2>
+            <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">{t('skills.subtitle')}</p>
+          </div>
+        </ScrollReveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {competencies.map((comp) => (
-            <div 
-              key={comp.id}
-              className="group flex flex-col h-full bg-slate-900 border border-slate-800 rounded-2xl p-6 transition-all duration-300 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
-            >
+          {competencies.map((comp, idx) => (
+            <ScrollReveal key={comp.id} delay={idx * 80}>
+              <div 
+                className="group flex flex-col h-full glass-morphism border border-slate-800 rounded-2xl p-6 transition-all duration-300 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover-3d"
+              >
               {/* Header: Ícone Circular Translúcido */}
               <div className="mb-6">
-                <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center ring-1 ring-indigo-500/20 group-hover:bg-indigo-500/20 group-hover:ring-indigo-500/40 transition-all duration-300">
+                <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center ring-1 ring-indigo-500/20 group-hover:bg-indigo-500/20 group-hover:ring-indigo-500/40 transition-all duration-300 hover-scale glow-effect">
                    <i className={`${comp.icon} text-xl text-indigo-400 group-hover:text-indigo-300 transition-colors`}></i>
                 </div>
               </div>
@@ -186,7 +203,7 @@ const CompetenciesSection = () => {
               </div>
               
               {/* Lista de Tópicos com Linha Vertical */}
-              <div className="mt-auto space-y-3">
+              <div className="mt-4 space-y-3">
                 {comp.items?.map((item, idx) => (
                    <div 
                      key={idx} 
@@ -198,8 +215,8 @@ const CompetenciesSection = () => {
                    </div>
                 ))}
               </div>
-
-            </div>
+              </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -218,18 +235,20 @@ const TechStackSection = () => {
   return (
     <section className="py-24 bg-slate-950 relative">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('tech.title')}</h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">{t('tech.subtitle')}</p>
-        </div>
+        <ScrollReveal delay={0}>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('tech.title')}</h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">{t('tech.subtitle')}</p>
+          </div>
+        </ScrollReveal>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {skills.map((skill) => (
-            <div 
-              key={skill.id}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300"
-            >
-              <div className="w-16 h-16 mb-4 flex items-center justify-center text-3xl text-slate-300">
+          {skills.map((skill, idx) => (
+            <ScrollReveal key={skill.id} delay={idx * 40}>
+              <div 
+                className="glass-morphism border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 hover-3d hover-scale"
+              >
+              <div className="w-16 h-16 mb-4 flex items-center justify-center text-3xl text-slate-300 hover-scale">
                 <i className={skill.icon}></i>
               </div>
               
@@ -238,12 +257,13 @@ const TechStackSection = () => {
               <div className="w-full mt-auto">
                 <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                    <div 
-                     className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full"
+                     className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 rounded-full animate-gradient-shift"
                      style={{ width: `${skill.level}%` }}
                    ></div>
                 </div>
               </div>
             </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -291,11 +311,12 @@ const ProjectsSection = () => {
   return (
     <section id="projects" className="py-24 bg-slate-950">
       <div className="container mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('projects.title')}</h2>
-            <p className="text-slate-400 max-w-xl">{t('projects.subtitle')}</p>
-          </div>
+        <ScrollReveal delay={0}>
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('projects.title')}</h2>
+              <p className="text-slate-400 max-w-xl">{t('projects.subtitle')}</p>
+            </div>
           
           <div className="flex items-center gap-4 mt-4 md:mt-0">
              {/* Navigation Buttons */}
@@ -314,20 +335,20 @@ const ProjectsSection = () => {
                <i className="fa-solid fa-chevron-right"></i>
              </button>
           </div>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* Carousel Container */}
         <div className="relative overflow-hidden -mx-2 p-2">
-          <div 
-            className="flex transition-transform duration-500 ease-in-out gap-8"
-            style={{ transform: `translateX(-${currentIndex * (100 / itemsPerScreen)}%)` }}
-          >
-            {projects.map((project) => (
+          <div className="flex transition-transform duration-500 ease-in-out gap-8"
+            style={{ transform: `translateX(-${currentIndex * (100 / itemsPerScreen)}%)` }}>
+            {projects.map((project, idx) => (
               <div 
                 key={project.id} 
                 className="flex-shrink-0 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.33rem)]"
               >
-                <div className="h-full group bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300 flex flex-col">
+                <ScrollReveal delay={idx * 80}>
+                  <div className="h-full group glass-morphism border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300 flex flex-col hover-3d">
                   <div className="relative h-48 overflow-hidden">
                     <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent z-10 transition-colors"></div>
                     <img 
@@ -365,6 +386,7 @@ const ProjectsSection = () => {
                     </div>
                   </div>
                 </div>
+                </ScrollReveal>
               </div>
             ))}
             {projects.length === 0 && (
@@ -423,7 +445,8 @@ const ContactSection = () => {
       <div className="container mx-auto px-6">
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
            {/* Form */}
-           <div className="bg-slate-900 p-8 md:p-10 rounded-3xl border border-slate-800">
+           <ScrollReveal delay={0}>
+             <div className="glass-morphism p-8 md:p-10 rounded-3xl border border-slate-800 hover-3d">
              <h3 className="text-2xl font-bold text-white mb-6">{t('contact.title')}</h3>
              <form className="space-y-6" onSubmit={handleContactSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -476,14 +499,16 @@ const ContactSection = () => {
                     required
                    ></textarea>
                 </div>
-                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-xl transition-all">
+                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-xl transition-all glow-effect hover-scale">
                   {t('contact.send')} (via WhatsApp)
                 </button>
              </form>
            </div>
+           </ScrollReveal>
 
            {/* Info */}
-           <div className="flex flex-col justify-center space-y-10">
+           <ScrollReveal delay={200}>
+             <div className="flex flex-col justify-center space-y-10">
               <div>
                 <h2 className="text-4xl md:text-5xl font-bold text-slate-50 mb-6">
                   {t('contact.touch.title')}
@@ -538,7 +563,8 @@ const ContactSection = () => {
                    </a>
                 </div>
               )}
-           </div>
+             </div>
+           </ScrollReveal>
          </div>
       </div>
     </section>
