@@ -655,7 +655,7 @@ const Admin: React.FC = () => {
 
           </div>
         </div>
-      )}
+      </div>
 
       {/* --- NOTIFICATIONS (Toast) --- */}
       {notification && (
