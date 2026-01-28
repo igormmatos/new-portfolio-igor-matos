@@ -64,12 +64,12 @@
     </style>
     
     <!-- 
-      IMPORT MAP EXTERNO
-      Carrega as definições de módulos do arquivo importmap.json.
-      Isso permite que o navegador faça cache das definições e mantém o HTML limpo.
+      IMPORT MAP INJECTION POINT
+      O Vite substituirá este comentário pelo conteúdo do importmap.json inline.
+      Isso garante que nossas versões (React 18) tenham precedência sobre o ambiente.
     -->
-    <script type="importmap" src="/importmap.json"></script>
-</script>
+    <!-- IMPORT MAP PLACEHOLDER -->
+
 <script type="importmap">
 {
   "imports": {
@@ -80,7 +80,8 @@
     "@hello-pangea/dnd": "https://esm.sh/@hello-pangea/dnd@^18.0.1",
     "vite": "https://esm.sh/vite@^7.3.1",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.93.2"
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.93.2",
+    "fs": "https://esm.sh/fs@^0.0.1-security"
   }
 }
 </script>
