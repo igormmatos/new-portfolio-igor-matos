@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- ⚡ CRÍTICO: Carregar o ImportMap antes de qualquer outra coisa para evitar conflitos de versão -->
+    <script src="/load-importmap.js"></script>
+
     <title>AlexDev | Portfólio de Arquiteto Sênior</title>
     
     <!-- Favicon -->
@@ -62,14 +66,6 @@
         background: #475569; 
       }
     </style>
-    
-    <!-- 
-      IMPORT MAP INJECTION POINT
-      O Vite substituirá este comentário pelo conteúdo do importmap.json inline.
-      Isso garante que nossas versões (React 18) tenham precedência sobre o ambiente.
-    -->
-    <!-- IMPORT MAP PLACEHOLDER -->
-
 <script type="importmap">
 {
   "imports": {
@@ -80,8 +76,7 @@
     "@hello-pangea/dnd": "https://esm.sh/@hello-pangea/dnd@^18.0.1",
     "vite": "https://esm.sh/vite@^7.3.1",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.93.2",
-    "fs": "https://esm.sh/fs@^0.0.1-security"
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.93.2"
   }
 }
 </script>

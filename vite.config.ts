@@ -1,36 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import fs from 'fs'
-
-// Plugin customizado para injetar o importmap.json inline no HTML
-const injectImportmap = () => {
-  return {
-    name: 'inject-importmap',
-    transformIndexHtml(html: string) {
-      try {
-        const importMapContent = fs.readFileSync('./importmap.json', 'utf-8');
-        // Substitui o placeholder pelo script inline
-        return html.replace(
-          '<!-- IMPORT MAP PLACEHOLDER -->',
-          `<script type="importmap">${importMapContent}</script>`
-        );
-      } catch (error) {
-        console.error('Erro ao injetar importmap:', error);
-        return html;
-      }
-    }
-  }
-}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react(), 
-    injectImportmap()
+    react()
   ],
+  publicDir: '.', // Garante que arquivos na raiz (como load-importmap.js) sejam servidos
   build: {
     rollupOptions: {
-      // Externaliza as dependências para usar o Import Map
+      // Externaliza as dependências para usar o Import Map carregado via script
       external: [
         'react',
         'react-dom',
