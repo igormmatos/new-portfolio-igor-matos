@@ -162,62 +162,14 @@ WHERE NOT EXISTS (SELECT 1 FROM public.technical_skills WHERE name = 'Tailwind C
 
 
 -- ==============================================================================
--- 6. AUTOMAÇÃO DE ORDENAÇÃO (TRIGGER SWAP)
+-- 6. REMOÇÃO DE TRIGGERS CONFLITANTES (CRÍTICO)
 -- ==============================================================================
+-- A nova lógica de Drag-and-Drop via frontend envia a lista inteira atualizada.
+-- Os triggers de "Swap" abaixo causam erros de concorrência (Code 21000) e devem ser removidos.
 
--- Função Genérica para trocar a ordem de itens
-CREATE OR REPLACE FUNCTION public.handle_display_order_swap()
-RETURNS TRIGGER AS $$
-DECLARE
-    conflicting_id uuid;
-BEGIN
-    -- 1. Prevenção de Recursividade: Se a trigger já estiver rodando (profundidade > 1), pare.
-    -- Isso evita que o UPDATE feito abaixo dispare a trigger novamente em loop infinito.
-    IF pg_trigger_depth() > 1 THEN
-        RETURN NEW;
-    END IF;
-
-    -- 2. Só executa se o display_order foi alterado
-    IF OLD.display_order = NEW.display_order THEN
-        RETURN NEW;
-    END IF;
-
-    -- 3. Verifica se existe colisão na tabela correta (TG_TABLE_NAME)
-    -- Busca o ID do item que já está ocupando a "nova" posição desejada
-    EXECUTE format('SELECT id FROM public.%I WHERE display_order = $1 AND id != $2', TG_TABLE_NAME)
-    INTO conflicting_id
-    USING NEW.display_order, NEW.id;
-
-    -- 4. Se houver conflito, faz a troca (Swap)
-    -- O item conflitante assume a posição antiga do item que está sendo movido (OLD.display_order)
-    IF conflicting_id IS NOT NULL THEN
-        EXECUTE format('UPDATE public.%I SET display_order = $1 WHERE id = $2', TG_TABLE_NAME)
-        USING OLD.display_order, conflicting_id;
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Remoção de triggers antigos (caso existam) para recriação limpa
 DROP TRIGGER IF EXISTS trg_swap_order_projects ON public.projects;
 DROP TRIGGER IF EXISTS trg_swap_order_journey ON public.journey_items;
 DROP TRIGGER IF EXISTS trg_swap_order_competencies ON public.competencies;
 DROP TRIGGER IF EXISTS trg_swap_order_technical_skills ON public.technical_skills;
 
--- Aplicação da Trigger nas tabelas
-CREATE TRIGGER trg_swap_order_projects
-BEFORE UPDATE ON public.projects
-FOR EACH ROW EXECUTE FUNCTION public.handle_display_order_swap();
-
-CREATE TRIGGER trg_swap_order_journey
-BEFORE UPDATE ON public.journey_items
-FOR EACH ROW EXECUTE FUNCTION public.handle_display_order_swap();
-
-CREATE TRIGGER trg_swap_order_competencies
-BEFORE UPDATE ON public.competencies
-FOR EACH ROW EXECUTE FUNCTION public.handle_display_order_swap();
-
-CREATE TRIGGER trg_swap_order_technical_skills
-BEFORE UPDATE ON public.technical_skills
-FOR EACH ROW EXECUTE FUNCTION public.handle_display_order_swap();
+DROP FUNCTION IF EXISTS public.handle_display_order_swap();

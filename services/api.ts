@@ -3,6 +3,20 @@ import { ProfileInfo, JourneyItem, Project, Competency, TechnicalSkill } from '.
 import { skills as staticSkills } from '../data';
 
 export const api = {
+  // --- Generic Reorder ---
+  // Atualiza a ordem dos itens.
+  // NOTA: É necessário passar o objeto completo para o upsert para satisfazer constraints NOT NULL
+  reorderItems: async (table: string, items: any[]) => {
+    if (items.length === 0) return;
+    
+    // Upsert permite atualizar registros existentes se o ID bater
+    const { error } = await supabase
+      .from(table)
+      .upsert(items, { onConflict: 'id' }); 
+      
+    if (error) throw error;
+  },
+
   // --- Profile ---
   getProfile: async (): Promise<ProfileInfo | null> => {
     const { data, error } = await supabase

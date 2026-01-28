@@ -13,7 +13,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden py-20 lg:py-0">
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-x-hidden pt-20 pb-32 lg:py-28">
       {/* Background Decor */}
       <div className="absolute top-1/4 left-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-green-600/10 rounded-full blur-[120px] pointer-events-none"></div>
@@ -148,32 +148,56 @@ const CompetenciesSection = () => {
   }, []);
 
   return (
-    <section id="skills" className="py-24 bg-slate-900 relative border-b border-slate-800/50">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4">{t('skills.title')}</h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">{t('skills.subtitle')}</p>
+    <section id="skills" className="py-28 bg-slate-950 relative border-b border-slate-900">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/10 via-slate-950 to-slate-950 pointer-events-none"></div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="text-center mb-20">
+          <span className="text-indigo-500 font-semibold tracking-wider uppercase text-sm mb-2 block">{t('nav.skills')}</span>
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">{t('skills.title')}</h2>
+          <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">{t('skills.subtitle')}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {competencies.map((comp) => (
             <div 
               key={comp.id}
-              className="group bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:-translate-y-1 hover:border-indigo-500 transition-all duration-300 flex flex-col items-start"
+              className="group flex flex-col h-full bg-slate-900 border border-slate-800 rounded-2xl p-6 transition-all duration-300 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
             >
-              <div className="w-14 h-14 rounded-xl bg-slate-800/50 flex items-center justify-center mb-4 group-hover:bg-indigo-500/10 transition-colors">
-                <i className={`${comp.icon} text-2xl text-slate-400 group-hover:text-indigo-400 transition-colors`}></i>
+              {/* Header: Ícone Circular Translúcido */}
+              <div className="mb-6">
+                <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center ring-1 ring-indigo-500/20 group-hover:bg-indigo-500/20 group-hover:ring-indigo-500/40 transition-all duration-300">
+                   <i className={`${comp.icon} text-xl text-indigo-400 group-hover:text-indigo-300 transition-colors`}></i>
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-slate-200 mb-1">{comp.title}</h3>
-              {comp.subtitle && <p className="text-sm text-slate-500 mb-4">{comp.subtitle}</p>}
+
+              {/* Título e Subtítulo */}
+              <div className="mb-4">
+                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-indigo-100 transition-colors">
+                    {comp.title}
+                 </h3>
+                 {comp.subtitle && (
+                  <p className="text-sm text-slate-500 font-normal leading-relaxed">
+                    {comp.subtitle}
+                  </p>
+                 )}
+              </div>
               
-              <div className="mt-auto pt-4 flex flex-wrap gap-2 w-full">
+              {/* Lista de Tópicos com Linha Vertical */}
+              <div className="mt-auto space-y-3">
                 {comp.items?.map((item, idx) => (
-                   <span key={idx} className="px-2 py-1 text-[10px] font-semibold bg-slate-800 text-slate-300 rounded border border-slate-700">
-                     {item}
-                   </span>
+                   <div 
+                     key={idx} 
+                     className="relative pl-3 border-l-2 border-indigo-500/30 group-hover/item:border-indigo-500 transition-all duration-300 group/line"
+                   >
+                     <p className="text-sm text-slate-300 font-medium group-hover/line:text-white transition-colors">
+                       {item}
+                     </p>
+                   </div>
                 ))}
               </div>
+
             </div>
           ))}
         </div>
@@ -229,47 +253,108 @@ const TechStackSection = () => {
 const ExperienceSection = () => {
   const { t } = useI18n();
   const [experience, setExperience] = useState<JourneyItem[]>([]);
+  // Estado para controlar qual item está expandido no mobile (Accordion)
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     api.getJourney().then(setExperience);
   }, []);
 
+  const toggleExpand = (id: string) => {
+    setExpandedId(prev => prev === id ? null : id);
+  };
+
   return (
     <section id="experience" className="py-24 bg-slate-900">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Header Fixo */}
           <div className="lg:col-span-1">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4 sticky top-32">{t('experience.title')}</h2>
             <p className="text-slate-400 sticky top-44">
               {t('experience.subtitle')}
             </p>
           </div>
-          <div className="lg:col-span-2">
-            <div className="relative border-l-2 border-slate-800 ml-4 md:ml-6 space-y-12">
-              {experience.map((item) => (
-                <div key={item.id} className="relative pl-12">
-                  <div className="absolute -left-[9px] top-2 w-5 h-5 rounded-full border-4 border-slate-950 bg-indigo-500 shadow-[0_0_0_4px_rgba(99,102,241,0.2)]"></div>
-                  
-                  <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 md:p-8 hover:bg-slate-900 transition-colors">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                        <p className="text-indigo-400 font-medium mt-1">{item.company}</p>
+
+          {/* Lista de Experiências */}
+          <div className="lg:col-span-2 relative space-y-6 lg:space-y-12 lg:border-l-2 lg:border-slate-700 lg:ml-6">
+            {experience.map((item) => (
+              <div key={item.id} className="relative lg:pl-12">
+                {/* Dot (Apenas Desktop) */}
+                <div className="hidden lg:block absolute -left-[7px] top-8 w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_0_4px_rgba(99,102,241,0.2)]"></div>
+                
+                {/* Card Container */}
+                <div 
+                  className={`
+                    bg-slate-800 border rounded-2xl overflow-hidden transition-all duration-300
+                    ${expandedId === item.id 
+                      ? 'border-indigo-500/30 shadow-lg shadow-indigo-900/10' 
+                      : 'border-slate-700/50 hover:border-slate-600'
+                    }
+                  `}
+                >
+                  {/* Header do Card (Clicável no Mobile) */}
+                  <div 
+                    onClick={() => toggleExpand(item.id)}
+                    className="p-6 cursor-pointer lg:cursor-default"
+                  >
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg md:text-xl font-bold text-white leading-snug">{item.title}</h3>
+                        <p className="text-indigo-400 font-medium text-sm mt-1">{item.company}</p>
                       </div>
-                      <span className="mt-2 md:mt-0 inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-semibold text-slate-400 border border-slate-700">
+                      
+                      {/* Badge Desktop */}
+                      <span className="hidden lg:inline-block px-3 py-1 bg-slate-900/50 rounded-full text-xs font-semibold text-slate-500 border border-slate-700 whitespace-nowrap">
                         {item.period}
                       </span>
+
+                      {/* Ícone Chevron Mobile */}
+                      <div className="lg:hidden text-slate-500 mt-1">
+                         <i className={`fa-solid fa-chevron-down transition-transform duration-300 ${expandedId === item.id ? 'rotate-180 text-indigo-400' : ''}`}></i>
+                      </div>
                     </div>
-                    <p className="text-slate-400 leading-relaxed text-sm md:text-base">
-                      {item.description}
-                    </p>
-                    <div className="mt-4">
-                       <i className={`fa-solid ${item.type === 'work' ? 'fa-briefcase' : 'fa-graduation-cap'} text-slate-600`}></i>
+
+                    {/* Badge Mobile (Abaixo do título para economizar largura) */}
+                    <div className="lg:hidden flex items-center justify-between mt-3">
+                        <span className="text-xs font-semibold text-slate-400 bg-slate-900/50 px-2 py-1 rounded border border-slate-700">
+                          {item.period}
+                        </span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${item.type === 'work' ? 'text-indigo-400' : 'text-green-400'}`}>
+                           {item.type === 'work' ? 'Profissional' : 'Acadêmico'}
+                        </span>
                     </div>
                   </div>
+                  
+                  {/* Conteúdo Expansível */}
+                  <div 
+                    className={`
+                      px-6 pb-6 pt-0 border-t border-slate-700/30
+                      lg:block lg:border-t-0 lg:pt-0 lg:pb-8
+                      ${expandedId === item.id ? 'block' : 'hidden'}
+                    `}
+                  >
+                    {/* Padding top só quando expandido no mobile para separar do header */}
+                    <div className="lg:hidden h-4"></div>
+
+                    <p className="text-slate-300 leading-relaxed text-sm md:text-base">
+                      {item.description}
+                    </p>
+                    
+                    {/* Footer Desktop */}
+                    <div className="hidden lg:flex mt-6 pt-4 border-t border-slate-700/30 justify-between items-center">
+                       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                           <i className={`fa-solid ${item.type === 'work' ? 'fa-briefcase' : 'fa-graduation-cap'} ${item.type === 'work' ? 'text-indigo-500' : 'text-green-500'}`}></i>
+                           <span className={item.type === 'work' ? 'text-indigo-400' : 'text-green-400'}>
+                             {item.type === 'work' ? 'Experiência Profissional' : 'Formação Acadêmica'}
+                           </span>
+                       </div>
+                    </div>
+                  </div>
+
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

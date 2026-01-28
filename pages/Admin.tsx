@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { authService } from '../services/auth'; // Import authService
+import { authService } from '../services/auth';
 import { Project, ProfileInfo, JourneyItem, Competency, TechnicalSkill } from '../types';
 import { useI18n } from '../i18n';
 
@@ -13,13 +13,13 @@ type AdminTab = 'profile' | 'projects' | 'journey' | 'skills' | 'tech';
 interface DeleteModalState {
   isOpen: boolean;
   id: string | null;
-  itemName: string; // Nome do item para exibição (ex: "Projeto X")
-  typeLabel: string; // Rótulo do tipo (ex: "Projeto", "Habilidade")
-  deleteFn: ((id: string) => Promise<void>) | null; // Função da API injetada
-  setListFn: React.Dispatch<React.SetStateAction<any[]>> | null; // Setter do React injetado
+  itemName: string;
+  typeLabel: string;
+  deleteFn: ((id: string) => Promise<void>) | null;
+  setListFn: React.Dispatch<React.SetStateAction<any[]>> | null;
 }
 
-// --- Componentes de UI Reutilizáveis (Movidos para fora para evitar re-renderização e perda de foco) ---
+// --- Componentes de UI Reutilizáveis ---
 const FormInput = ({ label, value, onChange, placeholder, type = "text", min, max }: any) => (
   <div className="space-y-2">
     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>
@@ -48,6 +48,23 @@ const FormTextArea = ({ label, value, onChange, placeholder, rows = 3 }: any) =>
   </div>
 );
 
+// --- Componente StrictModeDroppable ---
+// Necessário para evitar problemas com React 18 Strict Mode e DnD
+const StrictModeDroppable = ({ children, ...props }: any) => {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setEnabled(false);
+    };
+  }, []);
+  if (!enabled) {
+    return null;
+  }
+  return <Droppable {...props}>{children}</Droppable>;
+};
+
 const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('profile');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -66,7 +83,7 @@ const Admin: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   
-  // Delete Modal State (Genérico)
+  // Delete Modal State
   const [deleteModal, setDeleteModal] = useState<DeleteModalState>({
     isOpen: false,
     id: null,
@@ -77,7 +94,7 @@ const Admin: React.FC = () => {
   });
 
   const { t } = useI18n();
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAllData();
@@ -91,21 +108,22 @@ const Admin: React.FC = () => {
       api.getTechnicalSkills(),
       api.getProfile()
     ]);
-    // Ordenar localmente para garantir consistência visual imediata
-    setProjects(pData?.sort((a, b) => a.display_order - b.display_order) || []);
-    setJourney(jData?.sort((a, b) => a.display_order - b.display_order) || []);
-    setCompetencies(cData?.sort((a, b) => a.display_order - b.display_order) || []);
-    setTechSkills(tData?.sort((a, b) => a.display_order - b.display_order) || []);
+    
+    // Sort items by display_order
+    const sortFn = (a: any, b: any) => (a.display_order || 0) - (b.display_order || 0);
+    
+    setProjects(pData?.sort(sortFn) || []);
+    setJourney(jData?.sort(sortFn) || []);
+    setCompetencies(cData?.sort(sortFn) || []);
+    setTechSkills(tData?.sort(sortFn) || []);
     setProfile(profData);
   };
 
-  // --- Helper de Notificação ---
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // --- Logout Handler ---
   const handleLogout = async () => {
     try {
       await authService.signOut();
@@ -113,6 +131,70 @@ const Admin: React.FC = () => {
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       showNotification('Erro ao sair do sistema.', 'error');
+    }
+  };
+
+  // --- Drag and Drop Handler ---
+  
+  // Feedback tátil ao pegar um item
+  const handleDragStart = () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+  };
+
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination) return;
+
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) return;
+
+    // Função genérica para reordenar array
+    const reorder = (list: any[], startIndex: number, endIndex: number) => {
+      const result = Array.from(list);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      // Atualiza display_order baseado no novo índice e preserva os outros campos
+      return result.map((item, index) => ({ ...item, display_order: index }));
+    };
+
+    let newItems: any[] = [];
+    let tableName = '';
+
+    // Lógica específica por aba
+    if (activeTab === 'projects') {
+        newItems = reorder(projects, sourceIndex, destinationIndex);
+        setProjects(newItems);
+        tableName = 'projects';
+    } else if (activeTab === 'journey') {
+        newItems = reorder(journey, sourceIndex, destinationIndex);
+        setJourney(newItems);
+        tableName = 'journey_items';
+    } else if (activeTab === 'skills') {
+        newItems = reorder(competencies, sourceIndex, destinationIndex);
+        setCompetencies(newItems);
+        tableName = 'competencies';
+    } else if (activeTab === 'tech') {
+        newItems = reorder(techSkills, sourceIndex, destinationIndex);
+        setTechSkills(newItems);
+        tableName = 'technical_skills';
+    }
+
+    // Persistir no backend (Batch Update)
+    try {
+        // CORREÇÃO: Enviamos o objeto completo (newItems) ao invés de apenas {id, order}
+        // Isso garante que o UPSERT do Supabase tenha todos os campos obrigatórios (NOT NULL)
+        // caso ele tente validar a inserção antes de identificar que é um update.
+        await api.reorderItems(tableName, newItems);
+        showNotification('Ordem atualizada com sucesso!', 'success');
+        
+    } catch (error) {
+        console.error("Erro ao reordenar:", error);
+        showNotification('Erro ao salvar a nova ordem.', 'error');
+        // Reverte o estado visual em caso de erro
+        fetchAllData();
     }
   };
 
@@ -147,36 +229,30 @@ const Admin: React.FC = () => {
   const handleSaveItem = async () => {
     setIsSaving(true);
     try {
-      // Helper para garantir display_order numérico
-      const getOrder = (currentOrder: any, listLength: number) => {
-        return currentOrder ? parseInt(currentOrder) : listLength + 1;
-      };
+      // Define display_order automaticamente para novos itens (final da lista)
+      const getNextOrder = (listLength: number) => listLength;
 
       if (activeTab === 'projects') {
         const proj = editingItem as Project;
-        const payload = { ...proj, display_order: getOrder(proj.display_order, projects.length) };
-        
+        const payload = { ...proj, display_order: proj.display_order ?? getNextOrder(projects.length) };
         if (proj.id) await api.updateProject(proj.id, payload);
         else await api.createProject(payload as any);
 
       } else if (activeTab === 'journey') {
         const jour = editingItem as JourneyItem;
-        const payload = { ...jour, display_order: getOrder(jour.display_order, journey.length) };
-
+        const payload = { ...jour, display_order: jour.display_order ?? getNextOrder(journey.length) };
         if (jour.id) await api.updateJourney(jour.id, payload);
         else await api.createJourney(payload as any);
 
       } else if (activeTab === 'skills') {
         const comp = editingItem as Competency;
-        const payload = { ...comp, display_order: getOrder(comp.display_order, competencies.length) };
-
+        const payload = { ...comp, display_order: comp.display_order ?? getNextOrder(competencies.length) };
         if (comp.id) await api.updateCompetency(comp.id, payload);
         else await api.createCompetency(payload as any);
 
       } else if (activeTab === 'tech') {
         const tech = editingItem as TechnicalSkill;
-        const payload = { ...tech, display_order: getOrder(tech.display_order, techSkills.length) };
-
+        const payload = { ...tech, display_order: tech.display_order ?? getNextOrder(techSkills.length) };
         if (tech.id) await api.updateTechnicalSkill(tech.id, payload);
         else await api.createTechnicalSkill(payload as any);
       }
@@ -192,7 +268,6 @@ const Admin: React.FC = () => {
     }
   };
 
-  // --- Handlers de Exclusão Genérica ---
   const handleDeleteRequest = (
     id: string, 
     itemName: string,
@@ -212,9 +287,7 @@ const Admin: React.FC = () => {
 
   const confirmDelete = async () => {
     const { id, deleteFn, setListFn } = deleteModal;
-
     if (!id || !deleteFn || !setListFn) return;
-
     try {
       setListFn((prev: any[]) => prev.filter(item => item.id !== id));
       setDeleteModal({ ...deleteModal, isOpen: false });
@@ -264,7 +337,6 @@ const Admin: React.FC = () => {
             </nav>
           </div>
 
-          {/* Logout Button in Sidebar */}
           <div className="p-6 border-t border-slate-800">
             <button
               onClick={handleLogout}
@@ -292,7 +364,6 @@ const Admin: React.FC = () => {
               </button>
             )}
             
-            {/* Mobile Logout Button (Only visible on small screens) */}
             <div className="md:hidden mt-4 w-full">
                <button
                   onClick={handleLogout}
@@ -342,183 +413,249 @@ const Admin: React.FC = () => {
                </form>
              )}
 
-             {/* GRID VIEW (CARDS) */}
+             {/* DRAG AND DROP CONTEXT FOR LISTS */}
              {activeTab !== 'profile' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  
-                  {/* PROJECTS CARDS */}
-                  {activeTab === 'projects' && projects.map(p => (
-                    <div key={p.id} className="group bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col hover:border-indigo-500/50 transition-all duration-300 relative">
-                      {/* Badge Ordem */}
-                      <span className="absolute top-2 left-2 z-10 bg-slate-950/80 backdrop-blur text-xs font-bold text-slate-400 border border-slate-800 px-2 py-1 rounded">
-                         #{p.display_order}
-                      </span>
-
-                      <div className="h-40 w-full overflow-hidden relative">
-                         <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors z-10"></div>
-                         {p.image_url ? (
-                           <img src={p.image_url} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                         ) : (
-                           <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600">
-                             <i className="fa-regular fa-image text-3xl"></i>
-                           </div>
-                         )}
-                      </div>
-                      
-                      <div className="p-5 flex-1 flex flex-col">
-                        <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
-                        <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide mb-3">{p.role}</p>
+                <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
+                    <StrictModeDroppable droppableId={activeTab} direction={activeTab === 'journey' ? 'vertical' : 'horizontal'}>
+                    {(provided: any, snapshot: any) => (
+                        <div 
+                            {...provided.droppableProps} 
+                            ref={provided.innerRef}
+                            className={`
+                              grid ${activeTab === 'journey' ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'}
+                              min-h-[200px] transition-all duration-300 rounded-2xl
+                              ${snapshot.isDraggingOver ? 'bg-slate-900/40 ring-2 ring-dashed ring-indigo-500/20 p-4 -m-4' : 'p-2 -m-2'}
+                            `}
+                        >
                         
-                        <div className="flex flex-wrap gap-2 mb-4">
-                           {p.technologies.split(',').slice(0, 3).map((t, i) => (
-                             <span key={i} className="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">{t.trim()}</span>
-                           ))}
-                           {p.technologies.split(',').length > 3 && <span className="text-[10px] text-slate-500 py-1">+mais</span>}
+                        {/* PROJECTS CARDS */}
+                        {activeTab === 'projects' && projects.map((p, index) => (
+                            <Draggable key={p.id} draggableId={p.id} index={index}>
+                            {(provided: any, snapshot: any) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={`group bg-slate-900 border rounded-2xl overflow-hidden flex flex-col transition-all duration-200 relative 
+                                      ${snapshot.isDragging 
+                                        ? 'border-indigo-400 ring-2 ring-indigo-500/30 shadow-2xl shadow-indigo-500/20 scale-105 rotate-2 z-50 bg-slate-800/95 opacity-90 backdrop-blur-sm cursor-grabbing' 
+                                        : 'border-slate-800 hover:border-indigo-500/50'
+                                      }`}
+                                    style={{ ...provided.draggableProps.style }}
+                                >
+                                    {/* Drag Handle */}
+                                    <div {...provided.dragHandleProps} className={`absolute top-2 right-2 z-20 w-8 h-8 rounded-lg ${snapshot.isDragging ? 'bg-indigo-600 text-white cursor-grabbing' : 'bg-slate-950/80 text-slate-500 hover:text-white cursor-grab active:cursor-grabbing'} flex items-center justify-center backdrop-blur-sm border border-slate-800 transition-colors`}>
+                                        <i className="fa-solid fa-grip-vertical"></i>
+                                    </div>
+
+                                    {/* Badge Ordem */}
+                                    <span className="absolute top-2 left-2 z-10 bg-slate-950/80 backdrop-blur text-xs font-bold text-slate-400 border border-slate-800 px-2 py-1 rounded">
+                                        #{index + 1}
+                                    </span>
+
+                                    <div className="h-40 w-full overflow-hidden relative">
+                                        <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors z-10"></div>
+                                        {p.image_url ? (
+                                        <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
+                                        ) : (
+                                        <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600">
+                                            <i className="fa-regular fa-image text-3xl"></i>
+                                        </div>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
+                                        <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide mb-3">{p.role}</p>
+                                        
+                                        <div className="mt-auto flex justify-between items-center pt-4 border-t border-slate-800">
+                                        <div className="flex gap-3">
+                                            {p.live_url && <i className="fa-solid fa-globe text-slate-500 hover:text-white" title="Live"></i>}
+                                            {p.github_url && <i className="fa-brands fa-github text-slate-500 hover:text-white" title="Code"></i>}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleOpenDrawer(p)} className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all">
+                                                <i className="fa-solid fa-pen text-xs"></i>
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteRequest(p.id, p.title, 'Projeto', api.deleteProject, setProjects)}
+                                                className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all"
+                                            >
+                                                <i className="fa-solid fa-trash text-xs"></i>
+                                            </button>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            </Draggable>
+                        ))}
+
+                        {/* JOURNEY CARDS */}
+                        {activeTab === 'journey' && journey.map((j, index) => (
+                            <Draggable key={j.id} draggableId={j.id} index={index}>
+                             {(provided: any, snapshot: any) => (
+                                <div 
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={`relative bg-slate-900 border rounded-2xl p-6 transition-all duration-200 group flex flex-col 
+                                      ${snapshot.isDragging 
+                                        ? 'border-indigo-400 bg-slate-800/95 opacity-90 backdrop-blur-sm shadow-xl scale-[1.02] z-50 cursor-grabbing' 
+                                        : 'border-slate-800 hover:border-slate-600'
+                                      }`}
+                                    style={{ ...provided.draggableProps.style }}
+                                >
+                                    {/* Drag Handle */}
+                                    <div {...provided.dragHandleProps} className={`absolute top-4 right-4 z-20 ${snapshot.isDragging ? 'text-indigo-400 cursor-grabbing' : 'text-slate-600 hover:text-white cursor-grab active:cursor-grabbing'}`}>
+                                        <i className="fa-solid fa-grip-vertical text-xl"></i>
+                                    </div>
+
+                                    {/* Tipo Indicator */}
+                                    <div className={`absolute top-0 left-0 bottom-0 w-1 rounded-l-2xl ${j.type === 'work' ? 'bg-indigo-500' : 'bg-green-500'}`}></div>
+                                    
+                                    <div className="flex justify-between items-start mb-4 pl-3 pr-8">
+                                        <span className={`text-xs font-bold px-2 py-1 rounded border ${j.type === 'work' ? 'bg-indigo-900/20 text-indigo-400 border-indigo-500/20' : 'bg-green-900/20 text-green-400 border-green-500/20'}`}>
+                                            {j.type === 'work' ? 'TRABALHO' : 'EDUCAÇÃO'}
+                                        </span>
+                                    </div>
+
+                                    <div className="pl-3 mb-4 flex-1">
+                                        <h3 className="text-lg font-bold text-white mb-1 leading-snug">{j.title}</h3>
+                                        <p className="text-slate-400 text-sm font-medium mb-2">{j.company}</p>
+                                        <p className="text-slate-500 text-xs flex items-center gap-2">
+                                            <i className="fa-regular fa-calendar"></i> {j.period}
+                                        </p>
+                                    </div>
+
+                                    <div className="pl-3 flex justify-end gap-2 mt-auto pt-4 border-t border-slate-800/50">
+                                        <button onClick={() => handleOpenDrawer(j)} className="text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-all">
+                                            Editar
+                                        </button>
+                                        <button onClick={() => handleDeleteRequest(j.id, j.title, 'Jornada', api.deleteJourney, setJourney)} className="text-sm font-medium text-slate-400 hover:text-red-400 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/10 transition-all">
+                                            Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                             )}
+                            </Draggable>
+                        ))}
+
+                        {/* SKILLS CARDS */}
+                        {activeTab === 'skills' && competencies.map((c, index) => (
+                            <Draggable key={c.id} draggableId={c.id} index={index}>
+                            {(provided: any, snapshot: any) => (
+                                <div 
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={`bg-slate-900 border rounded-2xl p-6 transition-all duration-200 relative group 
+                                      ${snapshot.isDragging 
+                                        ? 'border-indigo-400 ring-2 ring-indigo-500/30 shadow-2xl shadow-indigo-500/20 scale-105 rotate-1 z-50 bg-slate-800/95 opacity-90 backdrop-blur-sm cursor-grabbing' 
+                                        : 'border-slate-800 hover:-translate-y-1'
+                                      }`}
+                                    style={{ ...provided.draggableProps.style }}
+                                >
+                                    <div {...provided.dragHandleProps} className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center ${snapshot.isDragging ? 'text-indigo-400 cursor-grabbing' : 'text-slate-600 hover:text-white cursor-grab active:cursor-grabbing'}`}>
+                                        <i className="fa-solid fa-grip-vertical"></i>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 text-xl group-hover:text-indigo-400 group-hover:bg-indigo-500/10 transition-all">
+                                            <i className={c.icon}></i>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-white text-lg">{c.title}</h3>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex flex-wrap gap-2 mb-6 min-h-[60px] content-start">
+                                        {Array.isArray(c.items) && c.items.slice(0, 4).map((item, idx) => (
+                                            <span key={idx} className="px-2 py-1 text-[10px] font-semibold bg-slate-950 text-slate-400 rounded border border-slate-800">
+                                                {item}
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleOpenDrawer(c)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-all">
+                                            Editar
+                                        </button>
+                                        <button onClick={() => handleDeleteRequest(c.id, c.title, 'Habilidade', api.deleteCompetency, setCompetencies)} className="w-10 flex items-center justify-center bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all">
+                                            <i className="fa-solid fa-trash text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            </Draggable>
+                        ))}
+
+                        {/* TECH SKILLS CARDS */}
+                        {activeTab === 'tech' && techSkills.map((t, index) => (
+                            <Draggable key={t.id} draggableId={t.id} index={index}>
+                            {(provided: any, snapshot: any) => (
+                                <div 
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={`bg-slate-900 border rounded-2xl p-6 flex flex-col items-center text-center transition-all duration-200 relative group 
+                                      ${snapshot.isDragging 
+                                        ? 'border-indigo-400 ring-2 ring-indigo-500/30 shadow-2xl shadow-indigo-500/20 scale-105 rotate-2 z-50 bg-slate-800/95 opacity-90 backdrop-blur-sm cursor-grabbing' 
+                                        : 'border-slate-800 hover:border-indigo-500/50'
+                                      }`}
+                                    style={{ ...provided.draggableProps.style }}
+                                >
+                                    <div {...provided.dragHandleProps} className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center ${snapshot.isDragging ? 'text-indigo-400 cursor-grabbing' : 'text-slate-600 hover:text-white cursor-grab active:cursor-grabbing'}`}>
+                                        <i className="fa-solid fa-grip-vertical"></i>
+                                    </div>
+                                    <span className="absolute top-2 left-2 text-[10px] font-bold text-slate-600 bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                                        #{index + 1}
+                                    </span>
+
+                                    <div className="w-12 h-12 mb-3 flex items-center justify-center text-2xl text-slate-300">
+                                        <i className={t.icon}></i>
+                                    </div>
+                                    <h3 className="text-white font-bold mb-2">{t.name}</h3>
+                                    
+                                    <div className="w-full h-1.5 bg-slate-800 rounded-full mb-4">
+                                        <div className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full" style={{ width: `${t.level}%`}}></div>
+                                    </div>
+
+                                    <div className="flex gap-2 w-full mt-auto">
+                                        <button onClick={() => handleOpenDrawer(t)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition-all">
+                                            EDITAR
+                                        </button>
+                                        <button onClick={() => handleDeleteRequest(t.id, t.name, 'Tecnologia', api.deleteTechnicalSkill, setTechSkills)} className="w-8 flex items-center justify-center bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all">
+                                            <i className="fa-solid fa-trash text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            </Draggable>
+                        ))}
+                        
+                        {provided.placeholder}
                         </div>
-
-                        <div className="mt-auto flex justify-between items-center pt-4 border-t border-slate-800">
-                           <div className="flex gap-3">
-                              {p.live_url && <i className="fa-solid fa-globe text-slate-500 hover:text-white" title="Live"></i>}
-                              {p.github_url && <i className="fa-brands fa-github text-slate-500 hover:text-white" title="Code"></i>}
-                           </div>
-                           <div className="flex gap-2">
-                              <button onClick={() => handleOpenDrawer(p)} className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-all">
-                                <i className="fa-solid fa-pen text-xs"></i>
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteRequest(p.id, p.title, 'Projeto', api.deleteProject, setProjects)}
-                                className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all"
-                              >
-                                <i className="fa-solid fa-trash text-xs"></i>
-                              </button>
-                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* JOURNEY CARDS */}
-                  {activeTab === 'journey' && journey.map(j => (
-                    <div key={j.id} className="relative bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-slate-600 transition-all group flex flex-col">
-                       {/* Tipo Indicator */}
-                       <div className={`absolute top-0 left-0 bottom-0 w-1 rounded-l-2xl ${j.type === 'work' ? 'bg-indigo-500' : 'bg-green-500'}`}></div>
-                       
-                       <div className="flex justify-between items-start mb-4 pl-3">
-                          <span className={`text-xs font-bold px-2 py-1 rounded border ${j.type === 'work' ? 'bg-indigo-900/20 text-indigo-400 border-indigo-500/20' : 'bg-green-900/20 text-green-400 border-green-500/20'}`}>
-                             {j.type === 'work' ? 'TRABALHO' : 'EDUCAÇÃO'}
-                          </span>
-                          <span className="text-xs font-bold text-slate-500 border border-slate-800 px-2 py-1 rounded bg-slate-950">
-                             #{j.display_order}
-                          </span>
-                       </div>
-
-                       <div className="pl-3 mb-4 flex-1">
-                          <h3 className="text-lg font-bold text-white mb-1 leading-snug">{j.title}</h3>
-                          <p className="text-slate-400 text-sm font-medium mb-2">{j.company}</p>
-                          <p className="text-slate-500 text-xs flex items-center gap-2">
-                             <i className="fa-regular fa-calendar"></i> {j.period}
-                          </p>
-                       </div>
-
-                       <div className="pl-3 flex justify-end gap-2 mt-auto pt-4 border-t border-slate-800/50">
-                          <button onClick={() => handleOpenDrawer(j)} className="text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-all">
-                             Editar
-                          </button>
-                          <button onClick={() => handleDeleteRequest(j.id, j.title, 'Jornada', api.deleteJourney, setJourney)} className="text-sm font-medium text-slate-400 hover:text-red-400 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/10 transition-all">
-                             Excluir
-                          </button>
-                       </div>
-                    </div>
-                  ))}
-
-                  {/* SKILLS CARDS */}
-                  {activeTab === 'skills' && competencies.map(c => (
-                    <div key={c.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 relative group">
-                       <span className="absolute top-4 right-4 text-xs font-bold text-slate-600 bg-slate-950 px-2 py-1 rounded border border-slate-800">
-                         #{c.display_order}
-                       </span>
-
-                       <div className="flex items-center gap-4 mb-4">
-                          <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 text-xl group-hover:text-indigo-400 group-hover:bg-indigo-500/10 transition-all">
-                             <i className={c.icon}></i>
-                          </div>
-                          <div>
-                             <h3 className="font-bold text-white text-lg">{c.title}</h3>
-                             {c.subtitle && <p className="text-xs text-slate-500">{c.subtitle}</p>}
-                          </div>
-                       </div>
-                       
-                       <div className="flex flex-wrap gap-2 mb-6 min-h-[60px] content-start">
-                          {Array.isArray(c.items) && c.items.slice(0, 6).map((item, idx) => (
-                             <span key={idx} className="px-2 py-1 text-[10px] font-semibold bg-slate-950 text-slate-400 rounded border border-slate-800">
-                                {item}
-                             </span>
-                          ))}
-                          {Array.isArray(c.items) && c.items.length > 6 && (
-                             <span className="px-2 py-1 text-[10px] text-slate-600">+{c.items.length - 6}</span>
-                          )}
-                       </div>
-
-                       <div className="flex gap-2">
-                          <button onClick={() => handleOpenDrawer(c)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-all">
-                             Editar
-                          </button>
-                          <button onClick={() => handleDeleteRequest(c.id, c.title, 'Habilidade', api.deleteCompetency, setCompetencies)} className="w-10 flex items-center justify-center bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all">
-                             <i className="fa-solid fa-trash text-xs"></i>
-                          </button>
-                       </div>
-                    </div>
-                  ))}
-
-                  {/* TECH SKILLS CARDS */}
-                  {activeTab === 'tech' && techSkills.map(t => (
-                    <div key={t.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center hover:border-indigo-500/50 transition-all relative group">
-                        <span className="absolute top-2 left-2 text-[10px] font-bold text-slate-600 bg-slate-950 px-2 py-1 rounded border border-slate-800">
-                         #{t.display_order}
-                       </span>
-
-                       <div className="w-12 h-12 mb-3 flex items-center justify-center text-2xl text-slate-300">
-                         <i className={t.icon}></i>
-                       </div>
-                       <h3 className="text-white font-bold mb-2">{t.name}</h3>
-                       
-                       {/* Level Bar */}
-                       <div className="w-full h-1.5 bg-slate-800 rounded-full mb-4">
-                          <div className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full" style={{ width: `${t.level}%`}}></div>
-                       </div>
-                       <span className="text-xs text-slate-500 mb-4">{t.level}% Proficiência</span>
-
-                       <div className="flex gap-2 w-full mt-auto">
-                          <button onClick={() => handleOpenDrawer(t)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition-all">
-                             EDITAR
-                          </button>
-                          <button onClick={() => handleDeleteRequest(t.id, t.name, 'Tecnologia', api.deleteTechnicalSkill, setTechSkills)} className="w-8 flex items-center justify-center bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all">
-                             <i className="fa-solid fa-trash text-xs"></i>
-                          </button>
-                       </div>
-                    </div>
-                  ))}
-
-                  {/* Empty State */}
-                  {((activeTab === 'projects' && projects.length === 0) || 
-                    (activeTab === 'journey' && journey.length === 0) ||
-                    (activeTab === 'skills' && competencies.length === 0) ||
-                    (activeTab === 'tech' && techSkills.length === 0)) && (
-                    <div className="col-span-full text-center py-16 border-2 border-dashed border-slate-800 rounded-2xl">
-                      <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center mx-auto mb-4 text-slate-600">
-                        <i className="fa-regular fa-folder-open text-2xl"></i>
-                      </div>
-                      <p className="text-slate-500 font-medium">Nenhum item encontrado.</p>
-                      <button onClick={() => handleOpenDrawer({})} className="mt-4 text-indigo-400 hover:text-indigo-300 font-medium text-sm">
-                        Criar o primeiro item
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                    </StrictModeDroppable>
+                </DragDropContext>
              )}
+
+             {/* Empty State */}
+            {((activeTab === 'projects' && projects.length === 0) || 
+            (activeTab === 'journey' && journey.length === 0) ||
+            (activeTab === 'skills' && competencies.length === 0) ||
+            (activeTab === 'tech' && techSkills.length === 0)) && (
+            <div className="col-span-full text-center py-16 border-2 border-dashed border-slate-800 rounded-2xl">
+                <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center mx-auto mb-4 text-slate-600">
+                <i className="fa-regular fa-folder-open text-2xl"></i>
+                </div>
+                <p className="text-slate-500 font-medium">Nenhum item encontrado.</p>
+                <button onClick={() => handleOpenDrawer({})} className="mt-4 text-indigo-400 hover:text-indigo-300 font-medium text-sm">
+                Criar o primeiro item
+                </button>
+            </div>
+            )}
+
           </div>
         </div>
-      </div>
+      )}
 
       {/* --- NOTIFICATIONS (Toast) --- */}
       {notification && (
@@ -596,21 +733,7 @@ const Admin: React.FC = () => {
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
               
-              {/* Campo de ORDEM genérico para todos */}
-              {activeTab !== 'profile' && (
-                 <div className="p-4 bg-slate-950/50 border border-slate-800 rounded-xl mb-6">
-                    <FormInput 
-                       label="Ordem de Exibição" 
-                       type="number"
-                       placeholder="Ex: 1"
-                       value={editingItem.display_order} 
-                       onChange={(e: any) => setEditingItem({...editingItem, display_order: e.target.value})} 
-                    />
-                    <p className="text-[10px] text-slate-500 mt-2 ml-1">
-                       * Define a posição do card na tela inicial (menor número aparece primeiro).
-                    </p>
-                 </div>
-              )}
+              {/* NOTA: Removemos o campo de display_order, pois agora é controlado pelo Drag and Drop */}
 
               {activeTab === 'projects' && (
                 <>
