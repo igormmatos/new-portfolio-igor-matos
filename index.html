@@ -4,10 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Carrega importmap ANTES de tudo -->
-  <script src="/load-importmap.js"></script>
+  <!-- Carrega importmap apenas em DEV -->
+  <script>
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      const script = document.createElement('script');
+      script.src = '/load-importmap.js';
+      document.head.appendChild(script);
+    }
+  </script>
 
-  <title>Seu App</title>
+  <title>Igor Matos - Portfolio</title>
 <script type="importmap">
 {
   "imports": {
