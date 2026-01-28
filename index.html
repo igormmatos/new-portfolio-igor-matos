@@ -1,20 +1,73 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- ⚡ CRÍTICO: Carregar o ImportMap antes de qualquer outra coisa -->
+    <!-- Carrega incondicionalmente para garantir que Vercel use o importmap.json correto -->
+    <script src="/load-importmap.js"></script>
 
-  <!-- Carrega importmap apenas em DEV -->
-  <script>
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      const script = document.createElement('script');
-      script.src = '/load-importmap.js';
-      document.head.appendChild(script);
-    }
-  </script>
+    <title>AlexDev | Portfólio de Arquiteto Sênior</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/image/favicon.ico" />
 
-  <title>Igor Matos - Portfolio</title>
-<script type="importmap">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS (Necessário para arquitetura No-Build/CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              slate: {
+                850: '#151e32',
+                950: '#020617',
+              }
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'bounce-slow': 'bounce 3s infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <style>
+      /* Custom scrollbar for webkit */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569; 
+      }
+    </style>
+  <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@^19.2.4",
@@ -29,8 +82,9 @@
 }
 </script>
 </head>
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
+  <body class="bg-slate-900 text-slate-400 font-sans antialiased overflow-x-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div id="root"></div>
+    <!-- CORREÇÃO: Apontar para o arquivo correto na raiz -->
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>
