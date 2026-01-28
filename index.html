@@ -36,7 +36,8 @@
           mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
               if (node.tagName === 'SCRIPT' && node.type === 'importmap' && !node.hasAttribute('data-injected')) {
-                console.warn('🛑 Bloqueando importmap conflitante do ambiente:', node);
+                // Log movido para debug para limpar o console em produção
+                // console.debug('🛑 Bloqueando importmap conflitante do ambiente:', node);
                 node.remove();
               }
             });
@@ -105,7 +106,7 @@
         background: #475569; 
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@^19.2.4",

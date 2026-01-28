@@ -1,28 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Valores de fallback para garantir funcionamento mesmo se a injeção de env falhar
+// Valores de fallback para desenvolvimento local ou caso as env vars falhem
 const FALLBACK_URL = "https://iquantqgsrgwbqfwbhfq.supabase.co";
 const FALLBACK_KEY = "sb_publishable_5LjSKfbZIrnPTm-7do--Eg_2rZIvmBP";
 
-// Função para obter variáveis de ambiente com segurança
-const getEnvVar = (key: string): string | undefined => {
-  try {
-    // Tenta acessar import.meta.env (Vite)
-    const metaEnv = (import.meta as any).env;
-    if (metaEnv && metaEnv[key]) {
-      return metaEnv[key];
-    }
-  } catch (e) {
-    console.warn('Erro ao acessar import.meta.env', e);
-  }
-  return undefined;
-};
+// ⚡ IMPORTANTE: O Vite substitui estaticamente 'import.meta.env.VITE_...' durante o build.
+// Usamos optional chaining (?.) para evitar crash (TypeError) caso import.meta.env seja undefined
+// em ambientes onde o replace não ocorreu corretamente.
+const supabaseUrl = import.meta.env?.VITE_PUBLIC_SUPABASE_URL || FALLBACK_URL;
+const supabaseAnonKey = import.meta.env?.VITE_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_KEY;
 
-const supabaseUrl = getEnvVar('VITE_PUBLIC_SUPABASE_URL') || FALLBACK_URL;
-const supabaseAnonKey = getEnvVar('VITE_PUBLIC_SUPABASE_ANON_KEY') || FALLBACK_KEY;
-
+// Log discreto apenas em desenvolvimento ou se estiver usando fallback
 if (supabaseUrl === FALLBACK_URL) {
-  console.log('ℹ️ Usando credenciais de fallback do Supabase.');
+  console.debug('ℹ️ Supabase: Usando configuração de fallback/pública.');
 }
 
 // Cria uma instância única do cliente para ser usada em toda a aplicação

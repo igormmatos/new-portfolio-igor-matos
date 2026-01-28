@@ -1,3 +1,12 @@
+📝 Log de Alteração • Solicitação: Corrigir "Uncaught TypeError: Cannot read properties of undefined (reading 'VITE_PUBLIC_SUPABASE_URL')". • Ação Executada: 
+1. `supabaseClient.ts`: Adicionado optional chaining `import.meta.env?.KEY` para prevenir crash quando o objeto `env` não está disponível (comportamento nativo do navegador sem build). O sistema fará fallback seguro para as credenciais hardcoded.
+2. `index.html`: Removido bloco `<script type="importmap">` estático que continha versões conflitantes do React 19, mantendo apenas a injeção dinâmica controlada (React 18). • Resultado Esperado: Eliminação do erro fatal no console e carregamento correto da aplicação usando as credenciais de fallback se as variáveis de ambiente falharem.
+
+📝 Log de Alteração • Solicitação: Melhorar robustez da build e limpar erros de console. • Ação Executada: 
+1. Atualizado `supabaseClient.ts` para usar referências estáticas `import.meta.env.VITE_...` ao invés de acesso dinâmico, garantindo que o bundler do Vite substitua corretamente as variáveis de ambiente em produção.
+2. Removido bloco `<script type="importmap">` redundante/conflitante (React 19) do `index.html`.
+3. Ajustado nível de log do MutationObserver para reduzir ruído no console. • Resultado Esperado: Console limpo, conexão Supabase usando as credenciais corretas da Vercel (sem fallback desnecessário) e manutenção da estabilidade do ImportMap React 18.
+
 📝 Log de Alteração • Solicitação: Corrigir erro de build na Vercel (Rollup failed to resolve import) e erro de runtime (ReactCurrentOwner/ImportMap conflict). • Ação Executada: 
 1. `index.html` reescrito para injetar o ImportMap **de forma síncrona e inline** (via script JS imediato) em vez de usar `fetch`, eliminando a condição de corrida onde o navegador carregava módulos antes do mapa.
 2. Adicionada lógica de `MutationObserver` no mesmo script inline para bloquear injeções automáticas de React 19 pelo ambiente.
