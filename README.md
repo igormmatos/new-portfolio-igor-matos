@@ -2,19 +2,35 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+## Rodar localmente
 
-This contains everything you need to run your app locally.
+### Pré-requisitos
 
-View your app in AI Studio: https://ai.studio/apps/drive/1F5Oeq6OA9E08CVwImCnuCB4mCaIIP9tf
+- **Node.js** (recomendado: versão LTS)
+- **npm** (vem junto com o Node)
 
-## Run Locally
+### Passo a passo
 
-**Prerequisites:**  Node.js
+1. **Instalar dependências**
 
+```bash
+npm install
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. **Configurar variáveis de ambiente (Supabase)**
+
+O projeto usa Vite, então as variáveis precisam começar com `VITE_`.
+Já existe um arquivo `.env` na raiz com:
+
+- `VITE_PUBLIC_SUPABASE_URL`
+- `VITE_PUBLIC_SUPABASE_ANON_KEY`
+
+Se você trocar de projeto/instância do Supabase, atualize esses valores.
+
+3. **Subir o servidor de desenvolvimento**
+
+```bash
+npm run dev
+```
+
+Depois, abra o endereço que o Vite mostrar no terminal (geralmente `http://localhost:5173`).
