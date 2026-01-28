@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
+import VerticalJourney from '../components/VerticalJourney'; // Importado Novo Componente
 import { useI18n } from '../i18n';
 import { api } from '../services/api';
-import { ProfileInfo, Project, JourneyItem, Competency, TechnicalSkill } from '../types';
+import { ProfileInfo, Project, Competency, TechnicalSkill } from '../types';
 
 const HeroSection = () => {
   const { t } = useI18n();
@@ -244,118 +245,6 @@ const TechStackSection = () => {
               </div>
             </div>
           ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const ExperienceSection = () => {
-  const { t } = useI18n();
-  const [experience, setExperience] = useState<JourneyItem[]>([]);
-  // Estado para controlar qual item está expandido no mobile (Accordion)
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    api.getJourney().then(setExperience);
-  }, []);
-
-  const toggleExpand = (id: string) => {
-    setExpandedId(prev => prev === id ? null : id);
-  };
-
-  return (
-    <section id="experience" className="py-24 bg-slate-900">
-      <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Header Fixo */}
-          <div className="lg:col-span-1">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-50 mb-4 sticky top-32">{t('experience.title')}</h2>
-            <p className="text-slate-400 sticky top-44">
-              {t('experience.subtitle')}
-            </p>
-          </div>
-
-          {/* Lista de Experiências */}
-          <div className="lg:col-span-2 relative space-y-6 lg:space-y-12 lg:border-l-2 lg:border-slate-700 lg:ml-6">
-            {experience.map((item) => (
-              <div key={item.id} className="relative lg:pl-12">
-                {/* Dot (Apenas Desktop) */}
-                <div className="hidden lg:block absolute -left-[7px] top-8 w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_0_4px_rgba(99,102,241,0.2)]"></div>
-                
-                {/* Card Container */}
-                <div 
-                  className={`
-                    bg-slate-800 border rounded-2xl overflow-hidden transition-all duration-300
-                    ${expandedId === item.id 
-                      ? 'border-indigo-500/30 shadow-lg shadow-indigo-900/10' 
-                      : 'border-slate-700/50 hover:border-slate-600'
-                    }
-                  `}
-                >
-                  {/* Header do Card (Clicável no Mobile) */}
-                  <div 
-                    onClick={() => toggleExpand(item.id)}
-                    className="p-6 cursor-pointer lg:cursor-default"
-                  >
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg md:text-xl font-bold text-white leading-snug">{item.title}</h3>
-                        <p className="text-indigo-400 font-medium text-sm mt-1">{item.company}</p>
-                      </div>
-                      
-                      {/* Badge Desktop */}
-                      <span className="hidden lg:inline-block px-3 py-1 bg-slate-900/50 rounded-full text-xs font-semibold text-slate-500 border border-slate-700 whitespace-nowrap">
-                        {item.period}
-                      </span>
-
-                      {/* Ícone Chevron Mobile */}
-                      <div className="lg:hidden text-slate-500 mt-1">
-                         <i className={`fa-solid fa-chevron-down transition-transform duration-300 ${expandedId === item.id ? 'rotate-180 text-indigo-400' : ''}`}></i>
-                      </div>
-                    </div>
-
-                    {/* Badge Mobile (Abaixo do título para economizar largura) */}
-                    <div className="lg:hidden flex items-center justify-between mt-3">
-                        <span className="text-xs font-semibold text-slate-400 bg-slate-900/50 px-2 py-1 rounded border border-slate-700">
-                          {item.period}
-                        </span>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider ${item.type === 'work' ? 'text-indigo-400' : 'text-green-400'}`}>
-                           {item.type === 'work' ? 'Profissional' : 'Acadêmico'}
-                        </span>
-                    </div>
-                  </div>
-                  
-                  {/* Conteúdo Expansível */}
-                  <div 
-                    className={`
-                      px-6 pb-6 pt-0 border-t border-slate-700/30
-                      lg:block lg:border-t-0 lg:pt-0 lg:pb-8
-                      ${expandedId === item.id ? 'block' : 'hidden'}
-                    `}
-                  >
-                    {/* Padding top só quando expandido no mobile para separar do header */}
-                    <div className="lg:hidden h-4"></div>
-
-                    <p className="text-slate-300 leading-relaxed text-sm md:text-base">
-                      {item.description}
-                    </p>
-                    
-                    {/* Footer Desktop */}
-                    <div className="hidden lg:flex mt-6 pt-4 border-t border-slate-700/30 justify-between items-center">
-                       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-                           <i className={`fa-solid ${item.type === 'work' ? 'fa-briefcase' : 'fa-graduation-cap'} ${item.type === 'work' ? 'text-indigo-500' : 'text-green-500'}`}></i>
-                           <span className={item.type === 'work' ? 'text-indigo-400' : 'text-green-400'}>
-                             {item.type === 'work' ? 'Experiência Profissional' : 'Formação Acadêmica'}
-                           </span>
-                       </div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>
@@ -662,7 +551,7 @@ const Home: React.FC = () => {
       <HeroSection />
       <CompetenciesSection />
       <TechStackSection />
-      <ExperienceSection />
+      <VerticalJourney /> {/* Novo Componente Injetado */}
       <ProjectsSection />
       <ContactSection />
     </Layout>
