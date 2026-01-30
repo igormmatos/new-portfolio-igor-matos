@@ -363,6 +363,25 @@ const Admin: React.FC = () => {
                 <i className="fa-solid fa-plus mr-2"></i> {t('admin.add')}
               </button>
             )}
+
+            <div className="md:hidden mt-4 w-full">
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+                {menuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id as AdminTab)}
+                    className={`shrink-0 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-indigo-600/10 text-indigo-400 border-indigo-500/30'
+                        : 'text-slate-400 border-slate-800 bg-slate-950/50'
+                    }`}
+                  >
+                    <i className={`${item.icon} mr-2`}></i>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             
             <div className="md:hidden mt-4 w-full">
                <button
@@ -415,6 +434,13 @@ const Admin: React.FC = () => {
 
              {/* DRAG AND DROP CONTEXT FOR LISTS */}
              {activeTab !== 'profile' && (
+               <>
+                <div className="mb-4 text-xs text-slate-500 flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-900 text-slate-400 border border-slate-800">
+                    <i className="fa-solid fa-hand-pointer text-[10px]"></i>
+                  </span>
+                  Arraste pelo ícone para reordenar os cards
+                </div>
                 <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
                     <StrictModeDroppable droppableId={activeTab} direction={activeTab === 'journey' ? 'vertical' : 'horizontal'}>
                     {(provided: any, snapshot: any) => (
@@ -435,7 +461,7 @@ const Admin: React.FC = () => {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
-                                    className={`group bg-slate-900 border rounded-2xl overflow-hidden flex flex-col transition-all duration-200 relative 
+                                    className={`group bg-slate-900 border rounded-2xl overflow-hidden flex flex-col transition-all duration-200 relative select-none touch-manipulation
                                       ${snapshot.isDragging 
                                         ? 'border-indigo-400 ring-2 ring-indigo-500/30 shadow-2xl shadow-indigo-500/20 scale-105 rotate-2 z-50 bg-slate-800/95 opacity-90 backdrop-blur-sm cursor-grabbing' 
                                         : 'border-slate-800 hover:border-indigo-500/50'
@@ -443,7 +469,13 @@ const Admin: React.FC = () => {
                                     style={{ ...provided.draggableProps.style }}
                                 >
                                     {/* Drag Handle */}
-                                    <div {...provided.dragHandleProps} className={`absolute top-2 right-2 z-20 w-8 h-8 rounded-lg ${snapshot.isDragging ? 'bg-indigo-600 text-white cursor-grabbing' : 'bg-slate-950/80 text-slate-500 hover:text-white cursor-grab active:cursor-grabbing'} flex items-center justify-center backdrop-blur-sm border border-slate-800 transition-colors`}>
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      role="button"
+                                      aria-label="Arraste para reordenar"
+                                      title="Arraste para reordenar"
+                                      className={`absolute top-2 right-2 z-20 w-10 h-10 rounded-lg ${snapshot.isDragging ? 'bg-indigo-600 text-white cursor-grabbing' : 'bg-slate-950/80 text-slate-400 hover:text-white cursor-grab active:cursor-grabbing'} flex items-center justify-center backdrop-blur-sm border border-slate-800 transition-colors`}
+                                    >
                                         <i className="fa-solid fa-grip-vertical"></i>
                                     </div>
 
@@ -553,7 +585,13 @@ const Admin: React.FC = () => {
                                       }`}
                                     style={{ ...provided.draggableProps.style }}
                                 >
-                                    <div {...provided.dragHandleProps} className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center ${snapshot.isDragging ? 'text-indigo-400 cursor-grabbing' : 'text-slate-600 hover:text-white cursor-grab active:cursor-grabbing'}`}>
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      role="button"
+                                      aria-label="Arraste para reordenar"
+                                      title="Arraste para reordenar"
+                                      className={`absolute top-2 right-2 w-10 h-10 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-center ${snapshot.isDragging ? 'text-indigo-400 cursor-grabbing' : 'text-slate-400 hover:text-white cursor-grab active:cursor-grabbing'}`}
+                                    >
                                         <i className="fa-solid fa-grip-vertical"></i>
                                     </div>
 
@@ -594,14 +632,20 @@ const Admin: React.FC = () => {
                                 <div 
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
-                                    className={`bg-slate-900 border rounded-2xl p-6 flex flex-col items-center text-center transition-all duration-200 relative group 
+                                    className={`bg-slate-900 border rounded-2xl p-6 flex flex-col items-center text-center transition-all duration-200 relative group select-none touch-manipulation
                                       ${snapshot.isDragging 
                                         ? 'border-indigo-400 ring-2 ring-indigo-500/30 shadow-2xl shadow-indigo-500/20 scale-105 rotate-2 z-50 bg-slate-800/95 opacity-90 backdrop-blur-sm cursor-grabbing' 
                                         : 'border-slate-800 hover:border-indigo-500/50'
                                       }`}
                                     style={{ ...provided.draggableProps.style }}
                                 >
-                                    <div {...provided.dragHandleProps} className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center ${snapshot.isDragging ? 'text-indigo-400 cursor-grabbing' : 'text-slate-600 hover:text-white cursor-grab active:cursor-grabbing'}`}>
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      role="button"
+                                      aria-label="Arraste para reordenar"
+                                      title="Arraste para reordenar"
+                                      className={`absolute top-2 right-2 w-10 h-10 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-center ${snapshot.isDragging ? 'text-indigo-400 cursor-grabbing' : 'text-slate-400 hover:text-white cursor-grab active:cursor-grabbing'}`}
+                                    >
                                         <i className="fa-solid fa-grip-vertical"></i>
                                     </div>
                                     <span className="absolute top-2 left-2 text-[10px] font-bold text-slate-600 bg-slate-950 px-2 py-1 rounded border border-slate-800">
@@ -635,6 +679,7 @@ const Admin: React.FC = () => {
                     )}
                     </StrictModeDroppable>
                 </DragDropContext>
+               </>
              )}
 
              {/* Empty State */}

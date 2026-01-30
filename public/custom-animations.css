@@ -212,3 +212,24 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Mobile: reduzir microinterações e brilho decorativo */
+@media (max-width: 767px) {
+  .hover-3d:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .hover-scale:hover {
+    transform: none;
+  }
+
+  .glow-effect::before,
+  .glow-effect:hover::before {
+    opacity: 0;
+  }
+
+  .glow-effect:hover {
+    box-shadow: none;
+  }
+}

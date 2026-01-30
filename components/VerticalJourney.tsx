@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { JourneyItem } from '../types';
 import { api } from '../services/api';
 import ScrollReveal from './ScrollReveal';
+import { useI18n, selectLocalizedColumn } from '../i18n';
 
 // Dados de fallback caso a API não retorne nada
 const MOCK_JOURNEY: JourneyItem[] = [
@@ -35,10 +36,13 @@ const MOCK_JOURNEY: JourneyItem[] = [
 ];
 
 const VerticalJourney: React.FC = () => {
+  const { t, language } = useI18n();
   const [items, setItems] = useState<JourneyItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down'>('down');
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const touchDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,6 +83,37 @@ const VerticalJourney: React.FC = () => {
     changeSlide(prevIndex);
   }, [items.length, currentIndex, changeSlide]);
 
+  const swipeThreshold = 40;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.innerWidth >= 768) return;
+    const touch = e.touches[0];
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
+    touchDelta.current = { x: 0, y: 0 };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (window.innerWidth >= 768 || !touchStart.current) return;
+    const touch = e.touches[0];
+    touchDelta.current = {
+      x: touch.clientX - touchStart.current.x,
+      y: touch.clientY - touchStart.current.y,
+    };
+  };
+
+  const handleTouchEnd = () => {
+    if (window.innerWidth >= 768 || !touchStart.current) return;
+    const { x, y } = touchDelta.current;
+    if (Math.abs(x) > Math.abs(y) && Math.abs(x) > swipeThreshold) {
+      if (x < 0) handleNext();
+      if (x > 0) handlePrev();
+    } else if (Math.abs(y) > swipeThreshold) {
+      if (y < 0) handleNext();
+      if (y > 0) handlePrev();
+    }
+    touchStart.current = null;
+  };
+
   // Navegação por Teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -97,16 +132,20 @@ const VerticalJourney: React.FC = () => {
   if (items.length === 0) return null;
 
   const activeItem = items[currentIndex];
+  const activeTitle = selectLocalizedColumn(activeItem, 'title', language) || activeItem.title;
+  const activeCompany = selectLocalizedColumn(activeItem, 'company', language) || activeItem.company;
+  const activePeriod = selectLocalizedColumn(activeItem, 'period', language) || activeItem.period;
+  const activeDescription = selectLocalizedColumn(activeItem, 'description', language) || activeItem.description;
 
   const transformClass = isAnimating 
     ? (direction === 'down' ? '-translate-y-8 opacity-0' : 'translate-y-8 opacity-0')
     : 'translate-y-0 opacity-100';
 
   return (
-    <section id="experience" className="relative bg-slate-950 overflow-hidden py-24 border-t border-slate-900">
+    <section id="experience" className="relative bg-slate-950 overflow-hidden py-16 md:py-24 border-t border-slate-900 scroll-mt-24 md:scroll-mt-0">
       
       {/* Background Decor Simétrico com Blob Morphing */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none animate-blob-morph will-change-transform"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] opacity-60 md:opacity-100 pointer-events-none"></div>
 
       <div className="container mx-auto px-6 relative z-10 flex flex-col items-center">
 
@@ -114,14 +153,14 @@ const VerticalJourney: React.FC = () => {
         <ScrollReveal delay={0}>
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="inline-block text-indigo-500 font-mono text-sm tracking-wider uppercase mb-3 px-3 py-1 bg-indigo-500/5 rounded-full border border-indigo-500/10">
-                Carreira & Educação
+                {t('experience.badge')}
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Minha Jornada
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-5">
+                {t('experience.title')}
             </h2>
             <div className="w-24 h-1.5 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full mx-auto mb-6"></div>
-            <p className="text-slate-400 text-lg leading-relaxed">
-                Uma linha do tempo da minha carreira profissional e formação educacional, mostrando meu crescimento e marcos importantes.
+            <p className="text-slate-400 text-base md:text-lg leading-relaxed">
+                {t('experience.subtitle')}
             </p>
           </div>
         </ScrollReveal>
@@ -139,7 +178,7 @@ const VerticalJourney: React.FC = () => {
                 <button 
                     onClick={handlePrev}
                     className="z-10 w-10 h-10 rounded-full glass-morphism border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-lg hover-scale glow-effect"
-                    aria-label="Anterior"
+                    aria-label={t('experience.nav.prev')}
                 >
                     <i className="fa-solid fa-chevron-up text-sm"></i>
                 </button>
@@ -161,7 +200,7 @@ const VerticalJourney: React.FC = () => {
                                         : 'bg-slate-900 text-slate-500 border-slate-800 opacity-70 group-hover:opacity-100'
                                     }`}
                                 >
-                                    {item.period.split('–')[0]}
+                                    {(selectLocalizedColumn(item, 'period', language) || item.period).split('–')[0]}
                                 </span>
 
                                 {/* O Ponto */}
@@ -184,14 +223,19 @@ const VerticalJourney: React.FC = () => {
                 <button 
                     onClick={handleNext}
                     className="z-10 w-10 h-10 rounded-full glass-morphism border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-lg hover-scale glow-effect"
-                    aria-label="Próximo"
+                    aria-label={t('experience.nav.next')}
                 >
                     <i className="fa-solid fa-chevron-down text-sm"></i>
                 </button>
             </div>
 
             {/* 2. O CARD (Direita) */}
-            <div className="flex-1 w-full md:w-auto min-w-0 order-2 md:order-2">
+            <div
+              className="flex-1 w-full md:w-auto min-w-0 order-2 md:order-2"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
                 <div 
                   className={`
                      relative w-full glass-morphism border border-slate-800 rounded-3xl p-8 md:p-12 shadow-2xl
@@ -212,29 +256,29 @@ const VerticalJourney: React.FC = () => {
                               ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' 
                               : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                          }`}>
-                            {activeItem.type === 'work' ? 'Experiência' : 'Formação'}
+                            {activeItem.type === 'work' ? t('experience.type.work') : t('experience.type.education')}
                          </span>
                          <span className="flex items-center gap-2 text-slate-400 text-sm font-mono bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
                             <i className="fa-regular fa-calendar text-xs"></i>
-                            {activeItem.period}
+                            {activePeriod}
                          </span>
                       </div>
 
-                      <h3 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight">
-                         {activeItem.title}
+                      <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 leading-tight">
+                         {activeTitle}
                       </h3>
                       
-                      <div className="flex items-center gap-2 text-lg text-slate-400 mb-8 font-medium">
+                      <div className="flex items-center gap-2 text-base md:text-lg text-slate-400 mb-6 font-medium">
                          <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-slate-500">
                             <i className="fa-solid fa-building text-sm"></i>
                          </div>
-                         {activeItem.company}
+                         {activeCompany}
                       </div>
 
                       {/* Descrição */}
                       <div className="relative border-t border-slate-800/50 pt-6">
-                         <p className="text-slate-300 text-lg leading-relaxed">
-                            {activeItem.description}
+                         <p className="text-slate-300 text-base md:text-lg leading-relaxed">
+                            {activeDescription}
                          </p>
                       </div>
                    </div>
@@ -248,7 +292,7 @@ const VerticalJourney: React.FC = () => {
                   <button
                     onClick={handlePrev}
                     className="w-9 h-9 rounded-full glass-morphism border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-md hover-scale glow-effect"
-                    aria-label="Experiência anterior"
+                    aria-label={t('experience.nav.prev_full')}
                   >
                     <i className="fa-solid fa-chevron-left text-xs"></i>
                   </button>
@@ -267,7 +311,7 @@ const VerticalJourney: React.FC = () => {
                   <button
                     onClick={handleNext}
                     className="w-9 h-9 rounded-full glass-morphism border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-md hover-scale glow-effect"
-                    aria-label="Próxima experiência"
+                    aria-label={t('experience.nav.next_full')}
                   >
                     <i className="fa-solid fa-chevron-right text-xs"></i>
                   </button>

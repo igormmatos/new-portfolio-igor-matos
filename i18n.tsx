@@ -3,6 +3,11 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'pt-BR' | 'en' | 'fr';
 
+const STORAGE_KEY = 'app_language';
+const isLanguage = (value: string | null): value is Language =>
+  value === 'pt-BR' || value === 'en' || value === 'fr';
+const langSuffix = (lang: Language) => (lang === 'pt-BR' ? 'pt' : lang);
+
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -23,6 +28,9 @@ export const translations = {
     
     'hero.badge': 'Disponível para contratação',
     'hero.greeting': 'Olá, eu sou',
+    'hero.avatar_alt': 'Avatar',
+    'hero.experience.label': 'Experiência',
+    'hero.experience.value': '5+ Anos',
     'hero.cta.more': 'Conhecer Mais',
     'hero.cta.primary': 'Iniciar Projeto',
     'hero.cta.secondary': 'Ver Trabalhos',
@@ -35,12 +43,20 @@ export const translations = {
 
     'experience.title': 'Minha Jornada',
     'experience.subtitle': 'Uma linha do tempo da minha carreira profissional e formação educacional, mostrando meu crescimento e marcos.',
+    'experience.badge': 'Carreira & Educação',
+    'experience.type.work': 'Experiência',
+    'experience.type.education': 'Formação',
+    'experience.nav.prev': 'Anterior',
+    'experience.nav.next': 'Próximo',
+    'experience.nav.prev_full': 'Experiência anterior',
+    'experience.nav.next_full': 'Próxima experiência',
 
     'projects.title': 'Projetos em Destaque',
     'projects.subtitle': 'Trabalhos selecionados que demonstram minha habilidade em entregar soluções complexas.',
     'projects.viewGithub': 'Ver Github',
     'projects.liveDemo': 'Demo Online',
     'projects.code': 'Código',
+    'projects.empty': 'Nenhum projeto cadastrado ainda.',
 
     'contact.title': 'Vamos trabalhar juntos',
     'contact.name': 'Nome',
@@ -48,10 +64,15 @@ export const translations = {
     'contact.subject': 'Assunto',
     'contact.message': 'Mensagem',
     'contact.send': 'Enviar Mensagem',
+    'contact.send.via': '(via WhatsApp)',
     'contact.touch.title': 'Entre em contato',
     'contact.touch.desc': 'Tem um projeto em mente ou apenas quer dar um oi? Estou sempre aberto a discutir novos projetos, ideias criativas ou oportunidades.',
     'contact.touch.email': 'Me envie um email',
     'contact.touch.whatsapp': 'Conversar no WhatsApp',
+    'contact.view_profile': 'Ver perfil',
+    'contact.social.linkedin': 'LinkedIn',
+    'contact.social.github': 'GitHub',
+    'contact.fab': 'Fale Comigo',
 
     'footer.rights': 'Todos os direitos reservados.',
     'footer.privacy': 'Política de Privacidade',
@@ -85,6 +106,9 @@ export const translations = {
 
     'hero.badge': 'Available for hire',
     'hero.greeting': 'Hi, I am',
+    'hero.avatar_alt': 'Avatar',
+    'hero.experience.label': 'Experience',
+    'hero.experience.value': '5+ Years',
     'hero.cta.more': 'Learn More',
     'hero.cta.primary': 'Start a Project',
     'hero.cta.secondary': 'View Work',
@@ -97,12 +121,20 @@ export const translations = {
 
     'experience.title': 'My Journey',
     'experience.subtitle': 'A timeline of my professional career and educational background, showcasing my growth and milestones.',
+    'experience.badge': 'Career & Education',
+    'experience.type.work': 'Experience',
+    'experience.type.education': 'Education',
+    'experience.nav.prev': 'Previous',
+    'experience.nav.next': 'Next',
+    'experience.nav.prev_full': 'Previous experience',
+    'experience.nav.next_full': 'Next experience',
 
     'projects.title': 'Featured Projects',
     'projects.subtitle': 'Selected works that demonstrate my ability to deliver complex solutions.',
     'projects.viewGithub': 'View Github',
     'projects.liveDemo': 'Live Demo',
     'projects.code': 'Code',
+    'projects.empty': 'No projects yet.',
 
     'contact.title': 'Let\'s work together',
     'contact.name': 'Name',
@@ -110,10 +142,15 @@ export const translations = {
     'contact.subject': 'Subject',
     'contact.message': 'Message',
     'contact.send': 'Send Message',
+    'contact.send.via': '(via WhatsApp)',
     'contact.touch.title': 'Get in touch',
     'contact.touch.desc': 'Have a project in mind or just want to say hi? I\'m always open to discussing new projects, creative ideas or opportunities.',
     'contact.touch.email': 'Email me at',
     'contact.touch.whatsapp': 'Chat on WhatsApp',
+    'contact.view_profile': 'View profile',
+    'contact.social.linkedin': 'LinkedIn',
+    'contact.social.github': 'GitHub',
+    'contact.fab': 'Chat with me',
 
     'footer.rights': 'All rights reserved.',
     'footer.privacy': 'Privacy Policy',
@@ -147,6 +184,9 @@ export const translations = {
 
     'hero.badge': 'Disponible pour embauche',
     'hero.greeting': 'Salut, je suis',
+    'hero.avatar_alt': 'Avatar',
+    'hero.experience.label': 'Expérience',
+    'hero.experience.value': '5+ ans',
     'hero.cta.more': 'En savoir plus',
     'hero.cta.primary': 'Lancer un projet',
     'hero.cta.secondary': 'Voir mon travail',
@@ -159,12 +199,20 @@ export const translations = {
 
     'experience.title': 'Mon Parcours',
     'experience.subtitle': 'Une chronologie de ma carrière professionnelle et de ma formation, montrant ma croissance et mes étapes clés.',
+    'experience.badge': 'Carrière & Éducation',
+    'experience.type.work': 'Expérience',
+    'experience.type.education': 'Formation',
+    'experience.nav.prev': 'Précédent',
+    'experience.nav.next': 'Suivant',
+    'experience.nav.prev_full': 'Expérience précédente',
+    'experience.nav.next_full': 'Expérience suivante',
 
     'projects.title': 'Projets en Vedette',
     'projects.subtitle': 'Travaux sélectionnés démontrant ma capacité à livrer des solutions complexes.',
     'projects.viewGithub': 'Voir Github',
     'projects.liveDemo': 'Démo Live',
     'projects.code': 'Code',
+    'projects.empty': 'Aucun projet pour le moment.',
 
     'contact.title': 'Travaillons ensemble',
     'contact.name': 'Nom',
@@ -172,10 +220,15 @@ export const translations = {
     'contact.subject': 'Sujet',
     'contact.message': 'Message',
     'contact.send': 'Envoyer le message',
+    'contact.send.via': '(via WhatsApp)',
     'contact.touch.title': 'Contactez-moi',
     'contact.touch.desc': 'Vous avez un projet en tête ou voulez simplement dire bonjour ? Je suis toujours ouvert aux nouveaux projets et idées créatives.',
     'contact.touch.email': 'Envoyez-moi un email',
     'contact.touch.whatsapp': 'Discuter sur WhatsApp',
+    'contact.view_profile': 'Voir le profil',
+    'contact.social.linkedin': 'LinkedIn',
+    'contact.social.github': 'GitHub',
+    'contact.fab': 'Parlons',
 
     'footer.rights': 'Tous droits réservés.',
     'footer.privacy': 'Politique de Confidentialité',
@@ -204,19 +257,23 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [language, setLanguageState] = useState<Language>('pt-BR');
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('app_language') as Language;
-    if (savedLang && (savedLang === 'pt-BR' || savedLang === 'en' || savedLang === 'fr')) {
+    const savedLang = localStorage.getItem(STORAGE_KEY);
+    if (isLanguage(savedLang)) {
       setLanguageState(savedLang);
     }
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('app_language', lang);
+    localStorage.setItem(STORAGE_KEY, lang);
   };
 
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations['pt-BR']] || key;
+    return (
+      translations[language][key as keyof typeof translations['pt-BR']] ||
+      translations['pt-BR'][key as keyof typeof translations['pt-BR']] ||
+      key
+    );
   };
 
   return (
@@ -232,4 +289,29 @@ export const useI18n = () => {
     throw new Error('useI18n must be used within an I18nProvider');
   }
   return context;
+};
+
+export const selectLocalizedColumn = <T = string>(
+  record: any,
+  baseField: string,
+  lang: Language,
+  fallback: Language = 'pt-BR'
+): T | undefined => {
+  if (!record) return undefined;
+  const primary = record[`${baseField}_${langSuffix(lang)}`];
+  if (primary !== undefined && primary !== null && primary !== '') return primary as T;
+  const fb = record[`${baseField}_${langSuffix(fallback)}`];
+  if (fb !== undefined && fb !== null && fb !== '') return fb as T;
+  return record[baseField] as T;
+};
+
+export const selectLocalizedArray = (
+  record: any,
+  baseField: string,
+  lang: Language,
+  fallback: Language = 'pt-BR'
+): string[] => {
+  const value = selectLocalizedColumn<any>(record, baseField, lang, fallback);
+  if (Array.isArray(value)) return value;
+  return [];
 };

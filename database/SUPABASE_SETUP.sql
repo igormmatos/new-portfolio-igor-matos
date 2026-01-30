@@ -1,0 +1,140 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.competencies (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  title text NOT NULL,
+  title_pt text,
+  title_en text,
+  title_fr text,
+  subtitle text,
+  subtitle_pt text,
+  subtitle_en text,
+  subtitle_fr text,
+  icon text,
+  items ARRAY DEFAULT '{}'::text[],
+  items_pt text[],
+  items_en text[],
+  items_fr text[],
+  color_theme text DEFAULT 'indigo'::text,
+  display_order integer DEFAULT 0,
+  CONSTRAINT competencies_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.display_order_audit_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  table_name text NOT NULL,
+  moved_item_id uuid,
+  displaced_item_id uuid,
+  new_position integer,
+  happened_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT display_order_audit_logs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.journey_items (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  title text NOT NULL,
+  title_pt text,
+  title_en text,
+  title_fr text,
+  company text,
+  company_pt text,
+  company_en text,
+  company_fr text,
+  period text,
+  period_pt text,
+  period_en text,
+  period_fr text,
+  description text NOT NULL,
+  description_pt text,
+  description_en text,
+  description_fr text,
+  type text DEFAULT 'work'::text,
+  display_order integer DEFAULT 0,
+  CONSTRAINT journey_items_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.profile_info (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  display_name text NOT NULL,
+  display_name_pt text,
+  display_name_en text,
+  display_name_fr text,
+  headline text NOT NULL,
+  headline_pt text,
+  headline_en text,
+  headline_fr text,
+  bio text NOT NULL,
+  bio_pt text,
+  bio_en text,
+  bio_fr text,
+  whatsapp text NOT NULL,
+  linkedin_url text,
+  email_contact text,
+  action_phrase text,
+  action_phrase_pt text,
+  action_phrase_en text,
+  action_phrase_fr text,
+  git_url text,
+  badge text,
+  badge_pt text,
+  badge_en text,
+  badge_fr text,
+  CONSTRAINT profile_info_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.projects (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  title text NOT NULL,
+  title_pt text,
+  title_en text,
+  title_fr text,
+  role text,
+  role_pt text,
+  role_en text,
+  role_fr text,
+  description text,
+  description_pt text,
+  description_en text,
+  description_fr text,
+  technologies text,
+  technologies_pt text,
+  technologies_en text,
+  technologies_fr text,
+  github_url text,
+  live_url text,
+  image_url text,
+  display_order integer NOT NULL DEFAULT 0,
+  CONSTRAINT projects_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.services (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  title text NOT NULL,
+  description text NOT NULL,
+  icon text NOT NULL,
+  display_order integer DEFAULT 0,
+  CONSTRAINT services_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.submissions (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  user_name text NOT NULL,
+  user_email text NOT NULL,
+  user_phone text NOT NULL,
+  is_whatsapp boolean DEFAULT true,
+  status text DEFAULT 'Não Iniciado'::text,
+  answers jsonb DEFAULT '{}'::jsonb,
+  CONSTRAINT submissions_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.technical_skills (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  name_pt text,
+  name_en text,
+  name_fr text,
+  icon text,
+  level integer CHECK (level >= 0 AND level <= 100),
+  display_order integer DEFAULT 0,
+  CONSTRAINT technical_skills_pkey PRIMARY KEY (id)
+);

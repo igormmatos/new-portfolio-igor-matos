@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useI18n, Language } from '../i18n';
+import { useI18n, Language, selectLocalizedColumn } from '../i18n';
 import { api } from '../services/api';
 import { ProfileInfo } from '../types';
 
@@ -79,7 +79,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isAdmin = location.pathname.includes('admin');
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -95,14 +95,26 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
   }, [location.pathname]);
 
   const navLinks = [
-    { name: t('nav.home'), href: '#' },
-    { name: t('nav.skills'), href: '#skills' },
-    { name: t('nav.experience'), href: '#experience' },
+    { name: t('nav.home'), href: '#home' },
     { name: t('nav.projects'), href: '#projects' },
+    { name: t('nav.experience'), href: '#experience' },
+    { name: t('nav.skills'), href: '#skills' },
     { name: t('nav.contact'), href: '#contact' },
   ];
 
-  const logoAlt = profile?.display_name ? `${profile.display_name} Logo` : 'Logo';
+  const profileName = selectLocalizedColumn(profile, 'display_name', language) || profile?.display_name;
+  const logoAlt = profileName ? `${profileName} Logo` : 'Logo';
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (!href.startsWith('#')) return;
+    e.preventDefault();
+    const targetId = href.slice(1);
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-900/90 backdrop-blur-md border-b border-slate-800 py-4' : 'bg-transparent py-6'}`}>
@@ -123,6 +135,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
               <a
                 key={link.name}
                 href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
                 className="relative text-sm font-medium text-slate-300 hover:text-white transition-colors duration-300 after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:bg-indigo-500 hover:after:w-full after:transition-all after:duration-300"
               >
                 {link.name}
@@ -179,8 +192,8 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
                   <a
                     key={link.name}
                     href={link.href}
+                    onClick={(e) => handleNavClick(e, link.href)}
                     className="w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition-colors text-left"
-                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.name}
                   </a>
@@ -199,7 +212,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
                     <i className="fa-solid fa-arrow-left mr-2"></i>
                     {t('nav.back')}
                   </span>
-                  <span className="text-xs text-slate-400">Home</span>
+                  <span className="text-xs text-slate-400">{t('nav.home')}</span>
                 </Link>
               ) : (
                 <Link
@@ -224,7 +237,12 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ profile }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const profileName = selectLocalizedColumn(profile, 'display_name', language) || profile?.display_name;
+  const footerTagline =
+    selectLocalizedColumn(profile, 'action_phrase', language) ||
+    profile?.action_phrase ||
+    t('footer.tagline');
 
   return (
     <footer className="bg-slate-950 border-t border-slate-900 pt-16 pb-8">
@@ -237,7 +255,7 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
                className="h-10 w-auto object-contain mb-4 opacity-90" 
              />
              <p className="mt-2 text-slate-500 max-w-sm text-sm">
-               {profile?.action_phrase || t('footer.tagline')}
+               {footerTagline}
              </p>
           </div>
           <div className="flex space-x-6">
@@ -254,7 +272,7 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
         </div>
         <div className="border-t border-slate-900 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-600 text-xs">
-            © {new Date().getFullYear()} {profile?.display_name || "Portfólio"}. {t('footer.rights')}
+            © {new Date().getFullYear()} {profileName || "Portfólio"}. {t('footer.rights')}
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-xs text-slate-600 hover:text-slate-400">{t('footer.privacy')}</a>
@@ -287,12 +305,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           href={`https://wa.me/${profile.whatsapp}?text=${encodeURIComponent("Olá, vi o seu portfólio e gostaria de conversar um pouco mais!")}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 animate-bounce-slow group glow-effect hover-scale"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 group glow-effect hover-scale"
           aria-label="Conversar no WhatsApp"
         >
           <i className="fa-brands fa-whatsapp text-3xl"></i>
           <span className="absolute right-full mr-4 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-700 pointer-events-none shadow-lg">
-             Fale Comigo
+             {t('contact.fab')}
           </span>
         </a>
       )}
