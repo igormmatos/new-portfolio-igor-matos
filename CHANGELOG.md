@@ -1,6 +1,4 @@
-📝 Log de Alteração • Solicitação: Corrigir "Uncaught TypeError: Cannot read properties of undefined (reading 'VITE_PUBLIC_SUPABASE_URL')". • Ação Executada: 
-1. `supabaseClient.ts`: Adicionado optional chaining `import.meta.env?.KEY` para prevenir crash quando o objeto `env` não está disponível (comportamento nativo do navegador sem build). O sistema fará fallback seguro para as credenciais hardcoded.
-2. `index.html`: Removido bloco `<script type="importmap">` estático que continha versões conflitantes do React 19, mantendo apenas a injeção dinâmica controlada (React 18). • Resultado Esperado: Eliminação do erro fatal no console e carregamento correto da aplicação usando as credenciais de fallback se as variáveis de ambiente falharem.
+# CHANGELOG.md
 
 📝 Log de Alteração • Solicitação: Melhorar robustez da build e limpar erros de console. • Ação Executada: 
 1. Atualizado `supabaseClient.ts` para usar referências estáticas `import.meta.env.VITE_...` ao invés de acesso dinâmico, garantindo que o bundler do Vite substitua corretamente as variáveis de ambiente em produção.
