@@ -2,6 +2,81 @@ import { supabase } from '../supabaseClient';
 import { ProfileInfo, JourneyItem, Project, Competency, TechnicalSkill } from '../types';
 import { skills as staticSkills } from '../data';
 
+type TranslatableTable =
+  | 'profile_info'
+  | 'projects'
+  | 'journey_items'
+  | 'competencies'
+  | 'technical_skills';
+
+const TRANSLATABLE_FIELDS: Record<TranslatableTable, { fields: string[]; arrayFields?: string[] }> = {
+  profile_info: {
+    fields: ['display_name', 'headline', 'bio', 'badge', 'action_phrase'],
+  },
+  projects: {
+    fields: ['title', 'role', 'description', 'technologies'],
+  },
+  journey_items: {
+    fields: ['title', 'company', 'period', 'description'],
+  },
+  competencies: {
+    fields: ['title', 'subtitle', 'items'],
+    arrayFields: ['items'],
+  },
+  technical_skills: {
+    fields: ['name'],
+  },
+};
+
+const buildLocalizedPayload = async (table: TranslatableTable, payload: any) => {
+  const config = TRANSLATABLE_FIELDS[table];
+  if (!config) return payload;
+
+  const texts: Record<string, string | string[]> = {};
+  config.fields.forEach((field) => {
+    const value = payload[field];
+    if (value === undefined || value === null) return;
+    if (config.arrayFields?.includes(field)) {
+      if (Array.isArray(value)) texts[field] = value;
+      return;
+    }
+    if (typeof value === 'string') texts[field] = value;
+  });
+
+  if (Object.keys(texts).length === 0) return payload;
+
+  try {
+    const { data, error } = await supabase.functions.invoke('translate', {
+      body: { texts },
+    });
+    if (error || !data?.translations) throw error || new Error('Translation failed');
+
+    const en = data.translations.en || {};
+    const fr = data.translations.fr || {};
+    const result: any = { ...payload };
+
+    Object.keys(texts).forEach((field) => {
+      const ptValue = texts[field];
+      result[`${field}_pt`] = ptValue;
+      result[`${field}_en`] = en[field] ?? ptValue;
+      result[`${field}_fr`] = fr[field] ?? ptValue;
+      result[field] = ptValue;
+    });
+
+    return result;
+  } catch (err) {
+    const result: any = { ...payload };
+    Object.keys(texts).forEach((field) => {
+      const ptValue = texts[field];
+      result[`${field}_pt`] = ptValue;
+      result[`${field}_en`] = ptValue;
+      result[`${field}_fr`] = ptValue;
+      result[field] = ptValue;
+    });
+    return result;
+  }
+};
+
 export const api = {
   // --- Generic Reorder ---
   // Atualiza a ordem dos itens.
@@ -32,7 +107,8 @@ export const api = {
   },
 
   updateProfile: async (id: string, updates: Partial<ProfileInfo>) => {
-    const { data, error } = await supabase.from('profile_info').update(updates).eq('id', id).select();
+    const localized = await buildLocalizedPayload('profile_info', updates);
+    const { data, error } = await supabase.from('profile_info').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
   },
@@ -52,13 +128,15 @@ export const api = {
   },
 
   createJourney: async (item: Omit<JourneyItem, 'id'>) => {
-    const { data, error } = await supabase.from('journey_items').insert([item]).select();
+    const localized = await buildLocalizedPayload('journey_items', item);
+    const { data, error } = await supabase.from('journey_items').insert([localized]).select();
     if (error) throw error;
     return data;
   },
 
   updateJourney: async (id: string, updates: Partial<JourneyItem>) => {
-    const { data, error } = await supabase.from('journey_items').update(updates).eq('id', id).select();
+    const localized = await buildLocalizedPayload('journey_items', updates);
+    const { data, error } = await supabase.from('journey_items').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
   },
@@ -83,13 +161,15 @@ export const api = {
   },
 
   createProject: async (project: Omit<Project, 'id'>) => {
-    const { data, error } = await supabase.from('projects').insert([project]).select();
+    const localized = await buildLocalizedPayload('projects', project);
+    const { data, error } = await supabase.from('projects').insert([localized]).select();
     if (error) throw error;
     return data;
   },
 
   updateProject: async (id: string, updates: Partial<Project>) => {
-    const { data, error } = await supabase.from('projects').update(updates).eq('id', id).select();
+    const localized = await buildLocalizedPayload('projects', updates);
+    const { data, error } = await supabase.from('projects').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
   },
@@ -114,13 +194,15 @@ export const api = {
   },
 
   createCompetency: async (item: Omit<Competency, 'id'>) => {
-    const { data, error } = await supabase.from('competencies').insert([item]).select();
+    const localized = await buildLocalizedPayload('competencies', item);
+    const { data, error } = await supabase.from('competencies').insert([localized]).select();
     if (error) throw error;
     return data;
   },
 
   updateCompetency: async (id: string, updates: Partial<Competency>) => {
-    const { data, error } = await supabase.from('competencies').update(updates).eq('id', id).select();
+    const localized = await buildLocalizedPayload('competencies', updates);
+    const { data, error } = await supabase.from('competencies').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
   },
@@ -155,13 +237,15 @@ export const api = {
   },
 
   createTechnicalSkill: async (item: Omit<TechnicalSkill, 'id'>) => {
-    const { data, error } = await supabase.from('technical_skills').insert([item]).select();
+    const localized = await buildLocalizedPayload('technical_skills', item);
+    const { data, error } = await supabase.from('technical_skills').insert([localized]).select();
     if (error) throw error;
     return data;
   },
 
   updateTechnicalSkill: async (id: string, updates: Partial<TechnicalSkill>) => {
-    const { data, error } = await supabase.from('technical_skills').update(updates).eq('id', id).select();
+    const localized = await buildLocalizedPayload('technical_skills', updates);
+    const { data, error } = await supabase.from('technical_skills').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
   },

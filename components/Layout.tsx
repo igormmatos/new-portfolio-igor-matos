@@ -285,6 +285,7 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
 };
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const { t } = useI18n();
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
 
   useEffect(() => {
