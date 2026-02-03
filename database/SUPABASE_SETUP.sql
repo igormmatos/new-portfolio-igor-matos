@@ -110,10 +110,6 @@ CREATE TABLE public.projects (
   description_pt text,
   description_en text,
   description_fr text,
-  technologies text,
-  technologies_pt text,
-  technologies_en text,
-  technologies_fr text,
   github_url text,
   live_url text,
   image_url text,
@@ -173,9 +169,9 @@ CREATE POLICY "Public read profile_info"
 ON public.profile_info FOR SELECT
 USING (true);
 
-CREATE POLICY "Public read projects"
+CREATE POLICY "Public read published projects"
 ON public.projects FOR SELECT
-USING (true);
+USING (status = 'published');
 
 CREATE POLICY "Public read journey_items"
 ON public.journey_items FOR SELECT
@@ -185,9 +181,9 @@ CREATE POLICY "Public read competencies"
 ON public.competencies FOR SELECT
 USING (true);
 
-CREATE POLICY "Public read technical_skills"
+CREATE POLICY "Public read active technical_skills"
 ON public.technical_skills FOR SELECT
-USING (true);
+USING (is_active = true);
 
 CREATE POLICY "Public read services"
 ON public.services FOR SELECT
@@ -339,13 +335,53 @@ END $$;
 
 ALTER TABLE public.profile_info
   ADD CONSTRAINT profile_info_email_contact_format
-  CHECK (email_contact IS NULL OR email_contact ~* '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$') NOT VALID,
+  CHECK (
+    email_contact IS NULL
+    OR (
+      btrim(
+        translate(
+          email_contact,
+          chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(9) || chr(10) || chr(13) || chr(32),
+          ''
+        )
+      ) NOT LIKE '%@%@%'
+      AND position('@' in btrim(
+        translate(
+          email_contact,
+          chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(9) || chr(10) || chr(13) || chr(32),
+          ''
+        )
+      )) > 1
+      AND split_part(
+        btrim(
+          translate(
+            email_contact,
+            chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(9) || chr(10) || chr(13) || chr(32),
+            ''
+          )
+        ),
+        '@',
+        2
+      ) LIKE '%.%'
+      AND position('.' in split_part(
+        btrim(
+          translate(
+            email_contact,
+            chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(9) || chr(10) || chr(13) || chr(32),
+            ''
+          )
+        ),
+        '@',
+        2
+      )) > 1
+    )
+  ) NOT VALID,
   ADD CONSTRAINT profile_info_linkedin_url_format
   CHECK (linkedin_url IS NULL OR linkedin_url ~* '^https?://') NOT VALID,
   ADD CONSTRAINT profile_info_git_url_format
   CHECK (git_url IS NULL OR git_url ~* '^https?://') NOT VALID,
   ADD CONSTRAINT profile_info_whatsapp_format
-  CHECK (whatsapp ~ '^[0-9+\\-()\\s]+$') NOT VALID;
+  CHECK (whatsapp ~ '^[0-9+() -]+$') NOT VALID;
 
 DO $$
 BEGIN
@@ -707,7 +743,6 @@ INSERT INTO "public"."projects" (
   "title", "title_pt", "title_en", "title_fr",
   "role", "role_pt", "role_en", "role_fr",
   "description", "description_pt", "description_en", "description_fr",
-  "technologies", "technologies_pt", "technologies_en", "technologies_fr",
   "github_url", "live_url", "image_url", "display_order"
 ) VALUES
 (
@@ -725,10 +760,6 @@ INSERT INTO "public"."projects" (
   'Sistema completo de gestão de fichas de alunos (Web/Mobile). Features: Login Google, Acesso individual, Progressão de treino e Integração MercadoPago.',
   'Complete student sheet management system (Web/Mobile). Features: Google Login, individual access, training progression and MercadoPago integration.',
   'Système complet de gestion de fiches d''étudiants (Web/Mobile). Fonctionnalités : Connexion Google, accès individuel, progression d''entraînement et intégration MercadoPago.',
-  'React, Node.js, Firebase, MercadoPago API',
-  'React, Node.js, Firebase, MercadoPago API',
-  'React, Node.js, Firebase, MercadoPago API',
-  'React, Node.js, Firebase, MercadoPago API',
   'https://github.com/igormatos',
   '#',
   'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop',
@@ -749,10 +780,6 @@ INSERT INTO "public"."projects" (
   'Sistema de gestão de tarefas otimizado para o setor lácteo, desenvolvido em parceria com o Colégio Cotemig.',
   'Task management system optimized for the dairy sector, developed in partnership with Colégio Cotemig.',
   'Système de gestion de tâches optimisé pour le secteur laitier, développé en partenariat avec le Colégio Cotemig.',
-  'Vue.js, .NET Core, SQL Server',
-  'Vue.js, .NET Core, SQL Server',
-  'Vue.js, .NET Core, SQL Server',
-  'Vue.js, .NET Core, SQL Server',
   'https://github.com/igormmatos',
   '#',
   'https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1474&auto=format&fit=crop',
@@ -773,10 +800,6 @@ INSERT INTO "public"."projects" (
   'Atuação como PM e Arquiteto na reestruturação de sistemas legados e implementação de novos processos de CI/CD.',
   'Worked as PM and Architect in the restructuring of legacy systems and implementation of new CI/CD processes.',
   'Travail en tant que PM et Architecte dans la restructuration de systèmes hérités et la mise en œuvre de nouveaux processus CI/CD.',
-  'Docker, AWS, Microservices',
-  'Docker, AWS, Microservices',
-  'Docker, AWS, Microservices',
-  'Docker, AWS, Microservices',
   '',
   '#',
   'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1472&auto=format&fit=crop',

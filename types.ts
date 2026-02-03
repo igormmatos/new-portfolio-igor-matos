@@ -45,12 +45,13 @@ export interface JourneyItem {
   description_pt?: string;
   description_en?: string;
   description_fr?: string;
-  type: 'work' | 'education';
+  type: 'experience' | 'education';
   display_order: number;
 }
 
 export interface Project {
   id: string;
+  slug?: string;
   title: string;
   title_pt?: string;
   title_en?: string;
@@ -63,14 +64,13 @@ export interface Project {
   description_pt?: string;
   description_en?: string;
   description_fr?: string;
-  technologies: string; // Mantido como TEXT conforme solicitado
-  technologies_pt?: string;
-  technologies_en?: string;
-  technologies_fr?: string;
   github_url?: string;
   live_url?: string;
   image_url: string;
   display_order: number;
+  status?: 'draft' | 'published';
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Competency {
@@ -98,9 +98,40 @@ export interface TechnicalSkill {
   name_pt?: string;
   name_en?: string;
   name_fr?: string;
-  icon: string;
-  level: number; // 0 a 100
+  slug?: string;
+  category?: string;
+  icon?: string;
+  icon_key?: string;
+  is_active?: boolean;
   display_order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProjectSkillRef {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  icon_key: string | null;
+}
+
+export interface ProjectWithSkills extends Project {
+  skills: ProjectSkillRef[];
+}
+
+export interface SkillProjectRef {
+  id: string;
+  slug: string;
+  title: string;
+  role?: string;
+  image_url?: string;
+  display_order?: number;
+}
+
+export interface SkillWithProjects extends TechnicalSkill {
+  projects_count: number;
+  projects: SkillProjectRef[];
 }
 
 export interface ContactMessage {
@@ -117,21 +148,4 @@ export interface Skill {
   name: string;
   icon: string;
   level: number;
-}
-
-export interface Service {
-  id: number;
-  title: string;
-  description: string;
-  priceStart: number;
-  icon: string;
-}
-
-export interface ExperienceItem {
-  id: number;
-  role: string;
-  company: string;
-  period: string;
-  description: string;
-  type: string;
 }

@@ -1,5 +1,13 @@
 import { supabase } from '../supabaseClient';
-import { ProfileInfo, JourneyItem, Project, Competency, TechnicalSkill } from '../types';
+import {
+  ProfileInfo,
+  JourneyItem,
+  Project,
+  ProjectWithSkills,
+  Competency,
+  TechnicalSkill,
+  SkillWithProjects
+} from '../types';
 import { skills as staticSkills } from '../data';
 
 type TranslatableTable =
@@ -14,7 +22,7 @@ const TRANSLATABLE_FIELDS: Record<TranslatableTable, { fields: string[]; arrayFi
     fields: ['display_name', 'headline', 'bio', 'badge', 'action_phrase'],
   },
   projects: {
-    fields: ['title', 'role', 'description', 'technologies'],
+    fields: ['title', 'role', 'description'],
   },
   journey_items: {
     fields: ['title', 'company', 'period', 'description'],
@@ -122,7 +130,34 @@ export const api = {
   },
 
   updateProfile: async (id: string, updates: Partial<ProfileInfo>) => {
-    const localized = await buildLocalizedPayload('profile_info', updates);
+    const normalizeOptional = (value?: string | null) => {
+      if (value === undefined || value === null) return value ?? null;
+      const trimmed = value.trim();
+      return trimmed === '' ? null : trimmed;
+    };
+    const normalizeRequired = (value?: string | null) => {
+      if (value === undefined || value === null) return value ?? null;
+      return value.trim();
+    };
+    const normalizeEmail = (value?: string | null) => {
+      const cleaned = normalizeOptional(value);
+      if (cleaned === null || cleaned === undefined) return cleaned ?? null;
+      // Remove whitespace and zero-width characters that break DB regex
+      return cleaned.replace(/[\s\u200B\u200C\u200D\uFEFF]+/g, '');
+    };
+
+    const normalizedUpdates: Partial<ProfileInfo> = { ...updates };
+    if ('display_name' in updates) normalizedUpdates.display_name = normalizeRequired(updates.display_name);
+    if ('headline' in updates) normalizedUpdates.headline = normalizeRequired(updates.headline);
+    if ('bio' in updates) normalizedUpdates.bio = normalizeRequired(updates.bio);
+    if ('whatsapp' in updates) normalizedUpdates.whatsapp = normalizeRequired(updates.whatsapp);
+    if ('email_contact' in updates) normalizedUpdates.email_contact = normalizeEmail(updates.email_contact);
+    if ('linkedin_url' in updates) normalizedUpdates.linkedin_url = normalizeOptional(updates.linkedin_url);
+    if ('git_url' in updates) normalizedUpdates.git_url = normalizeOptional(updates.git_url);
+    if ('action_phrase' in updates) normalizedUpdates.action_phrase = normalizeOptional(updates.action_phrase);
+    if ('badge' in updates) normalizedUpdates.badge = normalizeOptional(updates.badge);
+
+    const localized = await buildLocalizedPayload('profile_info', normalizedUpdates);
     const { data, error } = await supabase.from('profile_info').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
@@ -161,7 +196,7 @@ export const api = {
     if (error) throw error;
   },
 
-  // --- Projects ---
+  // --- Projects (Admin / raw table) ---
   getProjects: async (): Promise<Project[]> => {
     const { data, error } = await supabase
       .from('projects')
@@ -170,6 +205,20 @@ export const api = {
 
     if (error) {
       console.error('Error fetching projects:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  // --- Projects (Public / view) ---
+  getProjectsWithSkills: async (): Promise<ProjectWithSkills[]> => {
+    const { data, error } = await supabase
+      .from('v_projects_with_skills')
+      .select('*')
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching projects with skills:', error);
       return [];
     }
     return data || [];
@@ -227,27 +276,32 @@ export const api = {
     if (error) throw error;
   },
 
-  // --- Technical Skills (New Section) ---
+  // --- Technical Skills (Admin / raw table) ---
   getTechnicalSkills: async (): Promise<TechnicalSkill[]> => {
     const { data, error } = await supabase
       .from('technical_skills')
       .select('*')
       .order('display_order', { ascending: true });
 
-    // Fallback para consumo público (erro ou tabela vazia)
-    if (error || !data || data.length === 0) {
-      if (error) console.error('Error fetching technical skills (using fallback):', error);
-      
-      // Mapeia os dados estáticos para o formato do banco
-      return staticSkills.map(s => ({
-        id: s.id.toString(), // Converte number para string
-        name: s.name,
-        icon: s.icon,
-        level: s.level,
-        display_order: s.id
-      }));
+    if (error) {
+      console.error('Error fetching technical skills:', error);
+      return [];
     }
+    return (data || []) as TechnicalSkill[];
+  },
 
+  // --- Skills with related projects (Public / view) ---
+  getSkillsWithProjects: async (): Promise<SkillWithProjects[]> => {
+    const { data, error } = await supabase
+      .from('v_skills_with_projects')
+      .select('*')
+      .order('category', { ascending: true })
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching skills with projects:', error);
+      return [];
+    }
     return data || [];
   },
 
@@ -264,7 +318,9 @@ export const api = {
           id: s.id.toString(),
           name: s.name,
           icon: s.icon,
-          level: s.level,
+          icon_key: s.icon,
+          category: 'other',
+          is_active: true,
           display_order: s.id
         })),
         fromFallback: true
@@ -290,6 +346,28 @@ export const api = {
 
   deleteTechnicalSkill: async (id: string) => {
     const { error } = await supabase.from('technical_skills').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  // --- Project ↔ Skills pivot ---
+  getProjectSkillIds: async (projectId: string): Promise<string[]> => {
+    const { data, error } = await supabase
+      .from('project_technical_skills')
+      .select('technical_skill_id')
+      .eq('project_id', projectId);
+
+    if (error) {
+      console.error('Error fetching project skills:', error);
+      return [];
+    }
+    return (data || []).map((row: any) => row.technical_skill_id);
+  },
+
+  syncProjectSkills: async (projectId: string, skillIds: string[]) => {
+    const { error } = await supabase.rpc('sync_project_skills', {
+      p_project_id: projectId,
+      p_skill_ids: skillIds
+    });
     if (error) throw error;
   }
 };
