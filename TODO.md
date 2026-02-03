@@ -12,6 +12,8 @@ Maintain and evolve Igor Matos' professional portfolio (public site + admin), en
 - Manter o conteúdo principal (hero + projetos) acima da dobra com foco no posicionamento. (mobile ajustado)
 - Padronizar botões circulares de navegação (carousel/timeline) com mesmo estilo e tamanho. (pages/Home.tsx, components/VerticalJourney.tsx)
 - Padronizar títulos de seção (label + H2 + subtitle) para todas as seções. (pages/Home.tsx, components/VerticalJourney.tsx)
+- SEO técnico: titles/meta dinâmicos por idioma + hreflang + sitemap.xml + robots.txt. (pendente)
+- Analytics enxuto com eventos relevantes e compatível com i18n. (pendente)
 
 ### P1 (importante)
 - Consolidar escala tipográfica e espaçamento em todas as seções (H1/H2/H3/body/caption). (mobile ajustado)
@@ -41,6 +43,7 @@ Maintain and evolve Igor Matos' professional portfolio (public site + admin), en
 ## Próxima ação concreta
 Validar swipe/touch nos carrosseis de Projetos e Jornada no mobile.
 Após alterações no TODO, rodar `npm run readme:gen`.
+Aprovar plano de SEO/Analytics para iniciar implementação (sem mudanças de layout).
 
 ## Backlog de padronização (UX/UI)
 ### P0 — percepção profissional
