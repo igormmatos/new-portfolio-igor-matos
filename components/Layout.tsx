@@ -99,6 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
     { name: t('nav.projects'), href: '#projects' },
     { name: t('nav.experience'), href: '#experience' },
     { name: t('nav.skills'), href: '#skills' },
+    { name: t('admin.tech'), href: '#tech' },
     { name: t('nav.contact'), href: '#contact' },
   ];
 
@@ -124,7 +125,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
           <img 
             src="https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/image/logo_sem_fundo.png" 
             alt={logoAlt} 
-            className="h-18 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+            className="h-10 sm:h-12 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
 
@@ -181,11 +182,11 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
       <div
         className={`
           md:hidden overflow-hidden transition-all duration-300 
-          ${isMobileMenuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}
+          ${isMobileMenuOpen ? 'max-h-[70vh] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}
         `}
       >
         <div className="container mx-auto px-6 pb-4">
-          <div className="rounded-2xl border border-slate-800 glass-morphism shadow-2xl py-3 px-4">
+          <div className="rounded-2xl border border-slate-700 bg-slate-900/50 backdrop-blur-md shadow-2xl py-3 px-4 max-h-[70vh] overflow-y-auto">
             {!isAdmin && (
               <div className="flex flex-col space-y-2 mb-3">
                 {navLinks.map((link) => (
@@ -193,7 +194,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
                     key={link.name}
                     href={link.href}
                     onClick={(e) => handleNavClick(e, link.href)}
-                    className="w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition-colors text-left"
+                    className="w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors text-left"
                   >
                     {link.name}
                   </a>
@@ -205,7 +206,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
               {isAdmin ? (
                 <Link
                   to="/"
-                  className="w-full px-3 py-2 rounded-lg text-sm font-semibold text-slate-100 bg-slate-800 hover:bg-slate-700 flex items-center justify-between"
+                  className="w-full px-3 py-2 rounded-lg text-sm font-semibold border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-slate-800/60 flex items-center justify-between transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <span>
@@ -217,7 +218,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
               ) : (
                 <Link
                   to="/admin"
-                  className="w-full px-3 py-2 rounded-lg text-sm font-semibold text-slate-100 bg-slate-800 hover:bg-slate-700 flex items-center justify-between"
+                  className="w-full px-3 py-2 rounded-lg text-sm font-semibold border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-slate-800/60 flex items-center justify-between transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <span>{t('nav.admin')}</span>
@@ -269,7 +270,7 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
         </div>
         <div className="border-t border-slate-900 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-600 text-xs">
-            © {formatNumber(new Date().getFullYear())} {profileName || "Portfólio"}. {t('footer.rights')}
+            © {new Date().getFullYear()} {profileName || "Portfólio"}. {t('footer.rights')}
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-xs text-slate-600 hover:text-slate-400">{t('footer.privacy')}</a>

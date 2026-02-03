@@ -234,9 +234,9 @@ export const api = {
       .select('*')
       .order('display_order', { ascending: true });
 
-    // Fallback apenas se houver erro na consulta
-    if (error) {
-      console.error('Error fetching technical skills (using fallback):', error);
+    // Fallback para consumo público (erro ou tabela vazia)
+    if (error || !data || data.length === 0) {
+      if (error) console.error('Error fetching technical skills (using fallback):', error);
       
       // Mapeia os dados estáticos para o formato do banco
       return staticSkills.map(s => ({
@@ -248,7 +248,7 @@ export const api = {
       }));
     }
 
-    return data;
+    return data || [];
   },
 
   getTechnicalSkillsWithMeta: async (): Promise<{ data: TechnicalSkill[]; fromFallback: boolean }> => {

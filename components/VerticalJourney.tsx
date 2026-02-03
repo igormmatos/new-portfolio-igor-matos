@@ -152,10 +152,10 @@ const VerticalJourney: React.FC = () => {
         {/* --- HEADER CENTRALIZADO --- */}
         <ScrollReveal delay={0}>
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="inline-block text-indigo-500 font-mono text-sm tracking-wider uppercase mb-3 px-3 py-1 bg-indigo-500/5 rounded-full border border-indigo-500/10">
+            <span className="text-indigo-500 font-semibold tracking-wider uppercase text-sm mb-2 block">
                 {t('experience.badge')}
             </span>
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-5">
+            <h2 className="text-2xl md:text-4xl font-bold text-slate-50 mb-4">
                 {t('experience.title')}
             </h2>
             <div className="w-24 h-1.5 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full mx-auto mb-6"></div>
@@ -177,7 +177,7 @@ const VerticalJourney: React.FC = () => {
                 {/* Botão Cima */}
                 <button 
                     onClick={handlePrev}
-                    className="z-10 w-10 h-10 rounded-full glass-morphism border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-lg hover-scale glow-effect"
+                    className="z-10 w-10 h-10 rounded-full border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-600 hover:bg-indigo-600 transition-all flex items-center justify-center"
                     aria-label={t('experience.nav.prev')}
                 >
                     <i className="fa-solid fa-chevron-up text-sm"></i>
@@ -194,7 +194,7 @@ const VerticalJourney: React.FC = () => {
                                 className={`group relative flex items-center justify-center transition-all duration-300 outline-none ${isActive ? 'scale-125' : 'hover:scale-110'}`}
                             >
                                 {/* DATA LABEL (SEMPRE VISÍVEL) */}
-                                <span className={`absolute right-full mr-6 py-1 px-2 rounded text-xs font-mono whitespace-nowrap border transition-all duration-300
+                                <span className={`absolute right-full mr-6 py-1 px-2 rounded text-xs font-semibold whitespace-nowrap border transition-all duration-300
                                     ${isActive 
                                         ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 font-bold shadow-[0_0_10px_rgba(99,102,241,0.2)]' 
                                         : 'bg-slate-900 text-slate-500 border-slate-800 opacity-70 group-hover:opacity-100'
@@ -222,7 +222,7 @@ const VerticalJourney: React.FC = () => {
                 {/* Botão Baixo */}
                 <button 
                     onClick={handleNext}
-                    className="z-10 w-10 h-10 rounded-full glass-morphism border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-lg hover-scale glow-effect"
+                    className="z-10 w-10 h-10 rounded-full border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-600 hover:bg-indigo-600 transition-all flex items-center justify-center"
                     aria-label={t('experience.nav.next')}
                 >
                     <i className="fa-solid fa-chevron-down text-sm"></i>
@@ -238,13 +238,13 @@ const VerticalJourney: React.FC = () => {
             >
                 <div 
                   className={`
-                     relative w-full glass-morphism border border-slate-800 rounded-3xl p-8 md:p-12 shadow-2xl
+                     relative w-full glass-morphism border border-slate-800 rounded-2xl p-5 md:p-6 shadow-2xl
                      transition-all duration-500 ease-out flex flex-col md:min-h-[350px] justify-center hover-3d
                      ${transformClass}
                   `}
                 >
                    {/* Background Icon Decor */}
-                   <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none overflow-hidden rounded-3xl">
+                   <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none overflow-hidden rounded-2xl">
                       <i className={`fa-solid ${activeItem.type === 'work' ? 'fa-briefcase' : 'fa-graduation-cap'} text-[10rem] -mr-8 -mt-8`}></i>
                    </div>
 
@@ -258,13 +258,13 @@ const VerticalJourney: React.FC = () => {
                          }`}>
                             {activeItem.type === 'work' ? t('experience.type.work') : t('experience.type.education')}
                          </span>
-                         <span className="flex items-center gap-2 text-slate-400 text-sm font-mono bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
+                         <span className="flex items-center gap-2 text-slate-400 text-sm font-medium bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
                             <i className="fa-regular fa-calendar text-xs"></i>
                             {activePeriod}
                          </span>
                       </div>
 
-                      <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 leading-tight">
+                      <h3 className="text-2xl md:text-3xl font-bold text-slate-50 mb-2 leading-tight">
                          {activeTitle}
                       </h3>
                       
@@ -277,7 +277,7 @@ const VerticalJourney: React.FC = () => {
 
                       {/* Descrição */}
                       <div className="relative border-t border-slate-800/50 pt-6">
-                         <p className="text-slate-300 text-base md:text-lg leading-relaxed">
+                         <p className="text-slate-400 text-base md:text-lg leading-relaxed">
                             {activeDescription}
                          </p>
                       </div>
@@ -291,7 +291,7 @@ const VerticalJourney: React.FC = () => {
                 <div className="mt-6 lg:hidden flex items-center justify-center gap-4">
                   <button
                     onClick={handlePrev}
-                    className="w-9 h-9 rounded-full glass-morphism border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-md hover-scale glow-effect"
+                    className="w-10 h-10 rounded-full border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-600 hover:bg-indigo-600 transition-all flex items-center justify-center"
                     aria-label={t('experience.nav.prev_full')}
                   >
                     <i className="fa-solid fa-chevron-left text-xs"></i>
@@ -310,7 +310,7 @@ const VerticalJourney: React.FC = () => {
 
                   <button
                     onClick={handleNext}
-                    className="w-9 h-9 rounded-full glass-morphism border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-indigo-600 transition-all flex items-center justify-center shadow-md hover-scale glow-effect"
+                    className="w-10 h-10 rounded-full border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-600 hover:bg-indigo-600 transition-all flex items-center justify-center"
                     aria-label={t('experience.nav.next_full')}
                   >
                     <i className="fa-solid fa-chevron-right text-xs"></i>

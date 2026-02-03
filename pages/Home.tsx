@@ -20,6 +20,14 @@ const HeroSection = () => {
   const profileAction = selectLocalizedColumn(profile, 'action_phrase', language) || profile?.action_phrase;
   const profileBio = selectLocalizedColumn(profile, 'bio', language) || profile?.bio;
 
+  const handleScrollToNext = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const target = document.getElementById('projects');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <section id="home" className="relative min-h-[80vh] md:min-h-[90vh] lg:min-h-screen flex items-center justify-center overflow-x-hidden pt-4 pb-20 md:pt-20 md:pb-32 lg:pt-8 lg:pb-10 xl:pt-12 xl:pb-16 scroll-mt-24 md:scroll-mt-0">
       {/* Background Decor com Blob Morphing */}
@@ -64,14 +72,14 @@ const HeroSection = () => {
 
           {/* 5. Proposta de Valor (H3) */}
           <ScrollReveal delay={320}>
-            <h3 className="text-lg md:text-xl text-slate-100 font-medium">
+            <h3 className="text-lg md:text-xl text-slate-100 font-bold">
                {profileAction}
             </h3>
           </ScrollReveal>
 
           {/* 6. Bio / Resumo (P) */}
           <ScrollReveal delay={400}>
-            <p className="text-base md:text-lg text-slate-300 mb-6 md:mb-10 max-w-xl leading-relaxed">
+            <p className="text-base md:text-lg text-slate-400 mb-6 md:mb-10 max-w-xl leading-relaxed">
               {profileBio || t('hero.description')}
             </p>
           </ScrollReveal>
@@ -81,6 +89,7 @@ const HeroSection = () => {
             <div className="flex flex-col gap-4 w-full sm:w-auto pt-2 md:pt-4">
               <a 
                 href="#projects" 
+                onClick={handleScrollToNext}
                 className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-1 text-center"
               >
                 {t('hero.cta.more')}
@@ -94,7 +103,7 @@ const HeroSection = () => {
                       href={profile.linkedin_url} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="w-11 h-11 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition-all flex items-center justify-center"
+                      className="w-10 h-10 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition-all flex items-center justify-center"
                       title="LinkedIn"
                     >
                       <i className="fa-brands fa-linkedin-in text-lg"></i>
@@ -105,7 +114,7 @@ const HeroSection = () => {
                       href={profile.git_url} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="w-11 h-11 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition-all flex items-center justify-center"
+                      className="w-10 h-10 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition-all flex items-center justify-center"
                       title="GitHub"
                     >
                       <i className="fa-brands fa-github text-lg"></i>
@@ -144,7 +153,7 @@ const HeroSection = () => {
                    <i className="fa-solid fa-code text-lg"></i>
                 </div>
                 <div>
-                   <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{t('hero.experience.label')}</p>
+                   <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{t('hero.experience.label')}</p>
                    <p className="text-xl font-bold text-white">{t('hero.experience.value')}</p>
                 </div>
              </div>
@@ -168,15 +177,15 @@ const CompetenciesSection = () => {
   }, []);
 
   return (
-    <section id="skills" className="py-20 md:py-28 bg-slate-950 relative border-b border-slate-900 scroll-mt-24 md:scroll-mt-0">
+    <section id="skills" className="py-16 md:py-24 bg-slate-950 relative border-b border-slate-900 scroll-mt-24 md:scroll-mt-0">
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/10 via-slate-950 to-slate-950 pointer-events-none"></div>
 
       <div className="container mx-auto px-6 relative z-10">
         <ScrollReveal delay={0}>
-          <div className="text-center mb-12 md:mb-20">
+          <div className="text-center mb-12 md:mb-16">
             <span className="text-indigo-500 font-semibold tracking-wider uppercase text-sm mb-2 block">{t('nav.skills')}</span>
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">{t('skills.title')}</h2>
+            <h2 className="text-2xl md:text-4xl font-bold text-slate-50 mb-4">{t('skills.title')}</h2>
             <p className="text-slate-400 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">{t('skills.subtitle')}</p>
           </div>
         </ScrollReveal>
@@ -216,7 +225,7 @@ const CompetenciesSection = () => {
                      key={idx} 
                      className="relative pl-3 border-l-2 border-indigo-500/30 group-hover/item:border-indigo-500 transition-all duration-300 group/line"
                    >
-                     <p className="text-sm text-slate-300 font-medium group-hover/line:text-white transition-colors">
+                     <p className="text-sm text-slate-400 font-medium group-hover/line:text-white transition-colors">
                        {item}
                      </p>
                    </div>
@@ -240,12 +249,13 @@ const TechStackSection = () => {
   }, []);
 
   return (
-    <section className="py-16 md:py-24 bg-slate-950 relative">
+    <section id="tech" className="py-16 md:py-24 bg-slate-950 relative">
       <div className="container mx-auto px-6">
         <ScrollReveal delay={0}>
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-2xl md:text-4xl font-bold text-slate-50 mb-3">{t('tech.title')}</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto text-base md:text-lg">{t('tech.subtitle')}</p>
+            <span className="text-indigo-500 font-semibold tracking-wider uppercase text-sm mb-2 block">{t('tech.badge')}</span>
+            <h2 className="text-2xl md:text-4xl font-bold text-slate-50 mb-4">{t('tech.title')}</h2>
+            <p className="text-slate-400 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">{t('tech.subtitle')}</p>
           </div>
         </ScrollReveal>
 
@@ -352,8 +362,9 @@ const ProjectsSection = () => {
         <ScrollReveal delay={0}>
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 md:mb-16">
             <div>
-              <h2 className="text-2xl md:text-4xl font-bold text-slate-50 mb-3">{t('projects.title')}</h2>
-              <p className="text-slate-400 max-w-xl text-base md:text-lg">{t('projects.subtitle')}</p>
+              <span className="text-indigo-500 font-semibold tracking-wider uppercase text-sm mb-2 block">{t('projects.badge')}</span>
+              <h2 className="text-2xl md:text-4xl font-bold text-slate-50 mb-4">{t('projects.title')}</h2>
+              <p className="text-slate-400 max-w-xl text-base md:text-lg leading-relaxed">{t('projects.subtitle')}</p>
             </div>
           
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -404,11 +415,16 @@ const ProjectsSection = () => {
                   </div>
                   <div className="p-5 md:p-6 flex-1 flex flex-col">
                     <div className="mb-2">
+                       {!project.live_url && (
+                         <span className="inline-flex items-center text-[10px] font-semibold uppercase tracking-wider text-amber-300 border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 rounded-full mb-2">
+                           {t('projects.status.prep')}
+                         </span>
+                       )}
                        <h3 className="text-base md:text-xl font-bold text-slate-100">
                          {selectLocalizedColumn(project, 'title', language) || project.title}
                        </h3>
                        {project.role && (
-                         <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide">
+                         <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">
                            {selectLocalizedColumn(project, 'role', language) || project.role}
                          </p>
                        )}
@@ -429,7 +445,7 @@ const ProjectsSection = () => {
                     
                     <div className="mt-auto flex gap-4 pt-4 border-t border-slate-900">
                        {project.live_url && (
-                         <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="text-xs md:text-sm font-medium text-slate-200 md:text-white hover:text-indigo-400 flex items-center">
+                         <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="text-xs md:text-sm font-medium text-slate-200 hover:text-indigo-400 flex items-center">
                            <i className="fa-solid fa-arrow-up-right-from-square mr-2"></i> {t('projects.liveDemo')}
                          </a>
                        )}
@@ -501,8 +517,8 @@ const ContactSection = () => {
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
            {/* Form */}
            <ScrollReveal delay={0}>
-             <div className="glass-morphism p-6 md:p-10 rounded-3xl border border-slate-800 hover-3d">
-             <h3 className="text-xl md:text-2xl font-bold text-white mb-5">{t('contact.title')}</h3>
+             <div className="glass-morphism p-5 md:p-6 rounded-2xl border border-slate-800 hover-3d">
+             <h3 className="text-xl md:text-2xl font-bold text-slate-50 mb-5">{t('contact.title')}</h3>
              <form className="space-y-6" onSubmit={handleContactSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -580,7 +596,7 @@ const ContactSection = () => {
                       <i className="fa-solid fa-envelope text-xl"></i>
                     </div>
                     <div>
-                      <h4 className="text-white font-medium text-lg">{t('contact.touch.email')}</h4>
+                      <h4 className="text-slate-100 font-medium text-lg">{t('contact.touch.email')}</h4>
                       <a
                         href={`mailto:${profile?.email_contact || "hello@alexdev.com"}`}
                         className="text-slate-400 hover:text-white transition-colors"
@@ -595,7 +611,7 @@ const ContactSection = () => {
                         <i className="fa-brands fa-linkedin-in text-xl"></i>
                       </div>
                       <div>
-                        <h4 className="text-white font-medium text-lg">{t('contact.social.linkedin')}</h4>
+                        <h4 className="text-slate-100 font-medium text-lg">{t('contact.social.linkedin')}</h4>
                         <a href={profile.linkedin_url} target="_blank" className="text-slate-400 hover:text-white transition-colors">{t('contact.view_profile')}</a>
                       </div>
                    </div>
@@ -606,7 +622,7 @@ const ContactSection = () => {
                         <i className="fa-brands fa-github text-xl"></i>
                       </div>
                       <div>
-                        <h4 className="text-white font-medium text-lg">{t('contact.social.github')}</h4>
+                        <h4 className="text-slate-100 font-medium text-lg">{t('contact.social.github')}</h4>
                         <a href={profile.git_url} target="_blank" className="text-slate-400 hover:text-white transition-colors">{t('contact.view_profile')}</a>
                       </div>
                    </div>

@@ -44,6 +44,7 @@ export const translations = {
 
     'tech.title': 'Tecnologias que Domino',
     'tech.subtitle': 'Ferramentas, linguagens e frameworks que utilizo com proficiência para entregar soluções robustas e escaláveis.',
+    'tech.badge': 'Tecnologias',
 
     'experience.title': 'Minha Jornada',
     'experience.subtitle': 'Uma linha do tempo da minha carreira profissional e formação educacional, mostrando meu crescimento e marcos.',
@@ -57,10 +58,12 @@ export const translations = {
 
     'projects.title': 'Projetos em Destaque',
     'projects.subtitle': 'Trabalhos selecionados que demonstram minha habilidade em entregar soluções complexas.',
+    'projects.badge': 'Projetos',
     'projects.viewGithub': 'Ver Github',
     'projects.liveDemo': 'Demo Online',
     'projects.code': 'Código',
     'projects.empty': 'Nenhum projeto cadastrado ainda.',
+    'projects.status.prep': 'Em preparo',
 
     'contact.title': 'Vamos trabalhar juntos',
     'contact.name': 'Nome',
@@ -128,6 +131,7 @@ export const translations = {
 
     'tech.title': 'Technologies I Master',
     'tech.subtitle': 'Tools, languages, and frameworks I use with proficiency to deliver robust and scalable solutions.',
+    'tech.badge': 'Technologies',
 
     'experience.title': 'My Journey',
     'experience.subtitle': 'A timeline of my professional career and educational background, showcasing my growth and milestones.',
@@ -141,10 +145,12 @@ export const translations = {
 
     'projects.title': 'Featured Projects',
     'projects.subtitle': 'Selected works that demonstrate my ability to deliver complex solutions.',
+    'projects.badge': 'Projects',
     'projects.viewGithub': 'View Github',
     'projects.liveDemo': 'Live Demo',
     'projects.code': 'Code',
     'projects.empty': 'No projects yet.',
+    'projects.status.prep': 'In progress',
 
     'contact.title': 'Let\'s work together',
     'contact.name': 'Name',
@@ -212,6 +218,7 @@ export const translations = {
 
     'tech.title': 'Technologies que je maîtrise',
     'tech.subtitle': 'Outils, langages et frameworks que j\'utilise avec compétence pour livrer des solutions robustes et évolutives.',
+    'tech.badge': 'Technologies',
 
     'experience.title': 'Mon Parcours',
     'experience.subtitle': 'Une chronologie de ma carrière professionnelle et de ma formation, montrant ma croissance et mes étapes clés.',
@@ -225,10 +232,12 @@ export const translations = {
 
     'projects.title': 'Projets en Vedette',
     'projects.subtitle': 'Travaux sélectionnés démontrant ma capacité à livrer des solutions complexes.',
+    'projects.badge': 'Projets',
     'projects.viewGithub': 'Voir Github',
     'projects.liveDemo': 'Démo Live',
     'projects.code': 'Code',
     'projects.empty': 'Aucun projet pour le moment.',
+    'projects.status.prep': 'En préparation',
 
     'contact.title': 'Travaillons ensemble',
     'contact.name': 'Nom',

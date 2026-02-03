@@ -522,7 +522,7 @@ const Admin: React.FC = () => {
                                         )}
                                     </div>
                                     
-                                    <div className="p-5 flex-1 flex flex-col">
+                                    <div className="p-6 flex-1 flex flex-col">
                                         <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
                                         <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide mb-3">{p.role}</p>
                                         
@@ -586,10 +586,10 @@ const Admin: React.FC = () => {
                                     </div>
 
                                     <div className="pl-3 flex justify-end gap-2 mt-auto pt-4 border-t border-slate-800/50">
-                                        <button onClick={() => handleOpenDrawer(j)} className="text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-all">
+                                        <button onClick={() => handleOpenDrawer(j)} className="text-xs font-semibold text-slate-300 border border-slate-700 hover:text-white hover:border-indigo-500 hover:bg-slate-800/60 flex items-center gap-2 px-3 py-2 rounded-lg transition-all">
                                             Editar
                                         </button>
-                                        <button onClick={() => handleDeleteRequest(j.id, j.title, 'Jornada', api.deleteJourney, setJourney)} className="text-sm font-medium text-slate-400 hover:text-red-400 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/10 transition-all">
+                                        <button onClick={() => handleDeleteRequest(j.id, j.title, 'Jornada', api.deleteJourney, setJourney)} className="text-xs font-semibold text-red-400 border border-red-500/30 hover:text-white hover:bg-red-500/20 flex items-center gap-2 px-3 py-2 rounded-lg transition-all">
                                             Excluir
                                         </button>
                                     </div>
@@ -640,10 +640,10 @@ const Admin: React.FC = () => {
                                     </div>
 
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleOpenDrawer(c)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-all">
+                                        <button onClick={() => handleOpenDrawer(c)} className="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-300 border border-slate-700 hover:text-white hover:border-indigo-500 hover:bg-slate-800/60 transition-all">
                                             Editar
                                         </button>
-                                        <button onClick={() => handleDeleteRequest(c.id, c.title, 'Habilidade', api.deleteCompetency, setCompetencies)} className="w-10 flex items-center justify-center bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all">
+                                        <button onClick={() => handleDeleteRequest(c.id, c.title, 'Habilidade', api.deleteCompetency, setCompetencies)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-red-500/30 text-red-400 hover:text-white hover:bg-red-500/20 transition-all">
                                             <i className="fa-solid fa-trash text-xs"></i>
                                         </button>
                                     </div>
@@ -692,10 +692,10 @@ const Admin: React.FC = () => {
                                         <button
                                           onClick={() => handleOpenDrawer(t)}
                                           disabled={isTechSkillsFallback}
-                                          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                                          className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
                                             isTechSkillsFallback
-                                              ? 'bg-slate-900 text-slate-600 cursor-not-allowed'
-                                              : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                                              ? 'border border-slate-800 text-slate-600 cursor-not-allowed'
+                                              : 'border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-slate-800/60'
                                           }`}
                                         >
                                             EDITAR
@@ -703,10 +703,10 @@ const Admin: React.FC = () => {
                                         <button
                                           onClick={() => handleDeleteRequest(t.id, t.name, 'Tecnologia', api.deleteTechnicalSkill, setTechSkills)}
                                           disabled={isTechSkillsFallback}
-                                          className={`w-8 flex items-center justify-center rounded-lg transition-all ${
+                                          className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all ${
                                             isTechSkillsFallback
-                                              ? 'bg-slate-900 text-slate-600 cursor-not-allowed'
-                                              : 'bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400'
+                                              ? 'border border-slate-800 text-slate-600 cursor-not-allowed'
+                                              : 'border border-red-500/30 text-red-400 hover:text-white hover:bg-red-500/20'
                                           }`}
                                         >
                                             <i className="fa-solid fa-trash text-xs"></i>
@@ -890,7 +890,27 @@ const Admin: React.FC = () => {
               {activeTab === 'tech' && (
                 <>
                   <FormInput label="Nome da Tecnologia" value={editingItem.name} onChange={(e: any) => setEditingItem({...editingItem, name: e.target.value})} placeholder="Ex: React, Docker" />
-                  <FormInput label="Ícone (FontAwesome)" value={editingItem.icon} onChange={(e: any) => setEditingItem({...editingItem, icon: e.target.value})} placeholder="fa-brands fa-react" />
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Ícone (FontAwesome)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                        placeholder="fa-brands fa-react"
+                        value={editingItem.icon || ''}
+                        onChange={(e) => setEditingItem({ ...editingItem, icon: e.target.value })}
+                      />
+                      <a
+                        href="https://fontawesome.com/search"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 px-3 py-2 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 transition-all flex items-center justify-center text-xs font-semibold"
+                        title="Abrir Font Awesome"
+                      >
+                        Font Awesome
+                      </a>
+                    </div>
+                  </div>
                   
                   <div className="space-y-2">
                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
