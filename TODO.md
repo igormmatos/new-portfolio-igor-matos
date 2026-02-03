@@ -3,6 +3,9 @@
 ## Objetivo atual do projeto
 Manter e evoluir o portfólio profissional de Igor Matos (site público + admin), garantindo clareza da proposta, prova de competência e experiência, com conteúdo dinâmico via Supabase.
 
+## Objective (EN)
+Maintain and evolve Igor Matos' professional portfolio (public site + admin), ensuring clarity of the value proposition, proof of competence and experience, with dynamic content via Supabase.
+
 ## Backlog priorizado
 ### P0 (crítico)
 - Garantir que navegação e ancoragem de seções funcionem consistentemente em desktop e mobile. (mobile ajustado com scroll offset)
@@ -15,6 +18,8 @@ Manter e evoluir o portfólio profissional de Igor Matos (site público + admin)
 - Padronizar cards de projetos e experiência para leitura comparativa rápida. (mobile ajustado)
 - Normalizar espaçamentos entre seções com escala única (ex: py-24 desktop / py-16 mobile). (pages/Home.tsx, components/VerticalJourney.tsx)
 - Uniformizar estilo base dos cards (raio/padding/borda) entre seções equivalentes. (pages/Home.tsx, components/VerticalJourney.tsx)
+- Documentação: README bilíngue + bloco autogerado via script. (concluído)
+- Documentação: Tech Stack atualizado com DeepL. (concluído)
 
 ### P2 (refino)
 - Reduzir efeitos decorativos que competem com o conteúdo principal. (mobile ajustado)
@@ -35,6 +40,7 @@ Manter e evoluir o portfólio profissional de Igor Matos (site público + admin)
 
 ## Próxima ação concreta
 Validar swipe/touch nos carrosseis de Projetos e Jornada no mobile.
+Após alterações no TODO, rodar `npm run readme:gen`.
 
 ## Backlog de padronização (UX/UI)
 ### P0 — percepção profissional
