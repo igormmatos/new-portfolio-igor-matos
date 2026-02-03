@@ -79,7 +79,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isAdmin = location.pathname.includes('admin');
-  const { t, language } = useI18n();
+  const { t, language, formatNumber } = useI18n();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -124,7 +124,7 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
           <img 
             src="https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/image/logo_sem_fundo.png" 
             alt={logoAlt} 
-            className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+            className="h-18 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
 
@@ -237,7 +237,7 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ profile }) => {
-  const { t, language } = useI18n();
+  const { t, language, formatNumber } = useI18n();
   const profileName = selectLocalizedColumn(profile, 'display_name', language) || profile?.display_name;
   const footerTagline =
     selectLocalizedColumn(profile, 'action_phrase', language) ||
@@ -252,7 +252,7 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
              <img 
                src="https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/image/logo_sem_fundo.png" 
                alt={profile?.display_name ? `${profile.display_name} Logo` : 'Logo'} 
-               className="h-10 w-auto object-contain mb-4 opacity-90" 
+               className="h-14 w-auto object-contain mb-4 opacity-90" 
              />
              <p className="mt-2 text-slate-500 max-w-sm text-sm">
                {footerTagline}
@@ -262,9 +262,6 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
             <a href={profile?.git_url || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all duration-300">
               <i className="fa-brands fa-github"></i>
             </a>
-            <a href="#" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-blue-500 hover:text-white transition-all duration-300">
-              <i className="fa-brands fa-twitter"></i>
-            </a>
             <a href={profile?.linkedin_url || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-blue-700 hover:text-white transition-all duration-300">
               <i className="fa-brands fa-linkedin-in"></i>
             </a>
@@ -272,7 +269,7 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
         </div>
         <div className="border-t border-slate-900 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-600 text-xs">
-            © {new Date().getFullYear()} {profileName || "Portfólio"}. {t('footer.rights')}
+            © {formatNumber(new Date().getFullYear())} {profileName || "Portfólio"}. {t('footer.rights')}
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-xs text-slate-600 hover:text-slate-400">{t('footer.privacy')}</a>

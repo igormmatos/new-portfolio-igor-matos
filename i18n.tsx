@@ -12,6 +12,8 @@ interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
+  formatDate: (value: Date | string | number, options?: Intl.DateTimeFormatOptions) => string;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -63,6 +65,10 @@ export const translations = {
     'contact.email': 'Email',
     'contact.subject': 'Assunto',
     'contact.message': 'Mensagem',
+    'contact.placeholder.name': 'João Lucas',
+    'contact.placeholder.email': 'john@example.com',
+    'contact.placeholder.subject': 'Projeto / Oportunidade',
+    'contact.placeholder.message': 'Conte um pouco sobre seu projeto...',
     'contact.send': 'Enviar Mensagem',
     'contact.send.via': '(via WhatsApp)',
     'contact.touch.title': 'Entre em contato',
@@ -141,6 +147,10 @@ export const translations = {
     'contact.email': 'Email',
     'contact.subject': 'Subject',
     'contact.message': 'Message',
+    'contact.placeholder.name': 'João Lucas',
+    'contact.placeholder.email': 'john@example.com',
+    'contact.placeholder.subject': 'Project / Opportunity',
+    'contact.placeholder.message': 'Tell me about your project...',
     'contact.send': 'Send Message',
     'contact.send.via': '(via WhatsApp)',
     'contact.touch.title': 'Get in touch',
@@ -219,6 +229,10 @@ export const translations = {
     'contact.email': 'Email',
     'contact.subject': 'Sujet',
     'contact.message': 'Message',
+    'contact.placeholder.name': 'João Lucas',
+    'contact.placeholder.email': 'john@example.com',
+    'contact.placeholder.subject': 'Projet / Opportunité',
+    'contact.placeholder.message': 'Parlez-moi de votre projet...',
     'contact.send': 'Envoyer le message',
     'contact.send.via': '(via WhatsApp)',
     'contact.touch.title': 'Contactez-moi',
@@ -276,8 +290,17 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const formatNumber = (value: number, options?: Intl.NumberFormatOptions) => {
+    return new Intl.NumberFormat(language, options).format(value);
+  };
+
+  const formatDate = (value: Date | string | number, options?: Intl.DateTimeFormatOptions) => {
+    const date = value instanceof Date ? value : new Date(value);
+    return new Intl.DateTimeFormat(language, options).format(date);
+  };
+
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t }}>
+    <I18nContext.Provider value={{ language, setLanguage, t, formatNumber, formatDate }}>
       {children}
     </I18nContext.Provider>
   );

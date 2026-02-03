@@ -21,14 +21,14 @@ const HeroSection = () => {
   const profileBio = selectLocalizedColumn(profile, 'bio', language) || profile?.bio;
 
   return (
-    <section id="home" className="relative min-h-[80vh] md:min-h-[90vh] flex items-center justify-center overflow-x-hidden pt-4 pb-20 md:pt-20 md:pb-32 lg:py-28 scroll-mt-24 md:scroll-mt-0">
+    <section id="home" className="relative min-h-[80vh] md:min-h-[90vh] lg:min-h-screen flex items-center justify-center overflow-x-hidden pt-4 pb-20 md:pt-20 md:pb-32 lg:pt-8 lg:pb-10 xl:pt-12 xl:pb-16 scroll-mt-24 md:scroll-mt-0">
       {/* Background Decor com Blob Morphing */}
       <div className="absolute top-1/4 left-0 w-96 h-96 bg-indigo-600/15 rounded-full blur-[120px] opacity-60 md:opacity-100 pointer-events-none"></div>
 
-      <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
+      <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-12 xl:gap-20 items-center relative z-10">
         
         {/* Text Content */}
-        <div className="flex flex-col items-start space-y-4 md:space-y-6 order-1 pt-0 lg:pt-0">
+        <div className="flex flex-col items-start space-y-4 md:space-y-6 lg:space-y-5 order-1 pt-0 lg:pt-1">
           
           {/* 1. Badge de Status com Pulse Soft */}
           <ScrollReveal delay={0}>
@@ -122,7 +122,7 @@ const HeroSection = () => {
           
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-indigo-500/10 rounded-full blur-3xl -z-10 opacity-60 md:opacity-100"></div>
 
-          <div className="relative w-full max-w-md mx-auto">
+          <div className="relative w-full max-w-md lg:max-w-sm xl:max-w-md mx-auto">
              <div className="absolute inset-0 border-2 border-slate-700/50 rounded-3xl rotate-6 transform translate-x-4 translate-y-4 z-0"></div>
              
              <div className="absolute inset-0 bg-slate-800/40 backdrop-blur-sm rounded-3xl -rotate-3 transform -translate-x-2 -translate-y-2 z-0"></div>
@@ -513,7 +513,7 @@ const ContactSection = () => {
                       value={contactForm.name}
                       onChange={handleInputChange}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" 
-                      placeholder="John Doe" 
+                      placeholder={t('contact.placeholder.name')} 
                       required
                     />
                   </div>
@@ -525,7 +525,7 @@ const ContactSection = () => {
                       value={contactForm.email}
                       onChange={handleInputChange}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" 
-                      placeholder="john@example.com" 
+                      placeholder={t('contact.placeholder.email')} 
                       required
                     />
                   </div>
@@ -538,7 +538,7 @@ const ContactSection = () => {
                     value={contactForm.subject}
                     onChange={handleInputChange}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" 
-                    placeholder="Project Inquiry" 
+                    placeholder={t('contact.placeholder.subject')} 
                     required
                    />
                 </div>
@@ -550,12 +550,13 @@ const ContactSection = () => {
                     value={contactForm.message}
                     onChange={handleInputChange}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" 
-                    placeholder="Tell me about your project..."
+                    placeholder={t('contact.placeholder.message')}
                     required
                    ></textarea>
                 </div>
-                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-xl transition-all glow-effect hover-scale">
-                  {t('contact.send')} {t('contact.send.via')}
+                <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg shadow-green-600/20 inline-flex items-center justify-center">
+                  <i className="fa-brands fa-whatsapp mr-3 text-2xl"></i>
+                  {t('contact.send')}
                 </button>
              </form>
            </div>
@@ -580,7 +581,12 @@ const ContactSection = () => {
                     </div>
                     <div>
                       <h4 className="text-white font-medium text-lg">{t('contact.touch.email')}</h4>
-                      <p className="text-slate-400">{profile?.email_contact || "hello@alexdev.com"}</p>
+                      <a
+                        href={`mailto:${profile?.email_contact || "hello@alexdev.com"}`}
+                        className="text-slate-400 hover:text-white transition-colors"
+                      >
+                        {profile?.email_contact || "hello@alexdev.com"}
+                      </a>
                     </div>
                  </div>
                  {profile?.linkedin_url && (
@@ -607,17 +613,7 @@ const ContactSection = () => {
                  )}
               </div>
 
-              {profile?.whatsapp && (
-                <div className="pt-8">
-                   <a 
-                    href={`https://wa.me/${profile.whatsapp}`}
-                    target="_blank"
-                    className="inline-flex items-center justify-center w-full md:w-auto px-8 py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg shadow-green-600/20"
-                   >
-                     <i className="fa-brands fa-whatsapp mr-3 text-2xl"></i> {t('contact.touch.whatsapp')}
-                   </a>
-                </div>
-              )}
+              
              </div>
            </ScrollReveal>
          </div>

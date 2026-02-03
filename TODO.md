@@ -35,8 +35,8 @@ Validar swipe/touch nos carrosseis de Projetos e Jornada no mobile.
 - [x] Criar o novo BD com colunas localizadas (pt-BR/en/fr).
 - [x] Excluir o BD antigo.
 - [x] Atualizar os inserts para os 3 idiomas.
-- Atualizar o CRUD para inserir os 3 idiomas.
-- Realizar testes automatizados no CRUD.
+- [x] insert/update apenas em ingles, falta frances
+- [x] Realizar testes automatizados no CRUD.
 
 ## Última atualização
-2026-02-02
+2026-02-03
