@@ -58,8 +58,8 @@ describe("api i18n CRUD", () => {
     sb.functions.invoke.mockResolvedValue({
       data: {
         translations: {
-          en: { title: "Title EN", description: "Desc EN", technologies: "Tech EN" },
-          fr: { title: "Title FR", description: "Desc FR", technologies: "Tech FR" },
+          en: { title: "Title EN", description: "Desc EN" },
+          fr: { title: "Title FR", description: "Desc FR" },
         },
       },
       error: null,
@@ -68,7 +68,6 @@ describe("api i18n CRUD", () => {
     await api.updateProject("11111111-1111-1111-1111-111111111111", {
       title: "Titulo PT",
       description: "Desc PT",
-      technologies: "Tech PT",
     });
 
     const payload = builder.update.mock.calls[0][0];
@@ -77,7 +76,7 @@ describe("api i18n CRUD", () => {
     expect(payload.title_en).toBe("Title EN");
     expect(payload.title_fr).toBe("Title FR");
     expect(payload.description_en).toBe("Desc EN");
-    expect(payload.technologies_fr).toBe("Tech FR");
+    expect(payload.description_fr).toBe("Desc FR");
   });
 
   it("falls back to pt-BR when translation fails", async () => {

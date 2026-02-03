@@ -27,12 +27,13 @@ const TechGroups: React.FC<TechGroupsProps> = ({ skills, language, onProjectSele
   const [activeSkill, setActiveSkill] = useState<SkillWithProjects | null>(null);
 
   const { grouped } = useMemo(() => {
+    const filteredSkills = skills.filter((skill) => (skill.projects_count || 0) > 0);
     const groupedSkills: Record<string, SkillWithProjects[]> = {};
     groups.forEach((group) => {
       groupedSkills[group.id] = [];
     });
 
-    skills.forEach((skill) => {
+    filteredSkills.forEach((skill) => {
       const rawGroup = (skill.category || 'other').toLowerCase();
       const group = groupedSkills[rawGroup] ? rawGroup : 'other';
       groupedSkills[group].push(skill);
@@ -61,7 +62,9 @@ const TechGroups: React.FC<TechGroupsProps> = ({ skills, language, onProjectSele
   return (
     <div className="space-y-6">
       <div className="space-y-3 md:hidden">
-        {groups.map((group) => {
+        {groups
+          .filter((group) => (grouped[group.id] ?? []).length > 0)
+          .map((group) => {
           const isOpen = openGroups.has(group.id);
           const items = grouped[group.id] ?? [];
           const isActiveGroup =
@@ -172,7 +175,9 @@ const TechGroups: React.FC<TechGroupsProps> = ({ skills, language, onProjectSele
       </div>
 
       <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-6">
-        {groups.map((group) => {
+        {groups
+          .filter((group) => (grouped[group.id] ?? []).length > 0)
+          .map((group) => {
           const items = grouped[group.id] ?? [];
           const isActiveGroup =
             activeSkill && items.some((skill) => skill.id === activeSkill.id);

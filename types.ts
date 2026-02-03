@@ -64,10 +64,6 @@ export interface Project {
   description_pt?: string;
   description_en?: string;
   description_fr?: string;
-  technologies: string; // Mantido como TEXT conforme solicitado
-  technologies_pt?: string;
-  technologies_en?: string;
-  technologies_fr?: string;
   github_url?: string;
   live_url?: string;
   image_url: string;
@@ -152,21 +148,4 @@ export interface Skill {
   name: string;
   icon: string;
   level: number;
-}
-
-export interface Service {
-  id: number;
-  title: string;
-  description: string;
-  priceStart: number;
-  icon: string;
-}
-
-export interface ExperienceItem {
-  id: number;
-  role: string;
-  company: string;
-  period: string;
-  description: string;
-  type: string;
 }

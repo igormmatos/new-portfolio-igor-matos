@@ -109,7 +109,27 @@ CREATE INDEX IF NOT EXISTS idx_project_technical_skills_skill_id
 -- Views
 CREATE OR REPLACE VIEW public.v_projects_with_skills AS
 SELECT
-  p.*,
+  p.id,
+  p.created_at,
+  p.title,
+  p.title_pt,
+  p.title_en,
+  p.title_fr,
+  p.role,
+  p.role_pt,
+  p.role_en,
+  p.role_fr,
+  p.description,
+  p.description_pt,
+  p.description_en,
+  p.description_fr,
+  p.github_url,
+  p.live_url,
+  p.image_url,
+  p.display_order,
+  p.slug,
+  p.status,
+  p.updated_at,
   COALESCE(
     jsonb_agg(
       jsonb_build_object(
@@ -139,7 +159,9 @@ LEFT JOIN LATERAL (
   ORDER BY ts.id, COALESCE(pts.sort_order, 9999), ts.name
 ) AS skill_rows ON true
 WHERE p.status = 'published'
-GROUP BY p.id;
+GROUP BY p.id, p.created_at, p.title, p.title_pt, p.title_en, p.title_fr, p.role, p.role_pt, p.role_en, p.role_fr,
+  p.description, p.description_pt, p.description_en, p.description_fr, p.github_url, p.live_url, p.image_url,
+  p.display_order, p.slug, p.status, p.updated_at;
 
 CREATE OR REPLACE VIEW public.v_skills_with_projects AS
 SELECT

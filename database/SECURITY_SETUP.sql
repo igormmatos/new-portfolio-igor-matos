@@ -7,6 +7,7 @@ ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.journey_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.competencies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.technical_skills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_technical_skills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.display_order_audit_logs ENABLE ROW LEVEL SECURITY;
@@ -16,9 +17,9 @@ CREATE POLICY "Public read profile_info"
 ON public.profile_info FOR SELECT
 USING (true);
 
-CREATE POLICY "Public read projects"
+CREATE POLICY "Public read published projects"
 ON public.projects FOR SELECT
-USING (true);
+USING (status = 'published');
 
 CREATE POLICY "Public read journey_items"
 ON public.journey_items FOR SELECT
@@ -28,9 +29,22 @@ CREATE POLICY "Public read competencies"
 ON public.competencies FOR SELECT
 USING (true);
 
-CREATE POLICY "Public read technical_skills"
+CREATE POLICY "Public read active technical_skills"
 ON public.technical_skills FOR SELECT
-USING (true);
+USING (is_active = true);
+
+CREATE POLICY "Public read project_technical_skills"
+ON public.project_technical_skills FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM public.projects p
+    WHERE p.id = project_id AND p.status = 'published'
+  )
+  AND EXISTS (
+    SELECT 1 FROM public.technical_skills ts
+    WHERE ts.id = technical_skill_id AND ts.is_active = true
+  )
+);
 
 CREATE POLICY "Public read services"
 ON public.services FOR SELECT
@@ -109,6 +123,21 @@ USING (true);
 
 CREATE POLICY "Auth delete technical_skills"
 ON public.technical_skills FOR DELETE
+TO authenticated
+USING (true);
+
+CREATE POLICY "Auth write project_technical_skills"
+ON public.project_technical_skills FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+CREATE POLICY "Auth update project_technical_skills"
+ON public.project_technical_skills FOR UPDATE
+TO authenticated
+USING (true);
+
+CREATE POLICY "Auth delete project_technical_skills"
+ON public.project_technical_skills FOR DELETE
 TO authenticated
 USING (true);
 

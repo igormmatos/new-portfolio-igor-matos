@@ -13,6 +13,7 @@ A professional portfolio built with React + Vite, featuring a public site and an
 - Drag-and-drop ordering for list-based content in the admin.
 - i18n support (pt-BR / en / fr) with UI strings and database-backed localized fields.
 - Fallbacks for missing content (e.g., technical skills) when the database is empty or unavailable.
+- Projects ↔ Technologies is modeled as N:N with `project_technical_skills` and public views.
 
 ## Tech Stack
 - React 18 + Vite
@@ -51,12 +52,22 @@ npm run test
 - `supabase/functions/` — Edge Functions (translation)
 - `__tests__/` — Vitest test suite
 - `database/` — SQL setup and seed data
+  - `PROJECT_TECH_RELATIONSHIP.sql` — N:N schema, views, RPC
+  - `REMOVE_PROJECT_TECHNOLOGIES.sql` — drop legacy `projects.technologies*` columns
 
 ## i18n (pt-BR / en / fr)
 Language switching is handled by the i18n context (`i18n.tsx`). UI strings live in the translation map, while content fetched from Supabase uses localized fields (e.g., `title_pt`, `title_en`, `title_fr`).
 
 ## Database Content Localization
 The app stores localized fields per entity (e.g., `title_pt`, `title_en`, `title_fr`). The UI selects the best available value based on language, with fallback to pt-BR when missing. Translation for CRUD writes is handled via an Edge Function integrated with DeepL (`supabase/functions/translate`).
+
+## Projects ↔ Technologies (N:N)
+- `technical_skills` is the master catalog (with `category`, `icon_key`, `is_active`).
+- `project_technical_skills` is the pivot table (N:N).
+- Public reads should use views:
+  - `v_projects_with_skills`
+  - `v_skills_with_projects`
+- Legacy columns `projects.technologies*` were removed in favor of the pivot.
 
 ## Observability Roadmap
 Analytics and SEO enhancements are planned but not implemented yet.
@@ -140,6 +151,7 @@ Portfólio profissional em React + Vite, com site público e painel admin para g
 - Reordenação com drag-and-drop no admin.
 - i18n (pt-BR / en / fr) com textos de UI e campos localizados do banco.
 - Fallbacks quando o conteúdo do banco não está disponível (ex.: tecnologias).
+- Relação Projetos ↔ Tecnologias em N:N via `project_technical_skills` e views públicas.
 
 ## Stack
 - React 18 + Vite
@@ -178,12 +190,22 @@ npm run test
 - `supabase/functions/` — Edge Functions (tradução)
 - `__tests__/` — suíte de testes (Vitest)
 - `database/` — SQL de setup e seeds
+  - `PROJECT_TECH_RELATIONSHIP.sql` — schema N:N, views, RPC
+  - `REMOVE_PROJECT_TECHNOLOGIES.sql` — remove colunas legadas `projects.technologies*`
 
 ## i18n (pt-BR / en / fr)
 O switch de idioma é feito pelo contexto de i18n (`i18n.tsx`). Strings da UI ficam no mapa de traduções e o conteúdo do Supabase usa campos localizados (`title_pt`, `title_en`, `title_fr`).
 
 ## Localização de Conteúdo do BD
 Os registros possuem campos localizados por idioma (ex.: `title_pt`, `title_en`, `title_fr`). A UI escolhe o melhor valor disponível com fallback para pt-BR quando faltar. As traduções de escrita no CRUD usam a Edge Function integrada ao DeepL (`supabase/functions/translate`).
+
+## Projetos ↔ Tecnologias (N:N)
+- `technical_skills` é o catálogo mestre (com `category`, `icon_key`, `is_active`).
+- `project_technical_skills` é a tabela pivô (N:N).
+- Leituras públicas usam as views:
+  - `v_projects_with_skills`
+  - `v_skills_with_projects`
+- As colunas legadas `projects.technologies*` foram removidas.
 
 ## Roadmap de Observabilidade
 Analytics e SEO estão planejados, mas ainda não implementados.

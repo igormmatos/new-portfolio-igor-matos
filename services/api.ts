@@ -22,7 +22,7 @@ const TRANSLATABLE_FIELDS: Record<TranslatableTable, { fields: string[]; arrayFi
     fields: ['display_name', 'headline', 'bio', 'badge', 'action_phrase'],
   },
   projects: {
-    fields: ['title', 'role', 'description', 'technologies'],
+    fields: ['title', 'role', 'description'],
   },
   journey_items: {
     fields: ['title', 'company', 'period', 'description'],

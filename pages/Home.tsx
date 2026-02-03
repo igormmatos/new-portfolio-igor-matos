@@ -378,11 +378,13 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
 
         {/* Carousel Container */}
         <div
-          className="relative overflow-hidden -mx-2 p-2"
+          className="relative overflow-hidden -mx-2 p-2 md:p-2"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-slate-950 to-transparent md:hidden"></div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-slate-950 to-transparent md:hidden"></div>
           <div 
             className="flex transition-transform duration-500 ease-in-out gap-0 md:gap-8"
             style={{ transform: `translateX(-${currentIndex * (100 / itemsPerScreen)}%)` }}
@@ -395,7 +397,7 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
                 <ScrollReveal delay={idx * 80}>
                   <div
                     id={`project-${project.id}`}
-                    className={`h-full group glass-morphism border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300 flex flex-col hover-3d w-[92%] md:w-full ${
+                    className={`h-full group glass-morphism border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300 flex flex-col hover-3d w-[88%] sm:w-[92%] md:w-full ${
                       highlightProjectId === project.id
                         ? 'ring-2 ring-indigo-500/60 shadow-[0_0_40px_-18px_rgba(99,102,241,0.9)]'
                         : ''
