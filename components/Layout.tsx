@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useI18n, Language, selectLocalizedColumn } from '../i18n';
 import { api } from '../services/api';
 import { ProfileInfo } from '../types';
+import { trackEvent } from '../services/analytics';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -260,10 +261,22 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
              </p>
           </div>
           <div className="flex space-x-6">
-            <a href={profile?.git_url || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all duration-300">
+            <a
+              href={profile?.git_url || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all duration-300"
+              onClick={() => trackEvent({ name: 'external_link_click', props: { type: 'github' } })}
+            >
               <i className="fa-brands fa-github"></i>
             </a>
-            <a href={profile?.linkedin_url || "#"} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-blue-700 hover:text-white transition-all duration-300">
+            <a
+              href={profile?.linkedin_url || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-blue-700 hover:text-white transition-all duration-300"
+              onClick={() => trackEvent({ name: 'external_link_click', props: { type: 'linkedin' } })}
+            >
               <i className="fa-brands fa-linkedin-in"></i>
             </a>
           </div>
@@ -306,6 +319,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           rel="noopener noreferrer"
           className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 group glow-effect hover-scale"
           aria-label="Conversar no WhatsApp"
+          onClick={() => trackEvent({ name: 'external_link_click', props: { type: 'whatsapp_fab' } })}
         >
           <i className="fa-brands fa-whatsapp text-3xl"></i>
           <span className="absolute right-full mr-4 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-700 pointer-events-none shadow-lg">
