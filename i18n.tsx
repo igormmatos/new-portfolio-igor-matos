@@ -36,6 +36,8 @@ export const translations = {
     'hero.cta.more': 'Conhecer Mais',
     'hero.cta.primary': 'Iniciar Projeto',
     'hero.cta.secondary': 'Ver Trabalhos',
+    'hero.title.highlight': 'Desenvolvendo experiências digitais com impacto real.',
+    'hero.description': 'Transformo ideias em soluções digitais modernas, elegantes e escaláveis.',
 
     'skills.title': 'Áreas de Atuação Estratégica',
     'skills.subtitle': 'As frentes em que aplico minha experiência para transformar desafios em soluções concretas.',
@@ -118,6 +120,8 @@ export const translations = {
     'hero.cta.more': 'Learn More',
     'hero.cta.primary': 'Start a Project',
     'hero.cta.secondary': 'View Work',
+    'hero.title.highlight': 'Building digital experiences with real impact.',
+    'hero.description': 'I turn ideas into modern, elegant, and scalable digital solutions.',
 
     'skills.title': 'Strategic Areas of Expertise',
     'skills.subtitle': 'The fronts where I apply my experience to transform challenges into concrete solutions.',
@@ -200,6 +204,8 @@ export const translations = {
     'hero.cta.more': 'En savoir plus',
     'hero.cta.primary': 'Lancer un projet',
     'hero.cta.secondary': 'Voir mon travail',
+    'hero.title.highlight': 'Créer des expériences numériques à impact réel.',
+    'hero.description': 'Je transforme les idées en solutions numériques modernes, élégantes et évolutives.',
 
     'skills.title': 'Domaines d\'Expertise Stratégique',
     'skills.subtitle': 'Les domaines où j\'applique mon expérience pour transformer les défis en solutions concrètes.',
@@ -283,11 +289,16 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const t = (key: string): string => {
-    return (
-      translations[language][key as keyof typeof translations['pt-BR']] ||
-      translations['pt-BR'][key as keyof typeof translations['pt-BR']] ||
-      key
-    );
+    const primary = translations[language][key as keyof typeof translations['pt-BR']];
+    if (primary !== undefined && primary !== null) return primary;
+
+    const fallback = translations['pt-BR'][key as keyof typeof translations['pt-BR']];
+    if (fallback !== undefined && fallback !== null) return fallback;
+
+    if (import.meta?.env?.MODE !== 'production') {
+      console.warn(`[i18n] Missing translation key: ${key}`);
+    }
+    return key;
   };
 
   const formatNumber = (value: number, options?: Intl.NumberFormatOptions) => {
@@ -322,9 +333,9 @@ export const selectLocalizedColumn = <T = string>(
 ): T | undefined => {
   if (!record) return undefined;
   const primary = record[`${baseField}_${langSuffix(lang)}`];
-  if (primary !== undefined && primary !== null && primary !== '') return primary as T;
+  if (primary !== undefined && primary !== null) return primary as T;
   const fb = record[`${baseField}_${langSuffix(fallback)}`];
-  if (fb !== undefined && fb !== null && fb !== '') return fb as T;
+  if (fb !== undefined && fb !== null) return fb as T;
   return record[baseField] as T;
 };
 

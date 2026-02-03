@@ -74,6 +74,7 @@ const Admin: React.FC = () => {
   const [journey, setJourney] = useState<JourneyItem[]>([]);
   const [competencies, setCompetencies] = useState<Competency[]>([]);
   const [techSkills, setTechSkills] = useState<TechnicalSkill[]>([]);
+  const [isTechSkillsFallback, setIsTechSkillsFallback] = useState(false);
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
 
   // Editing States
@@ -105,7 +106,7 @@ const Admin: React.FC = () => {
       api.getProjects(),
       api.getJourney(),
       api.getCompetencies(),
-      api.getTechnicalSkills(),
+      api.getTechnicalSkillsWithMeta(),
       api.getProfile()
     ]);
     
@@ -115,7 +116,8 @@ const Admin: React.FC = () => {
     setProjects(pData?.sort(sortFn) || []);
     setJourney(jData?.sort(sortFn) || []);
     setCompetencies(cData?.sort(sortFn) || []);
-    setTechSkills(tData?.sort(sortFn) || []);
+    setTechSkills(tData?.data?.sort(sortFn) || []);
+    setIsTechSkillsFallback(!!tData?.fromFallback);
     setProfile(profData);
   };
 
@@ -150,6 +152,11 @@ const Admin: React.FC = () => {
     const destinationIndex = result.destination.index;
 
     if (sourceIndex === destinationIndex) return;
+
+    if (activeTab === 'tech' && isTechSkillsFallback) {
+      showNotification('Não é possível reordenar tecnologias enquanto o fallback estiver ativo.', 'error');
+      return;
+    }
 
     // Função genérica para reordenar array
     const reorder = (list: any[], startIndex: number, endIndex: number) => {
@@ -227,6 +234,10 @@ const Admin: React.FC = () => {
   };
 
   const handleSaveItem = async () => {
+    if (activeTab === 'tech' && isTechSkillsFallback) {
+      showNotification('Não é possível editar tecnologias enquanto o fallback estiver ativo.', 'error');
+      return;
+    }
     setIsSaving(true);
     try {
       // Define display_order automaticamente para novos itens (final da lista)
@@ -275,6 +286,10 @@ const Admin: React.FC = () => {
     deleteFn: (id: string) => Promise<void>,
     setListFn: React.Dispatch<React.SetStateAction<any[]>>
   ) => {
+    if (activeTab === 'tech' && isTechSkillsFallback) {
+      showNotification('Não é possível excluir tecnologias enquanto o fallback estiver ativo.', 'error');
+      return;
+    }
     setDeleteModal({
       isOpen: true,
       id,
@@ -358,7 +373,13 @@ const Admin: React.FC = () => {
             {activeTab !== 'profile' && (
               <button 
                 onClick={() => handleOpenDrawer({})}
-                className="mt-4 md:mt-0 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium flex items-center shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                disabled={activeTab === 'tech' && isTechSkillsFallback}
+                title={activeTab === 'tech' && isTechSkillsFallback ? 'Fallback ativo: edições desabilitadas' : undefined}
+                className={`mt-4 md:mt-0 px-6 py-3 rounded-xl font-medium flex items-center shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 ${
+                  activeTab === 'tech' && isTechSkillsFallback
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                }`}
               >
                 <i className="fa-solid fa-plus mr-2"></i> {t('admin.add')}
               </button>
@@ -394,7 +415,7 @@ const Admin: React.FC = () => {
           </div>
 
           {/* Content Area */}
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-8 relative min-h-[500px]">
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-8 relative min-h-[500px]">
              
              {/* PROFILE TAB */}
              {activeTab === 'profile' && profile && (
@@ -435,6 +456,12 @@ const Admin: React.FC = () => {
              {/* DRAG AND DROP CONTEXT FOR LISTS */}
              {activeTab !== 'profile' && (
                <>
+                {activeTab === 'tech' && isTechSkillsFallback && (
+                  <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-200 text-sm flex items-center gap-2">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
+                    <span>Fallback ativo: tecnologias estão em modo somente leitura.</span>
+                  </div>
+                )}
                 <div className="mb-4 text-xs text-slate-500 flex items-center gap-2">
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-900 text-slate-400 border border-slate-800">
                     <i className="fa-solid fa-hand-pointer text-[10px]"></i>
@@ -662,10 +689,26 @@ const Admin: React.FC = () => {
                                     </div>
 
                                     <div className="flex gap-2 w-full mt-auto">
-                                        <button onClick={() => handleOpenDrawer(t)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition-all">
+                                        <button
+                                          onClick={() => handleOpenDrawer(t)}
+                                          disabled={isTechSkillsFallback}
+                                          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                                            isTechSkillsFallback
+                                              ? 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                                              : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                                          }`}
+                                        >
                                             EDITAR
                                         </button>
-                                        <button onClick={() => handleDeleteRequest(t.id, t.name, 'Tecnologia', api.deleteTechnicalSkill, setTechSkills)} className="w-8 flex items-center justify-center bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all">
+                                        <button
+                                          onClick={() => handleDeleteRequest(t.id, t.name, 'Tecnologia', api.deleteTechnicalSkill, setTechSkills)}
+                                          disabled={isTechSkillsFallback}
+                                          className={`w-8 flex items-center justify-center rounded-lg transition-all ${
+                                            isTechSkillsFallback
+                                              ? 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                                              : 'bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400'
+                                          }`}
+                                        >
                                             <i className="fa-solid fa-trash text-xs"></i>
                                         </button>
                                     </div>

@@ -34,3 +34,8 @@ npm run dev
 ```
 
 Depois, abra o endereço que o Vite mostrar no terminal (geralmente `http://localhost:5173`).
+
+
+4. **ODJU - Outros Dados Julgados Úteis**
+
+Aplicação React com suporte a múltiplos idiomas (pt-BR/en/fr), incluindo conteúdo dinâmico do banco, fallback inteligente e CRUD testado offline.

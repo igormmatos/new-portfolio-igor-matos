@@ -100,6 +100,25 @@ describe("api i18n CRUD", () => {
     expect(payload.description_fr).toBe("Desc PT");
   });
 
+  it("preserves provided translations when translation fails", async () => {
+    const builder = makeBuilder({});
+    sb.from.mockReturnValue(builder);
+    sb.functions.invoke.mockResolvedValue({
+      data: null,
+      error: new Error("translation failed"),
+    });
+
+    await api.updateProject("11111111-1111-1111-1111-111111111111", {
+      title: "Titulo PT",
+      title_en: "Existing EN",
+      title_fr: "Existing FR",
+    });
+
+    const payload = builder.update.mock.calls[0][0];
+    expect(payload.title_en).toBe("Existing EN");
+    expect(payload.title_fr).toBe("Existing FR");
+  });
+
   it("handles array fields for competencies", async () => {
     const builder = makeBuilder({});
     sb.from.mockReturnValue(builder);

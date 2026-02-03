@@ -58,19 +58,34 @@ const buildLocalizedPayload = async (table: TranslatableTable, payload: any) => 
     Object.keys(texts).forEach((field) => {
       const ptValue = texts[field];
       result[`${field}_pt`] = ptValue;
-      result[`${field}_en`] = en[field] ?? ptValue;
-      result[`${field}_fr`] = fr[field] ?? ptValue;
+      if (en[field] !== undefined && en[field] !== null) {
+        result[`${field}_en`] = en[field];
+      } else if (result[`${field}_en`] === undefined || result[`${field}_en`] === null) {
+        result[`${field}_en`] = ptValue;
+      }
+      if (fr[field] !== undefined && fr[field] !== null) {
+        result[`${field}_fr`] = fr[field];
+      } else if (result[`${field}_fr`] === undefined || result[`${field}_fr`] === null) {
+        result[`${field}_fr`] = ptValue;
+      }
       result[field] = ptValue;
     });
 
     return result;
   } catch (err) {
+    if (import.meta?.env?.MODE !== 'production') {
+      console.warn(`[i18n] Translation failed for ${table}; falling back to pt-BR.`, err);
+    }
     const result: any = { ...payload };
     Object.keys(texts).forEach((field) => {
       const ptValue = texts[field];
       result[`${field}_pt`] = ptValue;
-      result[`${field}_en`] = ptValue;
-      result[`${field}_fr`] = ptValue;
+      if (result[`${field}_en`] === undefined || result[`${field}_en`] === null) {
+        result[`${field}_en`] = ptValue;
+      }
+      if (result[`${field}_fr`] === undefined || result[`${field}_fr`] === null) {
+        result[`${field}_fr`] = ptValue;
+      }
       result[field] = ptValue;
     });
     return result;
@@ -219,9 +234,9 @@ export const api = {
       .select('*')
       .order('display_order', { ascending: true });
 
-    // Fallback se houver erro ou se não houver dados
-    if (error || !data || data.length === 0) {
-      if (error) console.error('Error fetching technical skills (using fallback):', error);
+    // Fallback apenas se houver erro na consulta
+    if (error) {
+      console.error('Error fetching technical skills (using fallback):', error);
       
       // Mapeia os dados estáticos para o formato do banco
       return staticSkills.map(s => ({
@@ -234,6 +249,29 @@ export const api = {
     }
 
     return data;
+  },
+
+  getTechnicalSkillsWithMeta: async (): Promise<{ data: TechnicalSkill[]; fromFallback: boolean }> => {
+    const { data, error } = await supabase
+      .from('technical_skills')
+      .select('*')
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching technical skills (using fallback):', error);
+      return {
+        data: staticSkills.map(s => ({
+          id: s.id.toString(),
+          name: s.name,
+          icon: s.icon,
+          level: s.level,
+          display_order: s.id
+        })),
+        fromFallback: true
+      };
+    }
+
+    return { data: data || [], fromFallback: false };
   },
 
   createTechnicalSkill: async (item: Omit<TechnicalSkill, 'id'>) => {
