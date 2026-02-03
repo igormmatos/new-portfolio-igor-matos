@@ -122,7 +122,34 @@ export const api = {
   },
 
   updateProfile: async (id: string, updates: Partial<ProfileInfo>) => {
-    const localized = await buildLocalizedPayload('profile_info', updates);
+    const normalizeOptional = (value?: string | null) => {
+      if (value === undefined || value === null) return value ?? null;
+      const trimmed = value.trim();
+      return trimmed === '' ? null : trimmed;
+    };
+    const normalizeRequired = (value?: string | null) => {
+      if (value === undefined || value === null) return value ?? null;
+      return value.trim();
+    };
+    const normalizeEmail = (value?: string | null) => {
+      const cleaned = normalizeOptional(value);
+      if (cleaned === null || cleaned === undefined) return cleaned ?? null;
+      // Remove whitespace and zero-width characters that break DB regex
+      return cleaned.replace(/[\s\u200B\u200C\u200D\uFEFF]+/g, '');
+    };
+
+    const normalizedUpdates: Partial<ProfileInfo> = { ...updates };
+    if ('display_name' in updates) normalizedUpdates.display_name = normalizeRequired(updates.display_name);
+    if ('headline' in updates) normalizedUpdates.headline = normalizeRequired(updates.headline);
+    if ('bio' in updates) normalizedUpdates.bio = normalizeRequired(updates.bio);
+    if ('whatsapp' in updates) normalizedUpdates.whatsapp = normalizeRequired(updates.whatsapp);
+    if ('email_contact' in updates) normalizedUpdates.email_contact = normalizeEmail(updates.email_contact);
+    if ('linkedin_url' in updates) normalizedUpdates.linkedin_url = normalizeOptional(updates.linkedin_url);
+    if ('git_url' in updates) normalizedUpdates.git_url = normalizeOptional(updates.git_url);
+    if ('action_phrase' in updates) normalizedUpdates.action_phrase = normalizeOptional(updates.action_phrase);
+    if ('badge' in updates) normalizedUpdates.badge = normalizeOptional(updates.badge);
+
+    const localized = await buildLocalizedPayload('profile_info', normalizedUpdates);
     const { data, error } = await supabase.from('profile_info').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
@@ -248,7 +275,7 @@ export const api = {
       }));
     }
 
-    return data || [];
+    return (data || []) as JourneyItem[];
   },
 
   getTechnicalSkillsWithMeta: async (): Promise<{ data: TechnicalSkill[]; fromFallback: boolean }> => {

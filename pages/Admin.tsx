@@ -569,11 +569,11 @@ const Admin: React.FC = () => {
                                     </div>
 
                                     {/* Tipo Indicator */}
-                                    <div className={`absolute top-0 left-0 bottom-0 w-1 rounded-l-2xl ${j.type === 'work' ? 'bg-indigo-500' : 'bg-green-500'}`}></div>
+                                    <div className={`absolute top-0 left-0 bottom-0 w-1 rounded-l-2xl ${j.type === 'experience' ? 'bg-indigo-500' : 'bg-green-500'}`}></div>
                                     
                                     <div className="flex justify-between items-start mb-4 pl-3 pr-8">
-                                        <span className={`text-xs font-bold px-2 py-1 rounded border ${j.type === 'work' ? 'bg-indigo-900/20 text-indigo-400 border-indigo-500/20' : 'bg-green-900/20 text-green-400 border-green-500/20'}`}>
-                                            {j.type === 'work' ? 'TRABALHO' : 'EDUCAÇÃO'}
+                                        <span className={`text-xs font-bold px-2 py-1 rounded border ${j.type === 'experience' ? 'bg-indigo-900/20 text-indigo-400 border-indigo-500/20' : 'bg-green-900/20 text-green-400 border-green-500/20'}`}>
+                                            {j.type === 'experience' ? 'EXPERIÊNCIA' : 'EDUCAÇÃO'}
                                         </span>
                                     </div>
 
@@ -855,10 +855,10 @@ const Admin: React.FC = () => {
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tipo</label>
                       <select 
                         className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none"
-                        value={editingItem.type || 'work'} 
+                        value={editingItem.type || 'experience'} 
                         onChange={e => setEditingItem({...editingItem, type: e.target.value})}
                       >
-                        <option value="work">Experiência Profissional</option>
+                        <option value="experience">Experiência Profissional</option>
                         <option value="education">Formação Acadêmica</option>
                       </select>
                     </div>

@@ -45,7 +45,7 @@ export interface JourneyItem {
   description_pt?: string;
   description_en?: string;
   description_fr?: string;
-  type: 'work' | 'education';
+  type: 'experience' | 'education';
   display_order: number;
 }
 

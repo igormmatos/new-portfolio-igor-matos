@@ -12,7 +12,7 @@ const MOCK_JOURNEY: JourneyItem[] = [
     company: 'TechFlow Solutions',
     period: '2021 – Atual',
     description: 'Liderando a migração para React 18 e definindo padrões de arquitetura para escalabilidade.',
-    type: 'work',
+    type: 'experience',
     display_order: 1
   },
   {
@@ -30,7 +30,7 @@ const MOCK_JOURNEY: JourneyItem[] = [
     company: 'Creative Pulse',
     period: '2017 – 2021',
     description: 'Desenvolvimento de aplicações web de alta performance utilizando Node.js e React.',
-    type: 'work',
+    type: 'experience',
     display_order: 3
   }
 ];
@@ -107,9 +107,6 @@ const VerticalJourney: React.FC = () => {
     if (Math.abs(x) > Math.abs(y) && Math.abs(x) > swipeThreshold) {
       if (x < 0) handleNext();
       if (x > 0) handlePrev();
-    } else if (Math.abs(y) > swipeThreshold) {
-      if (y < 0) handleNext();
-      if (y > 0) handlePrev();
     }
     touchStart.current = null;
   };
@@ -245,18 +242,18 @@ const VerticalJourney: React.FC = () => {
                 >
                    {/* Background Icon Decor */}
                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none overflow-hidden rounded-2xl">
-                      <i className={`fa-solid ${activeItem.type === 'work' ? 'fa-briefcase' : 'fa-graduation-cap'} text-[10rem] -mr-8 -mt-8`}></i>
+                      <i className={`fa-solid ${activeItem.type === 'experience' ? 'fa-briefcase' : 'fa-graduation-cap'} text-[10rem] -mr-8 -mt-8`}></i>
                    </div>
 
                    {/* Header do Card */}
                    <div className="relative z-10">
                       <div className="flex flex-wrap items-center gap-3 mb-6">
                          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm ${
-                            activeItem.type === 'work' 
+                            activeItem.type === 'experience'
                               ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' 
                               : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                          }`}>
-                            {activeItem.type === 'work' ? t('experience.type.work') : t('experience.type.education')}
+                            {activeItem.type === 'experience' ? t('experience.type.work') : t('experience.type.education')}
                          </span>
                          <span className="flex items-center gap-2 text-slate-400 text-sm font-medium bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
                             <i className="fa-regular fa-calendar text-xs"></i>
@@ -284,7 +281,7 @@ const VerticalJourney: React.FC = () => {
                    </div>
                    
                    {/* Efeito Glow Colorido Bottom */}
-                   <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${activeItem.type === 'work' ? 'from-indigo-600 via-blue-600 to-indigo-600' : 'from-emerald-600 via-green-600 to-emerald-600'} opacity-50`}></div>
+                   <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${activeItem.type === 'experience' ? 'from-indigo-600 via-blue-600 to-indigo-600' : 'from-emerald-600 via-green-600 to-emerald-600'} opacity-50`}></div>
                 </div>
 
                 {/* Navegação e paginação Mobile (quando a linha do tempo lateral não aparece) */}

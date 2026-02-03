@@ -185,13 +185,53 @@ END $$;
 
 ALTER TABLE public.profile_info
   ADD CONSTRAINT profile_info_email_contact_format
-  CHECK (email_contact IS NULL OR email_contact ~* '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$') NOT VALID,
+  CHECK (
+    email_contact IS NULL
+    OR (
+      btrim(
+        translate(
+          email_contact,
+          chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(9) || chr(10) || chr(13) || chr(32),
+          ''
+        )
+      ) NOT LIKE '%@%@%'
+      AND position('@' in btrim(
+        translate(
+          email_contact,
+          chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(9) || chr(10) || chr(13) || chr(32),
+          ''
+        )
+      )) > 1
+      AND split_part(
+        btrim(
+          translate(
+            email_contact,
+            chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(9) || chr(10) || chr(13) || chr(32),
+            ''
+          )
+        ),
+        '@',
+        2
+      ) LIKE '%.%'
+      AND position('.' in split_part(
+        btrim(
+          translate(
+            email_contact,
+            chr(8203) || chr(8204) || chr(8205) || chr(65279) || chr(9) || chr(10) || chr(13) || chr(32),
+            ''
+          )
+        ),
+        '@',
+        2
+      )) > 1
+    )
+  ) NOT VALID,
   ADD CONSTRAINT profile_info_linkedin_url_format
   CHECK (linkedin_url IS NULL OR linkedin_url ~* '^https?://') NOT VALID,
   ADD CONSTRAINT profile_info_git_url_format
   CHECK (git_url IS NULL OR git_url ~* '^https?://') NOT VALID,
   ADD CONSTRAINT profile_info_whatsapp_format
-  CHECK (whatsapp ~ '^[0-9+\\-()\\s]+$') NOT VALID;
+  CHECK (whatsapp ~ '^[0-9+() -]+$') NOT VALID;
 
 DO $$
 BEGIN
