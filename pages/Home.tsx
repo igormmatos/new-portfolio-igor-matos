@@ -4,6 +4,7 @@ import VerticalJourney from '../components/VerticalJourney';
 import ScrollReveal from '../components/ScrollReveal';
 import { useI18n, selectLocalizedArray, selectLocalizedColumn } from '../i18n';
 import { api } from '../services/api';
+import { trackEvent } from '../services/analytics';
 import { ProfileInfo, Project, Competency, TechnicalSkill } from '../types';
 
 const HeroSection = () => {
@@ -22,6 +23,7 @@ const HeroSection = () => {
 
   const handleScrollToNext = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
+    trackEvent({ name: 'cta_click', props: { source: 'hero' } });
     const target = document.getElementById('projects');
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -105,6 +107,7 @@ const HeroSection = () => {
                       rel="noopener noreferrer" 
                       className="w-10 h-10 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition-all flex items-center justify-center"
                       title="LinkedIn"
+                      onClick={() => trackEvent({ name: 'external_link_click', props: { type: 'linkedin' } })}
                     >
                       <i className="fa-brands fa-linkedin-in text-lg"></i>
                     </a>
@@ -116,6 +119,7 @@ const HeroSection = () => {
                       rel="noopener noreferrer" 
                       className="w-10 h-10 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition-all flex items-center justify-center"
                       title="GitHub"
+                      onClick={() => trackEvent({ name: 'external_link_click', props: { type: 'github' } })}
                     >
                       <i className="fa-brands fa-github text-lg"></i>
                     </a>
@@ -445,12 +449,24 @@ const ProjectsSection = () => {
                     
                     <div className="mt-auto flex gap-4 pt-4 border-t border-slate-900">
                        {project.live_url && (
-                         <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="text-xs md:text-sm font-medium text-slate-200 hover:text-indigo-400 flex items-center">
+                         <a
+                           href={project.live_url}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-xs md:text-sm font-medium text-slate-200 hover:text-indigo-400 flex items-center"
+                           onClick={() => trackEvent({ name: 'project_open', props: { type: 'live', id: project.id } })}
+                         >
                            <i className="fa-solid fa-arrow-up-right-from-square mr-2"></i> {t('projects.liveDemo')}
                          </a>
                        )}
                        {project.github_url && (
-                         <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="text-xs md:text-sm font-medium text-slate-500 hover:text-white flex items-center">
+                         <a
+                           href={project.github_url}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-xs md:text-sm font-medium text-slate-500 hover:text-white flex items-center"
+                           onClick={() => trackEvent({ name: 'project_open', props: { type: 'code', id: project.id } })}
+                         >
                            <i className="fa-brands fa-github mr-2"></i> {t('projects.code')}
                          </a>
                        )}
@@ -507,6 +523,7 @@ const ContactSection = () => {
     // Cria a URL do WhatsApp
     const url = `https://wa.me/${profile.whatsapp}?text=${encodeURIComponent(message)}`;
     
+    trackEvent({ name: 'external_link_click', props: { type: 'whatsapp', source: 'contact_form' } });
     // Abre em nova aba
     window.open(url, '_blank');
   };
@@ -600,6 +617,7 @@ const ContactSection = () => {
                       <a
                         href={`mailto:${profile?.email_contact || "hello@alexdev.com"}`}
                         className="text-slate-400 hover:text-white transition-colors"
+                        onClick={() => trackEvent({ name: 'external_link_click', props: { type: 'email' } })}
                       >
                         {profile?.email_contact || "hello@alexdev.com"}
                       </a>
@@ -612,7 +630,14 @@ const ContactSection = () => {
                       </div>
                       <div>
                         <h4 className="text-slate-100 font-medium text-lg">{t('contact.social.linkedin')}</h4>
-                        <a href={profile.linkedin_url} target="_blank" className="text-slate-400 hover:text-white transition-colors">{t('contact.view_profile')}</a>
+                        <a
+                          href={profile.linkedin_url}
+                          target="_blank"
+                          className="text-slate-400 hover:text-white transition-colors"
+                          onClick={() => trackEvent({ name: 'external_link_click', props: { type: 'linkedin' } })}
+                        >
+                          {t('contact.view_profile')}
+                        </a>
                       </div>
                    </div>
                  )}
@@ -623,7 +648,14 @@ const ContactSection = () => {
                       </div>
                       <div>
                         <h4 className="text-slate-100 font-medium text-lg">{t('contact.social.github')}</h4>
-                        <a href={profile.git_url} target="_blank" className="text-slate-400 hover:text-white transition-colors">{t('contact.view_profile')}</a>
+                        <a
+                          href={profile.git_url}
+                          target="_blank"
+                          className="text-slate-400 hover:text-white transition-colors"
+                          onClick={() => trackEvent({ name: 'external_link_click', props: { type: 'github' } })}
+                        >
+                          {t('contact.view_profile')}
+                        </a>
                       </div>
                    </div>
                  )}
