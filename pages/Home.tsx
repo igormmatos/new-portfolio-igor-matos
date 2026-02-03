@@ -2,10 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import Layout from '../components/Layout';
 import VerticalJourney from '../components/VerticalJourney';
 import ScrollReveal from '../components/ScrollReveal';
+import TechGroups from '../components/TechGroups';
 import { useI18n, selectLocalizedArray, selectLocalizedColumn } from '../i18n';
 import { api } from '../services/api';
 import { trackEvent } from '../services/analytics';
-import { ProfileInfo, Project, Competency, TechnicalSkill } from '../types';
+import { ProfileInfo, ProjectWithSkills, Competency, SkillWithProjects } from '../types';
 
 const HeroSection = () => {
   const { t, language } = useI18n();
@@ -244,17 +245,18 @@ const CompetenciesSection = () => {
   );
 };
 
-const TechStackSection = () => {
+const TechStackSection = ({ onProjectSelect }: { onProjectSelect?: (projectId: string) => void }) => {
   const { t, language } = useI18n();
-  const [skills, setSkills] = useState<TechnicalSkill[]>([]);
+  const [skills, setSkills] = useState<SkillWithProjects[]>([]);
 
   useEffect(() => {
-    api.getTechnicalSkills().then(setSkills);
+    api.getSkillsWithProjects().then(setSkills);
   }, []);
 
   return (
     <section id="tech" className="py-16 md:py-24 bg-slate-950 relative">
-      <div className="container mx-auto px-6">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950 to-slate-950 pointer-events-none"></div>
+      <div className="container mx-auto px-6 relative z-10">
         <ScrollReveal delay={0}>
           <div className="text-center mb-12 md:mb-16">
             <span className="text-indigo-500 font-semibold tracking-wider uppercase text-sm mb-2 block">{t('tech.badge')}</span>
@@ -263,47 +265,24 @@ const TechStackSection = () => {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {skills.map((skill, idx) => (
-            <ScrollReveal key={skill.id} delay={idx * 40}>
-              <div 
-                className="glass-morphism border border-slate-800 rounded-2xl p-5 md:p-6 flex flex-col items-center text-center hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 hover-3d hover-scale"
-              >
-              <div className="w-16 h-16 mb-4 flex items-center justify-center text-3xl text-slate-300 hover-scale">
-                <i className={skill.icon}></i>
-              </div>
-              
-              <h3 className="text-base md:text-lg font-bold text-white mb-4 md:mb-6">
-                {selectLocalizedColumn(skill, 'name', language) || skill.name}
-              </h3>
-              
-              <div className="w-full mt-auto">
-                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                   <div 
-                     className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 rounded-full animate-gradient-shift"
-                     style={{ width: `${skill.level}%` }}
-                   ></div>
-                </div>
-              </div>
-            </div>
-            </ScrollReveal>
-          ))}
-        </div>
+        <ScrollReveal delay={40}>
+          <TechGroups skills={skills} language={language} onProjectSelect={onProjectSelect} />
+        </ScrollReveal>
       </div>
     </section>
   );
 };
 
-const ProjectsSection = () => {
+const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string | null }) => {
   const { t, language } = useI18n();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithSkills[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerScreen, setItemsPerScreen] = useState(3);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const touchDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
-    api.getProjects().then(setProjects);
+    api.getProjectsWithSkills().then(setProjects);
 
     const handleResize = () => {
       if (window.innerWidth < 768) setItemsPerScreen(1);
@@ -316,10 +295,16 @@ const ProjectsSection = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const parseTech = (tech: string) => {
-    if (!tech) return [];
-    return tech.split(',').map(s => s.trim());
-  };
+  useEffect(() => {
+    if (!highlightProjectId || projects.length === 0) return;
+    const targetIndex = projects.findIndex((project) => project.id === highlightProjectId);
+    if (targetIndex === -1) return;
+    const maxIndex = Math.max(0, projects.length - itemsPerScreen);
+    const nextIndex = Math.min(targetIndex, maxIndex);
+    setCurrentIndex(nextIndex);
+  }, [highlightProjectId, itemsPerScreen, projects]);
+
+  const formatSkill = (skillName: string) => skillName.trim();
 
   const nextSlide = () => {
     const maxIndex = Math.max(0, projects.length - itemsPerScreen);
@@ -408,7 +393,14 @@ const ProjectsSection = () => {
                 className="flex-shrink-0 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.33rem)] flex justify-center md:justify-start"
               >
                 <ScrollReveal delay={idx * 80}>
-                  <div className="h-full group glass-morphism border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300 flex flex-col hover-3d w-[92%] md:w-full">
+                  <div
+                    id={`project-${project.id}`}
+                    className={`h-full group glass-morphism border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300 flex flex-col hover-3d w-[92%] md:w-full ${
+                      highlightProjectId === project.id
+                        ? 'ring-2 ring-indigo-500/60 shadow-[0_0_40px_-18px_rgba(99,102,241,0.9)]'
+                        : ''
+                    }`}
+                  >
                   <div className="relative h-48 overflow-hidden">
                     <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent z-10 transition-colors"></div>
                     <img 
@@ -438,11 +430,12 @@ const ProjectsSection = () => {
                     </p>
                     
                     <div className="flex flex-wrap gap-2 mb-4 md:mb-6">
-                      {parseTech(
-                        (selectLocalizedColumn(project, 'technologies', language) as string) || project.technologies
-                      ).map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded-md border border-slate-700">
-                          {tag}
+                      {(project.skills || []).map((skill) => (
+                        <span
+                          key={skill.id}
+                          className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded-md border border-slate-700"
+                        >
+                          {formatSkill(skill.name)}
                         </span>
                       ))}
                     </div>
@@ -671,13 +664,26 @@ const ContactSection = () => {
 };
 
 const Home: React.FC = () => {
+  const [highlightProjectId, setHighlightProjectId] = useState<string | null>(null);
+
+  const handleProjectSelect = (projectId: string) => {
+    setHighlightProjectId(projectId);
+    const section = document.getElementById('projects');
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => {
+      const card = document.getElementById(`project-${projectId}`);
+      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+    setTimeout(() => setHighlightProjectId(null), 2600);
+  };
+
   return (
     <Layout>
       <HeroSection />
-      <ProjectsSection />
+      <ProjectsSection highlightProjectId={highlightProjectId} />
       <VerticalJourney /> {/* Novo Componente Injetado */}
       <CompetenciesSection />
-      <TechStackSection />
+      <TechStackSection onProjectSelect={handleProjectSelect} />
       <ContactSection />
     </Layout>
   );

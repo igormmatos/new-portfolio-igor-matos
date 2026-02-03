@@ -9,6 +9,14 @@ import { useI18n } from '../i18n';
 
 type AdminTab = 'profile' | 'projects' | 'journey' | 'skills' | 'tech';
 
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
 // Interface para o estado do Modal de Exclusão
 interface DeleteModalState {
   isOpen: boolean;
@@ -76,6 +84,8 @@ const Admin: React.FC = () => {
   const [techSkills, setTechSkills] = useState<TechnicalSkill[]>([]);
   const [isTechSkillsFallback, setIsTechSkillsFallback] = useState(false);
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
+  const [skillSearch, setSkillSearch] = useState('');
 
   // Editing States
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -100,6 +110,19 @@ const Admin: React.FC = () => {
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  useEffect(() => {
+    if (!isDrawerOpen || activeTab !== 'projects') return;
+    const loadProjectSkills = async () => {
+      if (editingItem?.id) {
+        const ids = await api.getProjectSkillIds(editingItem.id);
+        setSelectedSkillIds(ids);
+      } else {
+        setSelectedSkillIds([]);
+      }
+    };
+    loadProjectSkills();
+  }, [isDrawerOpen, activeTab, editingItem?.id]);
 
   const fetchAllData = async () => {
     const [pData, jData, cData, tData, profData] = await Promise.all([
@@ -214,6 +237,8 @@ const Admin: React.FC = () => {
   const closeDrawer = () => {
     setIsDrawerOpen(false);
     setEditingItem(null);
+    setSelectedSkillIds([]);
+    setSkillSearch('');
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -245,9 +270,23 @@ const Admin: React.FC = () => {
 
       if (activeTab === 'projects') {
         const proj = editingItem as Project;
-        const payload = { ...proj, display_order: proj.display_order ?? getNextOrder(projects.length) };
-        if (proj.id) await api.updateProject(proj.id, payload);
-        else await api.createProject(payload as any);
+        const payload = {
+          ...proj,
+          slug: proj.slug || slugify(proj.title || ''),
+          status: proj.status || 'published',
+          display_order: proj.display_order ?? getNextOrder(projects.length)
+        };
+        let savedId = proj.id;
+        if (proj.id) {
+          const updated = await api.updateProject(proj.id, payload);
+          savedId = updated?.[0]?.id || proj.id;
+        } else {
+          const created = await api.createProject(payload as any);
+          savedId = created?.[0]?.id;
+        }
+        if (savedId) {
+          await api.syncProjectSkills(savedId, selectedSkillIds);
+        }
 
       } else if (activeTab === 'journey') {
         const jour = editingItem as JourneyItem;
@@ -263,7 +302,14 @@ const Admin: React.FC = () => {
 
       } else if (activeTab === 'tech') {
         const tech = editingItem as TechnicalSkill;
-        const payload = { ...tech, display_order: tech.display_order ?? getNextOrder(techSkills.length) };
+        const payload = {
+          ...tech,
+          slug: tech.slug || slugify(tech.name || ''),
+          category: tech.category || 'other',
+          icon_key: tech.icon_key || tech.icon,
+          is_active: tech.is_active ?? true,
+          display_order: tech.display_order ?? getNextOrder(techSkills.length)
+        };
         if (tech.id) await api.updateTechnicalSkill(tech.id, payload);
         else await api.createTechnicalSkill(payload as any);
       }
@@ -680,13 +726,15 @@ const Admin: React.FC = () => {
                                     </span>
 
                                     <div className="w-12 h-12 mb-3 flex items-center justify-center text-2xl text-slate-300">
-                                        <i className={t.icon}></i>
+                                        <i className={t.icon_key || t.icon}></i>
                                     </div>
-                                    <h3 className="text-white font-bold mb-2">{t.name}</h3>
-                                    
-                                    <div className="w-full h-1.5 bg-slate-800 rounded-full mb-4">
-                                        <div className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full" style={{ width: `${t.level}%`}}></div>
-                                    </div>
+                                    <h3 className="text-white font-bold mb-1">{t.name}</h3>
+                                    <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500 mb-3">
+                                      {t.category || 'other'}
+                                    </p>
+                                    <span className={`text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-full border ${t.is_active ? 'border-emerald-500/40 text-emerald-300' : 'border-slate-700 text-slate-500'}`}>
+                                      {t.is_active ? 'ativo' : 'inativo'}
+                                    </span>
 
                                     <div className="flex gap-2 w-full mt-auto">
                                         <button
@@ -825,14 +873,89 @@ const Admin: React.FC = () => {
 
               {activeTab === 'projects' && (
                 <>
-                  <FormInput label="Título do Projeto" value={editingItem.title} onChange={(e: any) => setEditingItem({...editingItem, title: e.target.value})} placeholder="Ex: E-commerce Platform" />
+                  <FormInput
+                    label="Título do Projeto"
+                    value={editingItem.title}
+                    onChange={(e: any) => {
+                      const title = e.target.value;
+                      const shouldSyncSlug =
+                        !editingItem.slug || editingItem.slug === slugify(editingItem.title || '');
+                      setEditingItem({
+                        ...editingItem,
+                        title,
+                        slug: shouldSyncSlug ? slugify(title) : editingItem.slug,
+                      });
+                    }}
+                    placeholder="Ex: E-commerce Platform"
+                  />
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <FormInput label="Papel / Role" value={editingItem.role} onChange={(e: any) => setEditingItem({...editingItem, role: e.target.value})} placeholder="Ex: Lead Developer" />
-                     <FormInput label="Tech Stack" value={editingItem.technologies} onChange={(e: any) => setEditingItem({...editingItem, technologies: e.target.value})} placeholder="React, Node, AWS..." />
+                     <FormInput label="Slug" value={editingItem.slug} onChange={(e: any) => setEditingItem({...editingItem, slug: slugify(e.target.value)})} placeholder="ex: plataforma-financeira" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Status</label>
+                    <select
+                      className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none"
+                      value={editingItem.status || 'published'}
+                      onChange={(e) => setEditingItem({ ...editingItem, status: e.target.value })}
+                    >
+                      <option value="published">Publicado</option>
+                      <option value="draft">Rascunho</option>
+                    </select>
                   </div>
 
                   <FormTextArea label="Descrição" value={editingItem.description} onChange={(e: any) => setEditingItem({...editingItem, description: e.target.value})} />
+                  
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tecnologias utilizadas</label>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                      placeholder="Buscar tecnologia..."
+                      value={skillSearch}
+                      onChange={(e) => setSkillSearch(e.target.value)}
+                    />
+                    <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+                      {techSkills
+                        .filter((skill) => (skill.is_active ?? true))
+                        .filter((skill) => {
+                          const name = (skill.name || '').toLowerCase();
+                          return name.includes(skillSearch.toLowerCase());
+                        })
+                        .map((skill) => {
+                          const checked = selectedSkillIds.includes(skill.id);
+                          return (
+                            <label
+                              key={skill.id}
+                              className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm transition-all ${
+                                checked
+                                  ? 'border-indigo-500/60 bg-indigo-500/10 text-slate-100'
+                                  : 'border-slate-800 bg-slate-950/40 text-slate-300 hover:border-slate-700'
+                              }`}
+                            >
+                              <span className="flex items-center gap-3">
+                                <i className={`${skill.icon_key || skill.icon} text-base text-slate-300`}></i>
+                                {skill.name}
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  setSelectedSkillIds((prev) =>
+                                    prev.includes(skill.id)
+                                      ? prev.filter((id) => id !== skill.id)
+                                      : [...prev, skill.id]
+                                  )
+                                }
+                                className="h-4 w-4 accent-indigo-500"
+                              />
+                            </label>
+                          );
+                        })}
+                    </div>
+                  </div>
                   
                   <FormInput label="URL da Imagem (Supabase/Ext)" value={editingItem.image_url} onChange={(e: any) => setEditingItem({...editingItem, image_url: e.target.value})} placeholder="https://..." />
                   
@@ -889,7 +1012,43 @@ const Admin: React.FC = () => {
 
               {activeTab === 'tech' && (
                 <>
-                  <FormInput label="Nome da Tecnologia" value={editingItem.name} onChange={(e: any) => setEditingItem({...editingItem, name: e.target.value})} placeholder="Ex: React, Docker" />
+                  <FormInput
+                    label="Nome da Tecnologia"
+                    value={editingItem.name}
+                    onChange={(e: any) => {
+                      const name = e.target.value;
+                      const shouldSyncSlug =
+                        !editingItem.slug || editingItem.slug === slugify(editingItem.name || '');
+                      setEditingItem({
+                        ...editingItem,
+                        name,
+                        slug: shouldSyncSlug ? slugify(name) : editingItem.slug,
+                      });
+                    }}
+                    placeholder="Ex: React, Docker"
+                  />
+                  <FormInput
+                    label="Slug"
+                    value={editingItem.slug}
+                    onChange={(e: any) => setEditingItem({ ...editingItem, slug: slugify(e.target.value) })}
+                    placeholder="react, docker, aws"
+                  />
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                      Categoria
+                    </label>
+                    <select
+                      className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none"
+                      value={editingItem.category || 'other'}
+                      onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                    >
+                      <option value="frontend">Frontend</option>
+                      <option value="backend">Backend</option>
+                      <option value="data">Data</option>
+                      <option value="infra">Infra</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Ícone (FontAwesome)</label>
                     <div className="flex gap-2">
@@ -897,8 +1056,8 @@ const Admin: React.FC = () => {
                         type="text"
                         className="flex-1 bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                         placeholder="fa-brands fa-react"
-                        value={editingItem.icon || ''}
-                        onChange={(e) => setEditingItem({ ...editingItem, icon: e.target.value })}
+                        value={editingItem.icon_key || editingItem.icon || ''}
+                        onChange={(e) => setEditingItem({ ...editingItem, icon_key: e.target.value })}
                       />
                       <a
                         href="https://fontawesome.com/search"
@@ -911,29 +1070,30 @@ const Admin: React.FC = () => {
                       </a>
                     </div>
                   </div>
-                  
-                  <div className="space-y-2">
-                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
-                        Nível de Proficiência: {editingItem.level}%
-                     </label>
-                     <div className="flex items-center gap-4">
-                        <input 
-                           type="range" 
-                           min="0" 
-                           max="100" 
-                           className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                           value={editingItem.level || 0}
-                           onChange={(e) => setEditingItem({...editingItem, level: parseInt(e.target.value)})}
-                        />
-                        <input 
-                           type="number" 
-                           min="0" 
-                           max="100" 
-                           className="w-20 bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-center"
-                           value={editingItem.level || 0}
-                           onChange={(e) => setEditingItem({...editingItem, level: parseInt(e.target.value)})}
-                        />
-                     </div>
+                  <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Status</p>
+                      <p className="text-sm text-slate-200">
+                        {editingItem.is_active === false ? 'Inativo' : 'Ativo'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingItem({ ...editingItem, is_active: !(editingItem.is_active ?? true) })
+                      }
+                      className={`h-9 w-16 rounded-full border transition-all ${
+                        editingItem.is_active === false
+                          ? 'border-slate-700 bg-slate-900'
+                          : 'border-emerald-500/50 bg-emerald-500/20'
+                      }`}
+                    >
+                      <span
+                        className={`block h-7 w-7 translate-x-1 rounded-full bg-white shadow transition-all ${
+                          editingItem.is_active === false ? '' : 'translate-x-8'
+                        }`}
+                      ></span>
+                    </button>
                   </div>
                 </>
               )}
