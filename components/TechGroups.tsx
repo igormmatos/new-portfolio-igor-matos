@@ -18,7 +18,8 @@ const groups: Group[] = [
   { id: 'backend', label: 'Backend' },
   { id: 'data', label: 'Data' },
   { id: 'infra', label: 'Infra' },
-  { id: 'other', label: 'Other' },
+  { id: 'ai-tools', label: 'Ferramentas de IA' },
+  { id: 'other', label: 'Outros' },
 ];
 
 

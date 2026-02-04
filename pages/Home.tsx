@@ -278,6 +278,9 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
   const [projects, setProjects] = useState<ProjectWithSkills[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerScreen, setItemsPerScreen] = useState(3);
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [truncatedProjects, setTruncatedProjects] = useState<Record<string, boolean>>({});
+  const descMeasureRefs = useRef<Record<string, HTMLParagraphElement | null>>({});
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const touchDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -344,6 +347,57 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
     }
     touchStart.current = null;
   };
+
+  const updateTruncation = () => {
+    if (!projects.length) return;
+    const next: Record<string, boolean> = {};
+    projects.forEach((project) => {
+      const el = descMeasureRefs.current[project.id];
+      if (!el) return;
+      next[project.id] = el.scrollHeight - el.clientHeight > 1;
+    });
+    setTruncatedProjects((prev) => {
+      let changed = false;
+      const allKeys = new Set([...Object.keys(prev), ...Object.keys(next)]);
+      for (const key of allKeys) {
+        if ((prev[key] ?? false) !== (next[key] ?? false)) {
+          changed = true;
+          break;
+        }
+      }
+      return changed ? next : prev;
+    });
+    setExpandedProjects((prev) => {
+      const nextSet = new Set(prev);
+      let changed = false;
+      nextSet.forEach((id) => {
+        if (!next[id]) {
+          nextSet.delete(id);
+          changed = true;
+        }
+      });
+      return changed ? nextSet : prev;
+    });
+  };
+
+  const toggleProjectDescription = (projectId: string) => {
+    setExpandedProjects((prev) => {
+      const next = new Set(prev);
+      if (next.has(projectId)) next.delete(projectId);
+      else next.add(projectId);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!projects.length) return;
+    const raf = requestAnimationFrame(updateTruncation);
+    window.addEventListener('resize', updateTruncation);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', updateTruncation);
+    };
+  }, [projects, language, itemsPerScreen]);
 
   return (
     <section id="projects" className="py-16 md:py-24 bg-slate-950 scroll-mt-24 md:scroll-mt-0">
@@ -427,9 +481,35 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
                          </p>
                        )}
                     </div>
-                    <p className="text-slate-400 text-sm md:text-base mb-3 md:mb-4 line-clamp-3 leading-snug md:leading-relaxed">
-                      {selectLocalizedColumn(project, 'description', language) || project.description}
-                    </p>
+                    <div className="mb-3 md:mb-4 relative">
+                      <p
+                        id={`project-desc-${project.id}`}
+                        className={`text-justify text-slate-400 text-sm md:text-base leading-snug md:leading-relaxed ${
+                          expandedProjects.has(project.id) ? '' : 'line-clamp-3'
+                        }`}
+                      >
+                        {selectLocalizedColumn(project, 'description', language) || project.description}
+                      </p>
+                      <p
+                        ref={(el) => {
+                          descMeasureRefs.current[project.id] = el;
+                        }}
+                        className="absolute inset-x-0 top-0 opacity-0 pointer-events-none text-justify text-slate-400 text-sm md:text-base leading-snug md:leading-relaxed line-clamp-3"
+                      >
+                        {selectLocalizedColumn(project, 'description', language) || project.description}
+                      </p>
+                      {truncatedProjects[project.id] && (
+                        <button
+                          type="button"
+                          onClick={() => toggleProjectDescription(project.id)}
+                          className="mt-2 text-xs font-semibold uppercase tracking-wider text-indigo-300 hover:text-indigo-200 transition-colors"
+                          aria-expanded={expandedProjects.has(project.id)}
+                          aria-controls={`project-desc-${project.id}`}
+                        >
+                          {expandedProjects.has(project.id) ? 'Ler menos' : 'Ler mais'}
+                        </button>
+                      )}
+                    </div>
                     
                     <div className="flex flex-wrap gap-2 mb-4 md:mb-6">
                       {(project.skills || []).map((skill) => (

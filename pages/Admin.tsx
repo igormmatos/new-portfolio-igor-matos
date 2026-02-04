@@ -1046,7 +1046,8 @@ const Admin: React.FC = () => {
                       <option value="backend">Backend</option>
                       <option value="data">Data</option>
                       <option value="infra">Infra</option>
-                      <option value="other">Other</option>
+                      <option value="ai-tools">Ferramentas de IA (apoio ao desenvolvimento)</option>
+                      <option value="other">Outros</option>
                     </select>
                   </div>
                   <div className="space-y-2">
