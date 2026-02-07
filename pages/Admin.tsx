@@ -653,7 +653,7 @@ const Admin: React.FC<AdminProps> = ({ mode = 'full' }) => {
               {isDemoLocal && (
                 <button
                   onClick={() => navigate('/demo')}
-                  className="px-5 py-3 rounded-xl font-medium border border-amber-500/40 text-amber-200 hover:bg-amber-500/10 transition-all flex items-center"
+                  className="hidden md:flex px-5 py-3 rounded-xl font-medium border border-amber-500/40 text-amber-200 hover:bg-amber-500/10 transition-all items-center"
                 >
                   <i className="fa-solid fa-eye mr-2"></i>
                   {t('demo.preview_home_cta')}
@@ -718,6 +718,17 @@ const Admin: React.FC<AdminProps> = ({ mode = 'full' }) => {
              {/* PROFILE TAB */}
              {activeTab === 'profile' && profile && (
                <form onSubmit={handleSaveProfile} className="max-w-4xl space-y-8">
+                 <div className="flex justify-end">
+                    <button 
+                      type="submit" 
+                      disabled={isSaving}
+                      className="px-8 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-green-900/20 transition-all flex items-center gap-2"
+                    >
+                      {isSaving ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
+                      {t('admin.save')}
+                    </button>
+                 </div>
+
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <FormInput label="Nome de Exibição" value={profile.display_name} onChange={(e: any) => updateProfileField('display_name', e.target.value)} />
                    <FormInput label="Headline (Cargo)" value={profile.headline} onChange={(e: any) => updateProfileField('headline', e.target.value)} />
@@ -741,17 +752,6 @@ const Admin: React.FC<AdminProps> = ({ mode = 'full' }) => {
                      <FormInput label="LinkedIn URL" value={profile.linkedin_url} onChange={(e: any) => setProfile({...profile, linkedin_url: e.target.value})} />
                      <FormInput label="GitHub URL" value={profile.git_url} onChange={(e: any) => setProfile({...profile, git_url: e.target.value})} placeholder="https://github.com/..." />
                    </div>
-                 </div>
-                 
-                 <div className="pt-4 border-t border-slate-900 flex justify-end">
-                    <button 
-                      type="submit" 
-                      disabled={isSaving}
-                      className="px-8 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-green-900/20 transition-all flex items-center gap-2"
-                    >
-                      {isSaving ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-check"></i>}
-                      {t('admin.save')}
-                    </button>
                  </div>
                </form>
              )}
