@@ -55,6 +55,7 @@ export const translations = {
     'experience.nav.next': 'Próximo',
     'experience.nav.prev_full': 'Experiência anterior',
     'experience.nav.next_full': 'Próxima experiência',
+    'experience.cv_download': 'Baixar Currículo (PDF)',
 
     'projects.title': 'Projetos em Destaque',
     'projects.subtitle': 'Trabalhos selecionados que demonstram minha habilidade em entregar soluções complexas.',
@@ -142,6 +143,7 @@ export const translations = {
     'experience.nav.next': 'Next',
     'experience.nav.prev_full': 'Previous experience',
     'experience.nav.next_full': 'Next experience',
+    'experience.cv_download': 'Download Resume (PDF)',
 
     'projects.title': 'Featured Projects',
     'projects.subtitle': 'Selected works that demonstrate my ability to deliver complex solutions.',
@@ -229,6 +231,7 @@ export const translations = {
     'experience.nav.next': 'Suivant',
     'experience.nav.prev_full': 'Expérience précédente',
     'experience.nav.next_full': 'Expérience suivante',
+    'experience.cv_download': 'Télécharger le CV (PDF)',
 
     'projects.title': 'Projets en Vedette',
     'projects.subtitle': 'Travaux sélectionnés démontrant ma capacité à livrer des solutions complexes.',

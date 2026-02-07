@@ -330,10 +330,10 @@ const VerticalJourney: React.FC = () => {
               rel="noopener noreferrer"
               download="CV-Igor-MATOS.pdf"
               className="inline-flex items-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-6 py-3 text-sm md:text-base font-semibold text-indigo-200 hover:bg-indigo-500/20 hover:border-indigo-400/50 transition-all"
-              aria-label="Baixar currículo em PDF"
+              aria-label={t('experience.cv_download')}
             >
               <i className="fa-solid fa-file-arrow-down"></i>
-              Baixar Currículo (PDF)
+              {t('experience.cv_download')}
             </a>
           </div>
         </ScrollReveal>

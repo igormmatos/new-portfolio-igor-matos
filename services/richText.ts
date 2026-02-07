@@ -245,8 +245,6 @@ export const richTextToPlainText = (value?: string | null) => {
     .trim();
 };
 
-export const hasInvalidSkillsSeparator = (value: string) => value.includes(',');
-
 export const parseSkillsListInput = (value: string) =>
   value
     .split(';')

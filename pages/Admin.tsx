@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import RichTextEditor from '../components/RichTextEditor';
 import { api } from '../services/api';
 import { authService } from '../services/auth';
-import { hasInvalidSkillsSeparator, parseSkillsListInput } from '../services/richText';
+import { parseSkillsListInput } from '../services/richText';
 import { Project, ProfileInfo, JourneyItem, Competency, TechnicalSkill } from '../types';
 import { useI18n } from '../i18n';
 
@@ -18,8 +18,6 @@ const slugify = (value: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
-
-const SKILLS_SEPARATOR_ERROR = 'Use apenas ponto e vírgula (;) para separar os itens.';
 
 // Interface para o estado do Modal de Exclusão
 interface DeleteModalState {
@@ -81,7 +79,6 @@ const Admin: React.FC = () => {
   // Editing States
   const [editingItem, setEditingItem] = useState<any>(null);
   const [skillsItemsInput, setSkillsItemsInput] = useState('');
-  const [skillsItemsError, setSkillsItemsError] = useState<string | null>(null);
   
   // UI States
   const [isSaving, setIsSaving] = useState(false);
@@ -229,7 +226,6 @@ const Admin: React.FC = () => {
         ? item.items
         : '';
     setSkillsItemsInput(raw);
-    setSkillsItemsError(hasInvalidSkillsSeparator(raw) ? SKILLS_SEPARATOR_ERROR : null);
   };
 
   const handleOpenDrawer = (item: any = {}) => {
@@ -238,7 +234,6 @@ const Admin: React.FC = () => {
       syncSkillsInputState(item);
     } else {
       setSkillsItemsInput('');
-      setSkillsItemsError(null);
     }
     setIsDrawerOpen(true);
   };
@@ -249,7 +244,6 @@ const Admin: React.FC = () => {
     setSelectedSkillIds([]);
     setSkillSearch('');
     setSkillsItemsInput('');
-    setSkillsItemsError(null);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -277,18 +271,11 @@ const Admin: React.FC = () => {
 
     let parsedSkillItems: string[] = [];
     if (activeTab === 'skills') {
-      if (hasInvalidSkillsSeparator(skillsItemsInput)) {
-        setSkillsItemsError(SKILLS_SEPARATOR_ERROR);
-        showNotification(SKILLS_SEPARATOR_ERROR, 'error');
-        return;
-      }
-
       parsedSkillItems = parseSkillsListInput(skillsItemsInput);
       if (parsedSkillItems.length === 0) {
         showNotification('Adicione pelo menos um item de skill separado por ponto e vírgula (;).', 'error');
         return;
       }
-      setSkillsItemsError(null);
     }
 
     setIsSaving(true);
@@ -1049,23 +1036,14 @@ const Admin: React.FC = () => {
                      <p className="text-[10px] text-slate-500 mb-1">Separe os itens por ponto e vírgula (;)</p>
                      <textarea 
                          rows={4} 
-                         className={`w-full bg-slate-950/50 border rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 transition-all ${
-                           skillsItemsError
-                             ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/20'
-                             : 'border-slate-800 focus:border-indigo-500/50 focus:ring-indigo-500/20'
-                         }`}
+                         className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                          value={skillsItemsInput}
                          onChange={(e) => {
                            const raw = e.target.value;
-                           const invalid = hasInvalidSkillsSeparator(raw);
                            setSkillsItemsInput(raw);
-                           setSkillsItemsError(invalid ? SKILLS_SEPARATOR_ERROR : null);
                            setEditingItem({ ...editingItem, items: parseSkillsListInput(raw) });
                          }}
                      />
-                     {skillsItemsError && (
-                       <p className="text-xs text-red-400">{skillsItemsError}</p>
-                     )}
                   </div>
                 </>
               )}
