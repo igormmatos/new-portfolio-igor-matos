@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { SkillWithProjects } from '../types';
-import { selectLocalizedColumn } from '../i18n';
+import { Language, selectLocalizedColumn } from '../i18n';
 
 type TechGroupsProps = {
   skills: SkillWithProjects[];
-  language: string;
+  language: Language;
   onProjectSelect?: (projectId: string) => void;
 };
 
@@ -156,9 +156,13 @@ const TechGroups: React.FC<TechGroupsProps> = ({ skills, language, onProjectSele
                               onClick={() => onProjectSelect?.(project.id)}
                               className="w-full rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-left transition-all hover:border-indigo-400/50 hover:bg-slate-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
                             >
-                              <p className="text-sm font-semibold text-slate-100">{project.title}</p>
+                              <p className="text-sm font-semibold text-slate-100">
+                                {selectLocalizedColumn(project as any, 'title', language) || project.title}
+                              </p>
                               {project.role && (
-                                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{project.role}</p>
+                                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                                  {selectLocalizedColumn(project as any, 'role', language) || project.role}
+                                </p>
                               )}
                             </button>
                           ))}
@@ -278,9 +282,13 @@ const TechGroups: React.FC<TechGroupsProps> = ({ skills, language, onProjectSele
                     onClick={() => onProjectSelect?.(project.id)}
                     className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 text-left transition-all hover:border-indigo-400/50 hover:bg-slate-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
                   >
-                    <p className="text-sm font-semibold text-slate-100">{project.title}</p>
+                    <p className="text-sm font-semibold text-slate-100">
+                      {selectLocalizedColumn(project as any, 'title', language) || project.title}
+                    </p>
                     {project.role && (
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{project.role}</p>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                        {selectLocalizedColumn(project as any, 'role', language) || project.role}
+                      </p>
                     )}
                   </button>
                 ))

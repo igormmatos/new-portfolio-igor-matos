@@ -1,6 +1,4 @@
-import { describe, expect, it } from "vitest";
 import {
-  hasInvalidSkillsSeparator,
   parseSkillsListInput,
   sanitizeRichText,
   toDisplayHtml,
@@ -45,10 +43,6 @@ describe("richText utils", () => {
   it("parses skill list by semicolon only", () => {
     expect(parseSkillsListInput("A; B; C")).toEqual(["A", "B", "C"]);
     expect(parseSkillsListInput("A; ; B ;")).toEqual(["A", "B"]);
-  });
-
-  it("flags comma as invalid separator", () => {
-    expect(hasInvalidSkillsSeparator("A,B;C")).toBe(true);
-    expect(hasInvalidSkillsSeparator("A;B;C")).toBe(false);
+    expect(parseSkillsListInput("React, Node.js; Docker")).toEqual(["React, Node.js", "Docker"]);
   });
 });

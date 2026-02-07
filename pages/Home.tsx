@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import Layout from '../components/Layout';
 import VerticalJourney from '../components/VerticalJourney';
 import ScrollReveal from '../components/ScrollReveal';
@@ -8,14 +8,22 @@ import { useI18n, selectLocalizedArray, selectLocalizedColumn } from '../i18n';
 import { api } from '../services/api';
 import { trackEvent } from '../services/analytics';
 import { ProfileInfo, ProjectWithSkills, Competency, SkillWithProjects } from '../types';
+import { useDemoSession } from '../contexts/DemoSessionContext';
+import { buildDemoProjectsWithSkills, buildDemoSkillsWithProjects } from '../services/demoTransforms';
 
-const HeroSection = () => {
+type HomeMode = 'live' | 'demo-local';
+
+const HeroSection = ({ mode = 'live', profileData }: { mode?: HomeMode; profileData?: ProfileInfo | null }) => {
   const { t, language } = useI18n();
-  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const [profile, setProfile] = useState<ProfileInfo | null>(profileData || null);
 
   useEffect(() => {
+    if (mode === 'demo-local') {
+      setProfile(profileData || null);
+      return;
+    }
     api.getProfile().then(setProfile);
-  }, []);
+  }, [mode, profileData]);
 
   const profileBadge = selectLocalizedColumn(profile, 'badge', language) || t('hero.badge');
   const profileName = selectLocalizedColumn(profile, 'display_name', language) || profile?.display_name;
@@ -177,13 +185,23 @@ const HeroSection = () => {
   );
 };
 
-const CompetenciesSection = () => {
+const CompetenciesSection = ({
+  mode = 'live',
+  competenciesData,
+}: {
+  mode?: HomeMode;
+  competenciesData?: Competency[];
+}) => {
   const { t, language } = useI18n();
-  const [competencies, setCompetencies] = useState<Competency[]>([]);
+  const [competencies, setCompetencies] = useState<Competency[]>(competenciesData || []);
 
   useEffect(() => {
+    if (mode === 'demo-local') {
+      setCompetencies(competenciesData || []);
+      return;
+    }
     api.getCompetencies().then(setCompetencies);
-  }, []);
+  }, [mode, competenciesData]);
 
   return (
     <section id="skills" className="py-16 md:py-24 bg-slate-950 relative border-b border-slate-900 scroll-mt-24 md:scroll-mt-0">
@@ -249,13 +267,25 @@ const CompetenciesSection = () => {
   );
 };
 
-const TechStackSection = ({ onProjectSelect }: { onProjectSelect?: (projectId: string) => void }) => {
+const TechStackSection = ({
+  onProjectSelect,
+  mode = 'live',
+  skillsData,
+}: {
+  onProjectSelect?: (projectId: string) => void;
+  mode?: HomeMode;
+  skillsData?: SkillWithProjects[];
+}) => {
   const { t, language } = useI18n();
-  const [skills, setSkills] = useState<SkillWithProjects[]>([]);
+  const [skills, setSkills] = useState<SkillWithProjects[]>(skillsData || []);
 
   useEffect(() => {
+    if (mode === 'demo-local') {
+      setSkills(skillsData || []);
+      return;
+    }
     api.getSkillsWithProjects().then(setSkills);
-  }, []);
+  }, [mode, skillsData]);
 
   return (
     <section id="tech" className="py-16 md:py-24 bg-slate-950 relative">
@@ -277,9 +307,17 @@ const TechStackSection = ({ onProjectSelect }: { onProjectSelect?: (projectId: s
   );
 };
 
-const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string | null }) => {
+const ProjectsSection = ({
+  highlightProjectId,
+  mode = 'live',
+  projectsData,
+}: {
+  highlightProjectId?: string | null;
+  mode?: HomeMode;
+  projectsData?: ProjectWithSkills[];
+}) => {
   const { t, language } = useI18n();
-  const [projects, setProjects] = useState<ProjectWithSkills[]>([]);
+  const [projects, setProjects] = useState<ProjectWithSkills[]>(projectsData || []);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerScreen, setItemsPerScreen] = useState(3);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
@@ -289,8 +327,6 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
   const touchDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
-    api.getProjectsWithSkills().then(setProjects);
-
     const handleResize = () => {
       if (window.innerWidth < 768) setItemsPerScreen(1);
       else if (window.innerWidth < 1024) setItemsPerScreen(2);
@@ -301,6 +337,14 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (mode === 'demo-local') {
+      setProjects(projectsData || []);
+      return;
+    }
+    api.getProjectsWithSkills().then(setProjects);
+  }, [mode, projectsData]);
 
   useEffect(() => {
     if (!highlightProjectId || projects.length === 0) return;
@@ -519,7 +563,7 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
                           key={skill.id}
                           className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded-md border border-slate-700"
                         >
-                          {formatSkill(skill.name)}
+                          {formatSkill(selectLocalizedColumn(skill as any, 'name', language) || skill.name)}
                         </span>
                       ))}
                     </div>
@@ -565,9 +609,9 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
   );
 };
 
-const ContactSection = () => {
+const ContactSection = ({ mode = 'live', profileData }: { mode?: HomeMode; profileData?: ProfileInfo | null }) => {
   const { t } = useI18n();
-  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const [profile, setProfile] = useState<ProfileInfo | null>(profileData || null);
   
   // State para o formulário de contato
   const [contactForm, setContactForm] = useState({
@@ -578,8 +622,12 @@ const ContactSection = () => {
   });
 
   useEffect(() => {
+    if (mode === 'demo-local') {
+      setProfile(profileData || null);
+      return;
+    }
     api.getProfile().then(setProfile);
-  }, []);
+  }, [mode, profileData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -747,7 +795,17 @@ const ContactSection = () => {
   );
 };
 
-const Home: React.FC = () => {
+const Home: React.FC<{ mode?: HomeMode }> = ({ mode = 'live' }) => {
+  const isDemoLocal = mode === 'demo-local';
+  const demoSession = useDemoSession();
+  const demoProjectsWithSkills = useMemo(
+    () => buildDemoProjectsWithSkills(demoSession.projects, demoSession.techSkills),
+    [demoSession.projects, demoSession.techSkills]
+  );
+  const demoSkillsWithProjects = useMemo(
+    () => buildDemoSkillsWithProjects(demoSession.projects, demoSession.techSkills),
+    [demoSession.projects, demoSession.techSkills]
+  );
   const [highlightProjectId, setHighlightProjectId] = useState<string | null>(null);
 
   const handleProjectSelect = (projectId: string) => {
@@ -763,12 +821,20 @@ const Home: React.FC = () => {
 
   return (
     <Layout>
-      <HeroSection />
-      <ProjectsSection highlightProjectId={highlightProjectId} />
-      <VerticalJourney /> {/* Novo Componente Injetado */}
-      <CompetenciesSection />
-      <TechStackSection onProjectSelect={handleProjectSelect} />
-      <ContactSection />
+      <HeroSection mode={mode} profileData={isDemoLocal ? demoSession.profile : undefined} />
+      <ProjectsSection
+        mode={mode}
+        projectsData={isDemoLocal ? demoProjectsWithSkills : undefined}
+        highlightProjectId={highlightProjectId}
+      />
+      <VerticalJourney items={isDemoLocal ? demoSession.journey : undefined} />
+      <CompetenciesSection mode={mode} competenciesData={isDemoLocal ? demoSession.competencies : undefined} />
+      <TechStackSection
+        mode={mode}
+        skillsData={isDemoLocal ? demoSkillsWithProjects : undefined}
+        onProjectSelect={handleProjectSelect}
+      />
+      <ContactSection mode={mode} profileData={isDemoLocal ? demoSession.profile : undefined} />
     </Layout>
   );
 };

@@ -39,7 +39,11 @@ const MOCK_JOURNEY: JourneyItem[] = [
 const CV_URL =
   'https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/src/CV-Igor-MATOS.pdf';
 
-const VerticalJourney: React.FC = () => {
+interface VerticalJourneyProps {
+  items?: JourneyItem[];
+}
+
+const VerticalJourney: React.FC<VerticalJourneyProps> = ({ items: itemsProp }) => {
   const { t, language } = useI18n();
   const [items, setItems] = useState<JourneyItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -49,6 +53,11 @@ const VerticalJourney: React.FC = () => {
   const touchDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
+    if (itemsProp) {
+      setItems(itemsProp);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const data = await api.getJourney();
@@ -63,7 +72,7 @@ const VerticalJourney: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [itemsProp]);
 
   const changeSlide = useCallback((newIndex: number) => {
     if (newIndex === currentIndex) return;
@@ -330,10 +339,10 @@ const VerticalJourney: React.FC = () => {
               rel="noopener noreferrer"
               download="CV-Igor-MATOS.pdf"
               className="inline-flex items-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-6 py-3 text-sm md:text-base font-semibold text-indigo-200 hover:bg-indigo-500/20 hover:border-indigo-400/50 transition-all"
-              aria-label="Baixar currículo em PDF"
+              aria-label={t('experience.cv_download')}
             >
               <i className="fa-solid fa-file-arrow-down"></i>
-              Baixar Currículo (PDF)
+              {t('experience.cv_download')}
             </a>
           </div>
         </ScrollReveal>

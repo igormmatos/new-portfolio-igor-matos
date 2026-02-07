@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import { I18nProvider, useI18n } from './i18n';
 import { supabase } from './supabaseClient';
 import { initAnalytics, setAnalyticsContext, trackEvent, trackPageView } from './services/analytics';
+import { DemoSessionProvider } from './contexts/DemoSessionContext';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -22,7 +23,9 @@ const SeoAnalytics = () => {
   const lastLangRef = useRef<string | null>(null);
 
   const seoConfig = useMemo(() => {
-    const isAdmin = location.pathname.startsWith('/admin');
+    const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+    const isDemo = location.pathname === '/demo' || location.pathname.startsWith('/demo/');
+    const isAdminDemo = location.pathname.startsWith('/admin-demo');
     const isLogin = location.pathname.startsWith('/login');
 
     const base = {
@@ -49,6 +52,38 @@ const SeoAnalytics = () => {
           'pt-BR': 'Painel administrativo do portfólio.',
           'en': 'Portfolio admin panel.',
           'fr': 'Panneau d\'administration du portfolio.'
+        },
+        robots: 'noindex,nofollow'
+      };
+    }
+
+    if (isAdminDemo) {
+      return {
+        title: {
+          'pt-BR': 'Admin Demo | Igor Matos',
+          'en': 'Admin Demo | Igor Matos',
+          'fr': 'Admin Demo | Igor Matos'
+        },
+        description: {
+          'pt-BR': 'Visualizacao demonstrativa do painel administrativo.',
+          'en': 'Demonstration view of the admin panel.',
+          'fr': 'Vue de demonstration du panneau d administration.'
+        },
+        robots: 'noindex,nofollow'
+      };
+    }
+
+    if (isDemo) {
+      return {
+        title: {
+          'pt-BR': 'Demo | Igor Matos',
+          'en': 'Demo | Igor Matos',
+          'fr': 'Demo | Igor Matos'
+        },
+        description: {
+          'pt-BR': 'Visualizacao demonstrativa do portfolio.',
+          'en': 'Demonstration view of the portfolio.',
+          'fr': 'Vue de demonstration du portfolio.'
         },
         robots: 'noindex,nofollow'
       };
@@ -195,21 +230,29 @@ const App: React.FC = () => {
         <ScrollToTop />
         <SeoAnalytics />
         <div className="min-h-screen bg-slate-900 text-slate-400">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            
-            {/* Rota de Login: Redireciona para Admin se já estiver logado */}
-            <Route 
-              path="/login" 
-              element={session ? <Navigate to="/admin" replace /> : <Login />} 
-            />
-            
-            {/* Rota Protegida de Admin: Redireciona para Login se não estiver logado */}
-            <Route 
-              path="/admin" 
-              element={session ? <Admin /> : <Navigate to="/login" replace />} 
-            />
-          </Routes>
+          <DemoSessionProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/demo" element={<Home mode="demo-local" />} />
+              
+              {/* Rota de Login: Redireciona para Admin se já estiver logado */}
+              <Route 
+                path="/login" 
+                element={session ? <Navigate to="/admin" replace /> : <Login />} 
+              />
+
+              <Route
+                path="/admin-demo"
+                element={<Admin mode="demo-local" />}
+              />
+              
+              {/* Rota Protegida de Admin: Redireciona para Login se não estiver logado */}
+              <Route 
+                path="/admin" 
+                element={session ? <Admin /> : <Navigate to="/login" replace />} 
+              />
+            </Routes>
+          </DemoSessionProvider>
         </div>
       </Router>
     </I18nProvider>

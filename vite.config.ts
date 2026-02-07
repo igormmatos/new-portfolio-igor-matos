@@ -32,7 +32,7 @@ export default defineConfig({
         format: 'es',
         // Preserva os imports das dependências externas
         paths: (id) => {
-          const pathMap = {
+          const pathMap: Record<string, string> = {
             'react': 'react',
             'react-dom': 'react-dom',
             'react-dom/client': 'react-dom/client',

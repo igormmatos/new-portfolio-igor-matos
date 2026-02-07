@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
 import Layout from '../components/Layout';
+import { useI18n } from '../i18n';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +95,15 @@ const Login: React.FC = () => {
               >
                 {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-right-to-bracket"></i>}
                 {loading ? 'Autenticando...' : 'Entrar no Sistema'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/admin-demo')}
+                className="w-full py-3 border border-amber-500/30 text-amber-200 rounded-xl font-semibold hover:bg-amber-500/10 transition-all flex items-center justify-center gap-2"
+              >
+                <i className="fa-solid fa-eye"></i>
+                {t('demo.view_cta')}
               </button>
             </form>
           </div>

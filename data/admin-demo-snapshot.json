@@ -1,0 +1,333 @@
+{
+  "profile": {
+    "id": "demo-profile-001",
+    "display_name": "Igor Matos",
+    "display_name_pt": "Igor Matos",
+    "display_name_en": "Igor Matos",
+    "display_name_fr": "Igor Matos",
+    "headline": "Estrategista Tecnologico e Gestor de Solucoes",
+    "headline_pt": "Estrategista Tecnologico e Gestor de Solucoes",
+    "headline_en": "Technology Strategist and Solutions Manager",
+    "headline_fr": "Strategiste Technologique et Gestionnaire de Solutions",
+    "bio": "Perfil de demonstracao para apresentar o fluxo do painel admin. Alteracoes nesta rota ficam apenas na sessao local.",
+    "bio_pt": "Perfil de demonstracao para apresentar o fluxo do painel admin. Alteracoes nesta rota ficam apenas na sessao local.",
+    "bio_en": "Demo profile used to showcase the admin panel workflow. Changes in this route stay only in the local session.",
+    "bio_fr": "Profil de demonstration pour presenter le flux du panneau admin. Les modifications restent uniquement dans la session locale.",
+    "badge": "Disponivel para novos projetos",
+    "badge_pt": "Disponivel para novos projetos",
+    "badge_en": "Available for new projects",
+    "badge_fr": "Disponible pour de nouveaux projets",
+    "action_phrase": "Transformando desafios em resultados",
+    "action_phrase_pt": "Transformando desafios em resultados",
+    "action_phrase_en": "Turning challenges into outcomes",
+    "action_phrase_fr": "Transformer les defis en resultats",
+    "whatsapp": "+5595991353797",
+    "linkedin_url": "https://www.linkedin.com/in/igor-mmatos/",
+    "git_url": "https://github.com/igormmatos",
+    "email_contact": "igorantonio50@gmail.com"
+  },
+  "projects": [
+    {
+      "id": "demo-project-001",
+      "slug": "architecture-modernization",
+      "title": "Modernizacao de Arquitetura",
+      "title_pt": "Modernizacao de Arquitetura",
+      "title_en": "Architecture Modernization",
+      "title_fr": "Modernisation d Architecture",
+      "role": "Arquiteto de Solucoes",
+      "role_pt": "Arquiteto de Solucoes",
+      "role_en": "Solutions Architect",
+      "role_fr": "Architecte de Solutions",
+      "description": "Iniciativa de migracao e modernizacao com novos padroes de CI/CD e fronteiras de servicos.",
+      "description_pt": "Iniciativa de migracao e modernizacao com novos padroes de CI/CD e fronteiras de servicos.",
+      "description_en": "Migration and modernization initiative with new CI/CD standards and service boundaries.",
+      "description_fr": "Initiative de migration et de modernisation avec de nouvelles normes CI/CD et des frontieres de services.",
+      "github_url": "https://github.com/igormmatos",
+      "live_url": "#",
+      "image_url": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1472&auto=format&fit=crop",
+      "display_order": 0,
+      "status": "published",
+      "skill_ids": ["demo-tech-001", "demo-tech-003", "demo-tech-004"]
+    },
+    {
+      "id": "demo-project-002",
+      "slug": "task-management-platform",
+      "title": "Plataforma de Gestao de Tarefas",
+      "title_pt": "Plataforma de Gestao de Tarefas",
+      "title_en": "Task Management Platform",
+      "title_fr": "Plateforme de Gestion des Taches",
+      "role": "Lider de Frontend",
+      "role_pt": "Lider de Frontend",
+      "role_en": "Frontend Lead",
+      "role_fr": "Responsable Frontend",
+      "description": "Plataforma de planejamento e execucao com foco em clareza de processo e visibilidade operacional.",
+      "description_pt": "Plataforma de planejamento e execucao com foco em clareza de processo e visibilidade operacional.",
+      "description_en": "A planning and execution platform focused on process clarity and operational visibility.",
+      "description_fr": "Une plateforme de planification et d execution axee sur la clarte des processus et la visibilite operationnelle.",
+      "github_url": "https://github.com/igormmatos",
+      "live_url": "#",
+      "image_url": "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1470&auto=format&fit=crop",
+      "display_order": 1,
+      "status": "published",
+      "skill_ids": ["demo-tech-001", "demo-tech-002", "demo-tech-005"]
+    },
+    {
+      "id": "demo-project-003",
+      "slug": "operations-dashboard",
+      "title": "Dashboard de Operacoes",
+      "title_pt": "Dashboard de Operacoes",
+      "title_en": "Operations Dashboard",
+      "title_fr": "Tableau de Bord des Operations",
+      "role": "Desenvolvedor Fullstack",
+      "role_pt": "Desenvolvedor Fullstack",
+      "role_en": "Fullstack Developer",
+      "role_fr": "Developpeur Fullstack",
+      "description": "Dashboard de KPIs operacionais com controle de acesso e servicos backend resilientes.",
+      "description_pt": "Dashboard de KPIs operacionais com controle de acesso e servicos backend resilientes.",
+      "description_en": "Dashboard for operational KPIs with controlled access and resilient backend services.",
+      "description_fr": "Tableau de bord des KPI operationnels avec controle d acces et services backend resilients.",
+      "github_url": "https://github.com/igormmatos",
+      "live_url": "#",
+      "image_url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1470&auto=format&fit=crop",
+      "display_order": 2,
+      "status": "published",
+      "skill_ids": ["demo-tech-001", "demo-tech-002", "demo-tech-003"]
+    }
+  ],
+  "journey": [
+    {
+      "id": "demo-journey-001",
+      "title": "Consultor Senior de Tecnologia",
+      "title_pt": "Consultor Senior de Tecnologia",
+      "title_en": "Senior Technology Consultant",
+      "title_fr": "Consultant Senior en Technologie",
+      "company": "Projetos Independentes",
+      "company_pt": "Projetos Independentes",
+      "company_en": "Independent Projects",
+      "company_fr": "Projets Independants",
+      "period": "2023 - Atual",
+      "period_pt": "2023 - Atual",
+      "period_en": "2023 - Present",
+      "period_fr": "2023 - Present",
+      "description": "Liderando iniciativas de arquitetura e entrega, conectando prioridades de negocio com execucao tecnica.",
+      "description_pt": "Liderando iniciativas de arquitetura e entrega, conectando prioridades de negocio com execucao tecnica.",
+      "description_en": "Leading architecture and delivery initiatives, connecting business priorities with engineering execution.",
+      "description_fr": "Direction d initiatives d architecture et de livraison, reliant priorites business et execution technique.",
+      "type": "experience",
+      "display_order": 0
+    },
+    {
+      "id": "demo-journey-002",
+      "title": "Desenvolvedor de Software",
+      "title_pt": "Desenvolvedor de Software",
+      "title_en": "Software Developer",
+      "title_fr": "Developpeur Logiciel",
+      "company": "Times de Produto e Servicos",
+      "company_pt": "Times de Produto e Servicos",
+      "company_en": "Product and Services Teams",
+      "company_fr": "Equipes Produit et Services",
+      "period": "2018 - 2023",
+      "period_pt": "2018 - 2023",
+      "period_en": "2018 - 2023",
+      "period_fr": "2018 - 2023",
+      "description": "Construindo sistemas internos e para clientes com foco em confiabilidade, manutencao e velocidade de entrega.",
+      "description_pt": "Construindo sistemas internos e para clientes com foco em confiabilidade, manutencao e velocidade de entrega.",
+      "description_en": "Built internal and client-facing systems with focus on reliability, maintainability and speed of delivery.",
+      "description_fr": "Creation de systemes internes et clients avec focus sur fiabilite, maintenabilite et rapidite de livraison.",
+      "type": "experience",
+      "display_order": 1
+    },
+    {
+      "id": "demo-journey-003",
+      "title": "Analise e Desenvolvimento de Sistemas",
+      "title_pt": "Analise e Desenvolvimento de Sistemas",
+      "title_en": "Systems Analysis and Development",
+      "title_fr": "Analyse et Developpement de Systemes",
+      "company": "Estacio",
+      "company_pt": "Estacio",
+      "company_en": "Estacio",
+      "company_fr": "Estacio",
+      "period": "2022 - 2024",
+      "period_pt": "2022 - 2024",
+      "period_en": "2022 - 2024",
+      "period_fr": "2022 - 2024",
+      "description": "Formacao formal em arquitetura de software, modelagem de dados, POO e fluxos de entrega de produto.",
+      "description_pt": "Formacao formal em arquitetura de software, modelagem de dados, POO e fluxos de entrega de produto.",
+      "description_en": "Formal training in software architecture, data modeling, OOP and product delivery workflows.",
+      "description_fr": "Formation formelle en architecture logicielle, modelisation de donnees, POO et flux de livraison produit.",
+      "type": "education",
+      "display_order": 2
+    }
+  ],
+  "competencies": [
+    {
+      "id": "demo-competency-001",
+      "title": "Consultoria e Estrategia",
+      "title_pt": "Consultoria e Estrategia",
+      "title_en": "Consulting and Strategy",
+      "title_fr": "Conseil et Strategie",
+      "subtitle": "Planejamento tecnologico e governanca",
+      "subtitle_pt": "Planejamento tecnologico e governanca",
+      "subtitle_en": "Technology planning and governance",
+      "subtitle_fr": "Planification technologique et gouvernance",
+      "icon": "fa-solid fa-handshake",
+      "items": [
+        "Definicao de roadmap tecnologico",
+        "Avaliacoes de arquitetura",
+        "Mapeamento de riscos e dependencias"
+      ],
+      "items_pt": [
+        "Definicao de roadmap tecnologico",
+        "Avaliacoes de arquitetura",
+        "Mapeamento de riscos e dependencias"
+      ],
+      "items_en": [
+        "Technology roadmap definition",
+        "Architecture assessments",
+        "Risk and dependency mapping"
+      ],
+      "items_fr": [
+        "Definition de feuille de route technologique",
+        "Evaluations d architecture",
+        "Cartographie des risques et dependances"
+      ],
+      "color_theme": "indigo",
+      "display_order": 0
+    },
+    {
+      "id": "demo-competency-002",
+      "title": "Entrega e Lideranca",
+      "title_pt": "Entrega e Lideranca",
+      "title_en": "Delivery and Leadership",
+      "title_fr": "Livraison et Leadership",
+      "subtitle": "Execucao com clareza operacional",
+      "subtitle_pt": "Execucao com clareza operacional",
+      "subtitle_en": "Execution with operational clarity",
+      "subtitle_fr": "Execution avec clarte operationnelle",
+      "icon": "fa-solid fa-users-gear",
+      "items": [
+        "Comunicacao entre times",
+        "Planejamento de entregas incrementais",
+        "Registro de decisoes tecnicas"
+      ],
+      "items_pt": [
+        "Comunicacao entre times",
+        "Planejamento de entregas incrementais",
+        "Registro de decisoes tecnicas"
+      ],
+      "items_en": [
+        "Cross-team communication",
+        "Incremental delivery planning",
+        "Technical decision records"
+      ],
+      "items_fr": [
+        "Communication inter-equipes",
+        "Planification de livraisons incrementales",
+        "Journal des decisions techniques"
+      ],
+      "color_theme": "green",
+      "display_order": 1
+    },
+    {
+      "id": "demo-competency-003",
+      "title": "Engenharia de Sistemas",
+      "title_pt": "Engenharia de Sistemas",
+      "title_en": "Systems Engineering",
+      "title_fr": "Ingenierie des Systemes",
+      "subtitle": "Solucoes de software robustas",
+      "subtitle_pt": "Solucoes de software robustas",
+      "subtitle_en": "Robust software solutions",
+      "subtitle_fr": "Solutions logicielles robustes",
+      "icon": "fa-solid fa-laptop-code",
+      "items": [
+        "Design de backend e APIs",
+        "Arquitetura frontend",
+        "Performance e observabilidade"
+      ],
+      "items_pt": [
+        "Design de backend e APIs",
+        "Arquitetura frontend",
+        "Performance e observabilidade"
+      ],
+      "items_en": [
+        "Backend and API design",
+        "Frontend architecture",
+        "Performance and observability"
+      ],
+      "items_fr": [
+        "Conception backend et API",
+        "Architecture frontend",
+        "Performance et observabilite"
+      ],
+      "color_theme": "slate",
+      "display_order": 2
+    }
+  ],
+  "techSkills": [
+    {
+      "id": "demo-tech-001",
+      "name": "React",
+      "name_pt": "React",
+      "name_en": "React",
+      "name_fr": "React",
+      "slug": "react",
+      "category": "frontend",
+      "icon": "fa-brands fa-react",
+      "icon_key": "fa-brands fa-react",
+      "is_active": true,
+      "display_order": 0
+    },
+    {
+      "id": "demo-tech-002",
+      "name": "TypeScript",
+      "name_pt": "TypeScript",
+      "name_en": "TypeScript",
+      "name_fr": "TypeScript",
+      "slug": "typescript",
+      "category": "frontend",
+      "icon": "fa-solid fa-code",
+      "icon_key": "fa-solid fa-code",
+      "is_active": true,
+      "display_order": 1
+    },
+    {
+      "id": "demo-tech-003",
+      "name": "Node.js",
+      "name_pt": "Node.js",
+      "name_en": "Node.js",
+      "name_fr": "Node.js",
+      "slug": "nodejs",
+      "category": "backend",
+      "icon": "fa-brands fa-node-js",
+      "icon_key": "fa-brands fa-node-js",
+      "is_active": true,
+      "display_order": 2
+    },
+    {
+      "id": "demo-tech-004",
+      "name": "Docker",
+      "name_pt": "Docker",
+      "name_en": "Docker",
+      "name_fr": "Docker",
+      "slug": "docker",
+      "category": "infra",
+      "icon": "fa-brands fa-docker",
+      "icon_key": "fa-brands fa-docker",
+      "is_active": true,
+      "display_order": 3
+    },
+    {
+      "id": "demo-tech-005",
+      "name": "PostgreSQL",
+      "name_pt": "PostgreSQL",
+      "name_en": "PostgreSQL",
+      "name_fr": "PostgreSQL",
+      "slug": "postgresql",
+      "category": "data",
+      "icon": "fa-solid fa-database",
+      "icon_key": "fa-solid fa-database",
+      "is_active": true,
+      "display_order": 4
+    }
+  ]
+}

@@ -1,5 +1,4 @@
 import React from "react";
-import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
 import { I18nProvider, selectLocalizedArray, selectLocalizedColumn, useI18n } from "../i18n";
 

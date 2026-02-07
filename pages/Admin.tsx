@@ -5,11 +5,14 @@ import Layout from '../components/Layout';
 import RichTextEditor from '../components/RichTextEditor';
 import { api } from '../services/api';
 import { authService } from '../services/auth';
-import { hasInvalidSkillsSeparator, parseSkillsListInput } from '../services/richText';
+import { parseSkillsListInput } from '../services/richText';
 import { Project, ProfileInfo, JourneyItem, Competency, TechnicalSkill } from '../types';
-import { useI18n } from '../i18n';
+import { selectLocalizedArray, selectLocalizedColumn, useI18n } from '../i18n';
+import { useDemoSession } from '../contexts/DemoSessionContext';
 
 type AdminTab = 'profile' | 'projects' | 'journey' | 'skills' | 'tech';
+export type AdminMode = 'full' | 'demo-local';
+type LocalProject = Project & { skill_ids?: string[] };
 
 const slugify = (value: string) =>
   value
@@ -18,8 +21,6 @@ const slugify = (value: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
-
-const SKILLS_SEPARATOR_ERROR = 'Use apenas ponto e vírgula (;) para separar os itens.';
 
 // Interface para o estado do Modal de Exclusão
 interface DeleteModalState {
@@ -30,6 +31,20 @@ interface DeleteModalState {
   deleteFn: ((id: string) => Promise<void>) | null;
   setListFn: React.Dispatch<React.SetStateAction<any[]>> | null;
 }
+
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+
+const EMPTY_DELETE_MODAL: DeleteModalState = {
+  isOpen: false,
+  id: null,
+  itemName: '',
+  typeLabel: '',
+  deleteFn: null,
+  setListFn: null
+};
+
+const createLocalId = () =>
+  (globalThis.crypto?.randomUUID?.() || `demo-${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
 // --- Componentes de UI Reutilizáveis ---
 const FormInput = ({ label, value, onChange, placeholder, type = "text", min, max }: any) => (
@@ -64,48 +79,128 @@ const StrictModeDroppable = ({ children, ...props }: any) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
-const Admin: React.FC = () => {
+interface AdminProps {
+  mode?: AdminMode;
+}
+
+const Admin: React.FC<AdminProps> = ({ mode = 'full' }) => {
+  const isDemoLocal = mode === 'demo-local';
+  const demoSession = useDemoSession();
   const [activeTab, setActiveTab] = useState<AdminTab>('profile');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   // Data States
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [journey, setJourney] = useState<JourneyItem[]>([]);
-  const [competencies, setCompetencies] = useState<Competency[]>([]);
-  const [techSkills, setTechSkills] = useState<TechnicalSkill[]>([]);
+  const [liveProjects, setLiveProjects] = useState<LocalProject[]>([]);
+  const [liveJourney, setLiveJourney] = useState<JourneyItem[]>([]);
+  const [liveCompetencies, setLiveCompetencies] = useState<Competency[]>([]);
+  const [liveTechSkills, setLiveTechSkills] = useState<TechnicalSkill[]>([]);
   const [isTechSkillsFallback, setIsTechSkillsFallback] = useState(false);
-  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const [liveProfile, setLiveProfile] = useState<ProfileInfo | null>(null);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
   const [skillSearch, setSkillSearch] = useState('');
 
   // Editing States
   const [editingItem, setEditingItem] = useState<any>(null);
   const [skillsItemsInput, setSkillsItemsInput] = useState('');
-  const [skillsItemsError, setSkillsItemsError] = useState<string | null>(null);
   
   // UI States
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   
   // Delete Modal State
-  const [deleteModal, setDeleteModal] = useState<DeleteModalState>({
-    isOpen: false,
-    id: null,
-    itemName: '',
-    typeLabel: '',
-    deleteFn: null,
-    setListFn: null
-  });
+  const [deleteModal, setDeleteModal] = useState<DeleteModalState>(EMPTY_DELETE_MODAL);
 
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
+  const projects = isDemoLocal ? demoSession.projects : liveProjects;
+  const journey = isDemoLocal ? demoSession.journey : liveJourney;
+  const competencies = isDemoLocal ? demoSession.competencies : liveCompetencies;
+  const techSkills = isDemoLocal ? demoSession.techSkills : liveTechSkills;
+  const profile = isDemoLocal ? demoSession.profile : liveProfile;
+
+  const setProjects: React.Dispatch<React.SetStateAction<LocalProject[]>> = isDemoLocal
+    ? (demoSession.setDemoProjects as React.Dispatch<React.SetStateAction<LocalProject[]>>)
+    : setLiveProjects;
+
+  const setJourney: React.Dispatch<React.SetStateAction<JourneyItem[]>> = isDemoLocal
+    ? demoSession.setDemoJourney
+    : setLiveJourney;
+
+  const setCompetencies: React.Dispatch<React.SetStateAction<Competency[]>> = isDemoLocal
+    ? demoSession.setDemoCompetencies
+    : setLiveCompetencies;
+
+  const setTechSkills: React.Dispatch<React.SetStateAction<TechnicalSkill[]>> = isDemoLocal
+    ? demoSession.setDemoTechSkills
+    : setLiveTechSkills;
+
+  const setProfile = (next: ProfileInfo | null) => {
+    if (isDemoLocal) {
+      demoSession.setDemoProfile(next);
+      return;
+    }
+    setLiveProfile(next);
+  };
+
+  const getLanguageSuffix = () => (language === 'pt-BR' ? 'pt' : language);
+
+  const applyDemoLocalizedField = <T extends Record<string, any>>(
+    target: T,
+    baseField: string,
+    value: any
+  ): T => {
+    const next = { ...target, [baseField]: value } as T & Record<string, any>;
+    if (isDemoLocal) {
+      next[`${baseField}_${getLanguageSuffix()}`] = value;
+    }
+    return next as T;
+  };
+
+  const updateProfileField = (baseField: string, value: any) => {
+    if (!profile) return;
+    setProfile(applyDemoLocalizedField(profile as Record<string, any>, baseField, value) as ProfileInfo);
+  };
+
+  const updateEditingField = (
+    baseField: string,
+    value: any,
+    extras: Record<string, any> = {}
+  ) => {
+    setEditingItem({
+      ...applyDemoLocalizedField((editingItem || {}) as Record<string, any>, baseField, value),
+      ...extras,
+    });
+  };
+
+  const getLocalizedProjectTitle = (item: LocalProject) =>
+    selectLocalizedColumn(item, 'title', language) || item.title;
+  const getLocalizedProjectRole = (item: LocalProject) =>
+    selectLocalizedColumn(item, 'role', language) || item.role;
+  const getLocalizedJourneyTitle = (item: JourneyItem) =>
+    selectLocalizedColumn(item, 'title', language) || item.title;
+  const getLocalizedJourneyCompany = (item: JourneyItem) =>
+    selectLocalizedColumn(item, 'company', language) || item.company;
+  const getLocalizedJourneyPeriod = (item: JourneyItem) =>
+    selectLocalizedColumn(item, 'period', language) || item.period;
+  const getLocalizedCompetencyTitle = (item: Competency) =>
+    selectLocalizedColumn(item, 'title', language) || item.title;
+  const getLocalizedCompetencyItems = (item: Competency) =>
+    selectLocalizedArray(item, 'items', language).length ? selectLocalizedArray(item, 'items', language) : item.items;
+  const getLocalizedTechName = (item: TechnicalSkill) =>
+    selectLocalizedColumn(item, 'name', language) || item.name;
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [isDemoLocal]);
 
   useEffect(() => {
     if (!isDrawerOpen || activeTab !== 'projects') return;
+
+    if (isDemoLocal) {
+      setSelectedSkillIds((editingItem as LocalProject | null)?.skill_ids || []);
+      return;
+    }
+
     const loadProjectSkills = async () => {
       if (editingItem?.id) {
         const ids = await api.getProjectSkillIds(editingItem.id);
@@ -115,9 +210,14 @@ const Admin: React.FC = () => {
       }
     };
     loadProjectSkills();
-  }, [isDrawerOpen, activeTab, editingItem?.id]);
+  }, [isDrawerOpen, activeTab, editingItem?.id, isDemoLocal]);
 
   const fetchAllData = async () => {
+    if (isDemoLocal) {
+      setIsTechSkillsFallback(false);
+      return;
+    }
+
     const [pData, jData, cData, tData, profData] = await Promise.all([
       api.getProjects(),
       api.getJourney(),
@@ -129,12 +229,12 @@ const Admin: React.FC = () => {
     // Sort items by display_order
     const sortFn = (a: any, b: any) => (a.display_order || 0) - (b.display_order || 0);
     
-    setProjects(pData?.sort(sortFn) || []);
-    setJourney(jData?.sort(sortFn) || []);
-    setCompetencies(cData?.sort(sortFn) || []);
-    setTechSkills(tData?.data?.sort(sortFn) || []);
+    setLiveProjects(pData?.sort(sortFn) || []);
+    setLiveJourney(jData?.sort(sortFn) || []);
+    setLiveCompetencies(cData?.sort(sortFn) || []);
+    setLiveTechSkills(tData?.data?.sort(sortFn) || []);
     setIsTechSkillsFallback(!!tData?.fromFallback);
-    setProfile(profData);
+    setLiveProfile(profData);
   };
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
@@ -142,7 +242,25 @@ const Admin: React.FC = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
+  const resetDemoSession = () => {
+    demoSession.resetDemoSession();
+    setIsTechSkillsFallback(false);
+    setActiveTab('profile');
+    setIsDrawerOpen(false);
+    setEditingItem(null);
+    setSelectedSkillIds([]);
+    setSkillSearch('');
+    setSkillsItemsInput('');
+    setDeleteModal(EMPTY_DELETE_MODAL);
+  };
+
   const handleLogout = async () => {
+    if (isDemoLocal) {
+      resetDemoSession();
+      navigate('/');
+      return;
+    }
+
     try {
       await authService.signOut();
       navigate('/login');
@@ -205,6 +323,11 @@ const Admin: React.FC = () => {
         tableName = 'technical_skills';
     }
 
+    if (isDemoLocal) {
+      showNotification('Ordem atualizada apenas nesta sessão de demonstração.', 'success');
+      return;
+    }
+
     // Persistir no backend (Batch Update)
     try {
         // CORREÇÃO: Enviamos o objeto completo (newItems) ao invés de apenas {id, order}
@@ -229,7 +352,6 @@ const Admin: React.FC = () => {
         ? item.items
         : '';
     setSkillsItemsInput(raw);
-    setSkillsItemsError(hasInvalidSkillsSeparator(raw) ? SKILLS_SEPARATOR_ERROR : null);
   };
 
   const handleOpenDrawer = (item: any = {}) => {
@@ -238,7 +360,9 @@ const Admin: React.FC = () => {
       syncSkillsInputState(item);
     } else {
       setSkillsItemsInput('');
-      setSkillsItemsError(null);
+    }
+    if (isDemoLocal && activeTab === 'projects') {
+      setSelectedSkillIds((item as LocalProject)?.skill_ids || []);
     }
     setIsDrawerOpen(true);
   };
@@ -249,12 +373,16 @@ const Admin: React.FC = () => {
     setSelectedSkillIds([]);
     setSkillSearch('');
     setSkillsItemsInput('');
-    setSkillsItemsError(null);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (profile) {
+      if (isDemoLocal) {
+        showNotification('Alteração aplicada apenas nesta sessão de demonstração.', 'success');
+        return;
+      }
+
       setIsSaving(true);
       try {
         await api.updateProfile(profile.id, profile);
@@ -277,18 +405,11 @@ const Admin: React.FC = () => {
 
     let parsedSkillItems: string[] = [];
     if (activeTab === 'skills') {
-      if (hasInvalidSkillsSeparator(skillsItemsInput)) {
-        setSkillsItemsError(SKILLS_SEPARATOR_ERROR);
-        showNotification(SKILLS_SEPARATOR_ERROR, 'error');
-        return;
-      }
-
       parsedSkillItems = parseSkillsListInput(skillsItemsInput);
       if (parsedSkillItems.length === 0) {
         showNotification('Adicione pelo menos um item de skill separado por ponto e vírgula (;).', 'error');
         return;
       }
-      setSkillsItemsError(null);
     }
 
     setIsSaving(true);
@@ -296,10 +417,79 @@ const Admin: React.FC = () => {
       // Define display_order automaticamente para novos itens (final da lista)
       const getNextOrder = (listLength: number) => listLength;
 
+      if (isDemoLocal) {
+        if (activeTab === 'projects') {
+          const proj = editingItem as LocalProject;
+          const payload: LocalProject = {
+            ...proj,
+            id: proj.id || createLocalId(),
+            slug: proj.slug || slugify(proj.title || ''),
+            status: proj.status || 'published',
+            display_order: proj.display_order ?? getNextOrder(projects.length),
+            skill_ids: selectedSkillIds
+          };
+
+          setProjects((prev) => {
+            const exists = prev.some((item) => item.id === payload.id);
+            if (exists) return prev.map((item) => (item.id === payload.id ? payload : item));
+            return [...prev, payload];
+          });
+        } else if (activeTab === 'journey') {
+          const jour = editingItem as JourneyItem;
+          const payload: JourneyItem = {
+            ...jour,
+            id: jour.id || createLocalId(),
+            display_order: jour.display_order ?? getNextOrder(journey.length)
+          };
+
+          setJourney((prev) => {
+            const exists = prev.some((item) => item.id === payload.id);
+            if (exists) return prev.map((item) => (item.id === payload.id ? payload : item));
+            return [...prev, payload];
+          });
+        } else if (activeTab === 'skills') {
+          const comp = editingItem as Competency;
+          const payload: Competency = {
+            ...comp,
+            id: comp.id || createLocalId(),
+            items: parsedSkillItems,
+            display_order: comp.display_order ?? getNextOrder(competencies.length),
+          };
+
+          setCompetencies((prev) => {
+            const exists = prev.some((item) => item.id === payload.id);
+            if (exists) return prev.map((item) => (item.id === payload.id ? payload : item));
+            return [...prev, payload];
+          });
+        } else if (activeTab === 'tech') {
+          const tech = editingItem as TechnicalSkill;
+          const payload: TechnicalSkill = {
+            ...tech,
+            id: tech.id || createLocalId(),
+            slug: tech.slug || slugify(tech.name || ''),
+            category: tech.category || 'other',
+            icon_key: tech.icon_key || tech.icon,
+            is_active: tech.is_active ?? true,
+            display_order: tech.display_order ?? getNextOrder(techSkills.length)
+          };
+
+          setTechSkills((prev) => {
+            const exists = prev.some((item) => item.id === payload.id);
+            if (exists) return prev.map((item) => (item.id === payload.id ? payload : item));
+            return [...prev, payload];
+          });
+        }
+
+        showNotification('Alteração aplicada apenas nesta sessão de demonstração.', 'success');
+        closeDrawer();
+        return;
+      }
+
       if (activeTab === 'projects') {
-        const proj = editingItem as Project;
+        const proj = editingItem as LocalProject;
+        const { skill_ids: _skillIds, ...projectWithoutSkills } = proj;
         const payload = {
-          ...proj,
+          ...projectWithoutSkills,
           slug: proj.slug || slugify(proj.title || ''),
           status: proj.status || 'published',
           display_order: proj.display_order ?? getNextOrder(projects.length)
@@ -380,11 +570,17 @@ const Admin: React.FC = () => {
 
   const confirmDelete = async () => {
     const { id, deleteFn, setListFn } = deleteModal;
-    if (!id || !deleteFn || !setListFn) return;
+    if (!id || !setListFn || (!isDemoLocal && !deleteFn)) return;
     try {
       setListFn((prev: any[]) => prev.filter(item => item.id !== id));
-      setDeleteModal({ ...deleteModal, isOpen: false });
-      await deleteFn(id);
+      setDeleteModal(EMPTY_DELETE_MODAL);
+
+      if (isDemoLocal) {
+        showNotification('Alteração aplicada apenas nesta sessão de demonstração.', 'success');
+        return;
+      }
+
+      await deleteFn!(id);
       showNotification('Item removido com sucesso!', 'success');
     } catch (error) {
       console.error("Erro ao excluir:", error);
@@ -394,7 +590,7 @@ const Admin: React.FC = () => {
   };
 
   const closeDeleteModal = () => {
-    setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    setDeleteModal(EMPTY_DELETE_MODAL);
   };
 
   const menuItems = [
@@ -436,7 +632,7 @@ const Admin: React.FC = () => {
               className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all group"
             >
               <i className="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
-              <span className="font-medium">Sair do Sistema</span>
+              <span className="font-medium">{isDemoLocal ? t('demo.end_session') : 'Sair do Sistema'}</span>
             </button>
           </div>
         </aside>
@@ -447,21 +643,37 @@ const Admin: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-slate-50 capitalize">{menuItems.find(i => i.id === activeTab)?.label}</h1>
               <p className="text-slate-500 mt-1">{t('admin.manage')}</p>
+              {isDemoLocal && (
+                <span className="mt-3 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+                  Modo Demonstração (não salva no banco)
+                </span>
+              )}
             </div>
-            {activeTab !== 'profile' && (
-              <button 
-                onClick={() => handleOpenDrawer({})}
-                disabled={activeTab === 'tech' && isTechSkillsFallback}
-                title={activeTab === 'tech' && isTechSkillsFallback ? 'Fallback ativo: edições desabilitadas' : undefined}
-                className={`mt-4 md:mt-0 px-6 py-3 rounded-xl font-medium flex items-center shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 ${
-                  activeTab === 'tech' && isTechSkillsFallback
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
-                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
-                }`}
-              >
-                <i className="fa-solid fa-plus mr-2"></i> {t('admin.add')}
-              </button>
-            )}
+            <div className="mt-4 md:mt-0 flex items-center gap-3">
+              {isDemoLocal && (
+                <button
+                  onClick={() => navigate('/demo')}
+                  className="px-5 py-3 rounded-xl font-medium border border-amber-500/40 text-amber-200 hover:bg-amber-500/10 transition-all flex items-center"
+                >
+                  <i className="fa-solid fa-eye mr-2"></i>
+                  {t('demo.preview_home_cta')}
+                </button>
+              )}
+              {activeTab !== 'profile' && (
+                <button 
+                  onClick={() => handleOpenDrawer({})}
+                  disabled={activeTab === 'tech' && isTechSkillsFallback}
+                  title={activeTab === 'tech' && isTechSkillsFallback ? 'Fallback ativo: edições desabilitadas' : undefined}
+                  className={`px-6 py-3 rounded-xl font-medium flex items-center shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 ${
+                    activeTab === 'tech' && isTechSkillsFallback
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                  }`}
+                >
+                  <i className="fa-solid fa-plus mr-2"></i> {t('admin.add')}
+                </button>
+              )}
+            </div>
 
             <div className="md:hidden mt-4 w-full">
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
@@ -483,11 +695,19 @@ const Admin: React.FC = () => {
             </div>
             
             <div className="md:hidden mt-4 w-full">
+              {isDemoLocal && (
+                <button
+                  onClick={() => navigate('/demo')}
+                  className="mb-3 w-full py-2 border border-amber-500/40 text-amber-200 rounded-lg text-sm font-medium hover:bg-amber-500/10"
+                >
+                  {t('demo.preview_home_cta')}
+                </button>
+              )}
                <button
                   onClick={handleLogout}
                   className="w-full py-2 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/10"
                >
-                 Sair do Sistema
+                 {isDemoLocal ? t('demo.end_session') : 'Sair do Sistema'}
                </button>
             </div>
           </div>
@@ -499,20 +719,20 @@ const Admin: React.FC = () => {
              {activeTab === 'profile' && profile && (
                <form onSubmit={handleSaveProfile} className="max-w-4xl space-y-8">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                   <FormInput label="Nome de Exibição" value={profile.display_name} onChange={(e: any) => setProfile({...profile, display_name: e.target.value})} />
-                   <FormInput label="Headline (Cargo)" value={profile.headline} onChange={(e: any) => setProfile({...profile, headline: e.target.value})} />
+                   <FormInput label="Nome de Exibição" value={profile.display_name} onChange={(e: any) => updateProfileField('display_name', e.target.value)} />
+                   <FormInput label="Headline (Cargo)" value={profile.headline} onChange={(e: any) => updateProfileField('headline', e.target.value)} />
                    
                    <div className="md:col-span-2">
                       <RichTextEditor
                         label="Biografia (Resumo)"
                         value={profile.bio}
-                        onChange={(next) => setProfile({ ...profile, bio: next })}
+                        onChange={(next) => updateProfileField('bio', next)}
                         placeholder="Escreva a biografia com formatação..."
                       />
                    </div>
 
-                   <FormInput label="Texto do Badge (Status)" value={profile.badge} onChange={(e: any) => setProfile({...profile, badge: e.target.value})} placeholder="Ex: Disponível para projetos" />
-                   <FormInput label="Frase de Impacto (Gradiente)" value={profile.action_phrase} onChange={(e: any) => setProfile({...profile, action_phrase: e.target.value})} placeholder="Ex: Futuro da Web" />
+                   <FormInput label="Texto do Badge (Status)" value={profile.badge} onChange={(e: any) => updateProfileField('badge', e.target.value)} placeholder="Ex: Disponível para projetos" />
+                   <FormInput label="Frase de Impacto (Gradiente)" value={profile.action_phrase} onChange={(e: any) => updateProfileField('action_phrase', e.target.value)} placeholder="Ex: Futuro da Web" />
                    
                    <FormInput label="Email de Contato" value={profile.email_contact} onChange={(e: any) => setProfile({...profile, email_contact: e.target.value})} />
                    <FormInput label="WhatsApp (apenas números)" value={profile.whatsapp} onChange={(e: any) => setProfile({...profile, whatsapp: e.target.value})} placeholder="5511999999999" />
@@ -606,8 +826,8 @@ const Admin: React.FC = () => {
                                     </div>
                                     
                                     <div className="p-6 flex-1 flex flex-col">
-                                        <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
-                                        <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide mb-3">{p.role}</p>
+                                        <h3 className="text-lg font-bold text-white mb-1">{getLocalizedProjectTitle(p)}</h3>
+                                        <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide mb-3">{getLocalizedProjectRole(p)}</p>
                                         
                                         <div className="mt-auto flex justify-between items-center pt-4 border-t border-slate-800">
                                         <div className="flex gap-3">
@@ -619,7 +839,7 @@ const Admin: React.FC = () => {
                                                 <i className="fa-solid fa-pen text-xs"></i>
                                             </button>
                                             <button 
-                                                onClick={() => handleDeleteRequest(p.id, p.title, 'Projeto', api.deleteProject, setProjects)}
+                                                onClick={() => handleDeleteRequest(p.id, getLocalizedProjectTitle(p), 'Projeto', api.deleteProject, setProjects)}
                                                 className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all"
                                             >
                                                 <i className="fa-solid fa-trash text-xs"></i>
@@ -661,10 +881,10 @@ const Admin: React.FC = () => {
                                     </div>
 
                                     <div className="pl-3 mb-4 flex-1">
-                                        <h3 className="text-lg font-bold text-white mb-1 leading-snug">{j.title}</h3>
-                                        <p className="text-slate-400 text-sm font-medium mb-2">{j.company}</p>
+                                        <h3 className="text-lg font-bold text-white mb-1 leading-snug">{getLocalizedJourneyTitle(j)}</h3>
+                                        <p className="text-slate-400 text-sm font-medium mb-2">{getLocalizedJourneyCompany(j)}</p>
                                         <p className="text-slate-500 text-xs flex items-center gap-2">
-                                            <i className="fa-regular fa-calendar"></i> {j.period}
+                                            <i className="fa-regular fa-calendar"></i> {getLocalizedJourneyPeriod(j)}
                                         </p>
                                     </div>
 
@@ -672,7 +892,7 @@ const Admin: React.FC = () => {
                                         <button onClick={() => handleOpenDrawer(j)} className="text-xs font-semibold text-slate-300 border border-slate-700 hover:text-white hover:border-indigo-500 hover:bg-slate-800/60 flex items-center gap-2 px-3 py-2 rounded-lg transition-all">
                                             Editar
                                         </button>
-                                        <button onClick={() => handleDeleteRequest(j.id, j.title, 'Jornada', api.deleteJourney, setJourney)} className="text-xs font-semibold text-red-400 border border-red-500/30 hover:text-white hover:bg-red-500/20 flex items-center gap-2 px-3 py-2 rounded-lg transition-all">
+                                        <button onClick={() => handleDeleteRequest(j.id, getLocalizedJourneyTitle(j), 'Jornada', api.deleteJourney, setJourney)} className="text-xs font-semibold text-red-400 border border-red-500/30 hover:text-white hover:bg-red-500/20 flex items-center gap-2 px-3 py-2 rounded-lg transition-all">
                                             Excluir
                                         </button>
                                     </div>
@@ -710,12 +930,12 @@ const Admin: React.FC = () => {
                                             <i className={c.icon}></i>
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-white text-lg">{c.title}</h3>
+                                            <h3 className="font-bold text-white text-lg">{getLocalizedCompetencyTitle(c)}</h3>
                                         </div>
                                     </div>
                                     
                                     <div className="flex flex-wrap gap-2 mb-6 min-h-[60px] content-start">
-                                        {Array.isArray(c.items) && c.items.slice(0, 4).map((item, idx) => (
+                                        {getLocalizedCompetencyItems(c).slice(0, 4).map((item, idx) => (
                                             <span key={idx} className="px-2 py-1 text-[10px] font-semibold bg-slate-950 text-slate-400 rounded border border-slate-800">
                                                 {item}
                                             </span>
@@ -726,7 +946,7 @@ const Admin: React.FC = () => {
                                         <button onClick={() => handleOpenDrawer(c)} className="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-300 border border-slate-700 hover:text-white hover:border-indigo-500 hover:bg-slate-800/60 transition-all">
                                             Editar
                                         </button>
-                                        <button onClick={() => handleDeleteRequest(c.id, c.title, 'Habilidade', api.deleteCompetency, setCompetencies)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-red-500/30 text-red-400 hover:text-white hover:bg-red-500/20 transition-all">
+                                        <button onClick={() => handleDeleteRequest(c.id, getLocalizedCompetencyTitle(c), 'Habilidade', api.deleteCompetency, setCompetencies)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-red-500/30 text-red-400 hover:text-white hover:bg-red-500/20 transition-all">
                                             <i className="fa-solid fa-trash text-xs"></i>
                                         </button>
                                     </div>
@@ -765,7 +985,7 @@ const Admin: React.FC = () => {
                                     <div className="w-12 h-12 mb-3 flex items-center justify-center text-2xl text-slate-300">
                                         <i className={t.icon_key || t.icon}></i>
                                     </div>
-                                    <h3 className="text-white font-bold mb-1">{t.name}</h3>
+                                    <h3 className="text-white font-bold mb-1">{getLocalizedTechName(t)}</h3>
                                     <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500 mb-3">
                                       {t.category || 'other'}
                                     </p>
@@ -786,7 +1006,7 @@ const Admin: React.FC = () => {
                                             EDITAR
                                         </button>
                                         <button
-                                          onClick={() => handleDeleteRequest(t.id, t.name, 'Tecnologia', api.deleteTechnicalSkill, setTechSkills)}
+                                          onClick={() => handleDeleteRequest(t.id, getLocalizedTechName(t), 'Tecnologia', api.deleteTechnicalSkill, setTechSkills)}
                                           disabled={isTechSkillsFallback}
                                           className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all ${
                                             isTechSkillsFallback
@@ -917,9 +1137,7 @@ const Admin: React.FC = () => {
                       const title = e.target.value;
                       const shouldSyncSlug =
                         !editingItem.slug || editingItem.slug === slugify(editingItem.title || '');
-                      setEditingItem({
-                        ...editingItem,
-                        title,
+                      updateEditingField('title', title, {
                         slug: shouldSyncSlug ? slugify(title) : editingItem.slug,
                       });
                     }}
@@ -927,7 +1145,7 @@ const Admin: React.FC = () => {
                   />
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <FormInput label="Papel / Role" value={editingItem.role} onChange={(e: any) => setEditingItem({...editingItem, role: e.target.value})} placeholder="Ex: Lead Developer" />
+                     <FormInput label="Papel / Role" value={editingItem.role} onChange={(e: any) => updateEditingField('role', e.target.value)} placeholder="Ex: Lead Developer" />
                      <FormInput label="Slug" value={editingItem.slug} onChange={(e: any) => setEditingItem({...editingItem, slug: slugify(e.target.value)})} placeholder="ex: plataforma-financeira" />
                   </div>
 
@@ -946,7 +1164,7 @@ const Admin: React.FC = () => {
                   <RichTextEditor
                     label="Descrição"
                     value={editingItem.description}
-                    onChange={(next) => setEditingItem({ ...editingItem, description: next })}
+                    onChange={(next) => updateEditingField('description', next)}
                     placeholder="Descreva o projeto com formatação..."
                   />
                   
@@ -963,7 +1181,7 @@ const Admin: React.FC = () => {
                       {techSkills
                         .filter((skill) => (skill.is_active ?? true))
                         .filter((skill) => {
-                          const name = (skill.name || '').toLowerCase();
+                          const name = (getLocalizedTechName(skill) || '').toLowerCase();
                           return name.includes(skillSearch.toLowerCase());
                         })
                         .map((skill) => {
@@ -979,7 +1197,7 @@ const Admin: React.FC = () => {
                             >
                               <span className="flex items-center gap-3">
                                 <i className={`${skill.icon_key || skill.icon} text-base text-slate-300`}></i>
-                                {skill.name}
+                                {getLocalizedTechName(skill)}
                               </span>
                               <input
                                 type="checkbox"
@@ -1010,11 +1228,11 @@ const Admin: React.FC = () => {
 
               {activeTab === 'journey' && (
                 <>
-                  <FormInput label="Título / Cargo" value={editingItem.title} onChange={(e: any) => setEditingItem({...editingItem, title: e.target.value})} />
-                  <FormInput label="Empresa / Instituição" value={editingItem.company} onChange={(e: any) => setEditingItem({...editingItem, company: e.target.value})} />
+                  <FormInput label="Título / Cargo" value={editingItem.title} onChange={(e: any) => updateEditingField('title', e.target.value)} />
+                  <FormInput label="Empresa / Instituição" value={editingItem.company} onChange={(e: any) => updateEditingField('company', e.target.value)} />
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <FormInput label="Período" value={editingItem.period} onChange={(e: any) => setEditingItem({...editingItem, period: e.target.value})} placeholder="2020 - Presente" />
+                    <FormInput label="Período" value={editingItem.period} onChange={(e: any) => updateEditingField('period', e.target.value)} placeholder="2020 - Presente" />
                     
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tipo</label>
@@ -1032,7 +1250,7 @@ const Admin: React.FC = () => {
                   <RichTextEditor
                     label="Descrição das Atividades"
                     value={editingItem.description}
-                    onChange={(next) => setEditingItem({ ...editingItem, description: next })}
+                    onChange={(next) => updateEditingField('description', next)}
                     placeholder="Descreva as atividades com formatação..."
                   />
                 </>
@@ -1040,8 +1258,8 @@ const Admin: React.FC = () => {
 
               {activeTab === 'skills' && (
                 <>
-                  <FormInput label="Nome da Categoria" value={editingItem.title} onChange={(e: any) => setEditingItem({...editingItem, title: e.target.value})} placeholder="Ex: Backend" />
-                  <FormInput label="Subtítulo (Opcional)" value={editingItem.subtitle} onChange={(e: any) => setEditingItem({...editingItem, subtitle: e.target.value})} />
+                  <FormInput label="Nome da Categoria" value={editingItem.title} onChange={(e: any) => updateEditingField('title', e.target.value)} placeholder="Ex: Backend" />
+                  <FormInput label="Subtítulo (Opcional)" value={editingItem.subtitle} onChange={(e: any) => updateEditingField('subtitle', e.target.value)} />
                   <FormInput label="Ícone (FontAwesome)" value={editingItem.icon} onChange={(e: any) => setEditingItem({...editingItem, icon: e.target.value})} placeholder="fa-solid fa-code" />
                   
                   <div className="space-y-2">
@@ -1049,23 +1267,14 @@ const Admin: React.FC = () => {
                      <p className="text-[10px] text-slate-500 mb-1">Separe os itens por ponto e vírgula (;)</p>
                      <textarea 
                          rows={4} 
-                         className={`w-full bg-slate-950/50 border rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 transition-all ${
-                           skillsItemsError
-                             ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/20'
-                             : 'border-slate-800 focus:border-indigo-500/50 focus:ring-indigo-500/20'
-                         }`}
+                         className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                          value={skillsItemsInput}
                          onChange={(e) => {
                            const raw = e.target.value;
-                           const invalid = hasInvalidSkillsSeparator(raw);
                            setSkillsItemsInput(raw);
-                           setSkillsItemsError(invalid ? SKILLS_SEPARATOR_ERROR : null);
-                           setEditingItem({ ...editingItem, items: parseSkillsListInput(raw) });
+                           updateEditingField('items', parseSkillsListInput(raw));
                          }}
                      />
-                     {skillsItemsError && (
-                       <p className="text-xs text-red-400">{skillsItemsError}</p>
-                     )}
                   </div>
                 </>
               )}
@@ -1079,9 +1288,7 @@ const Admin: React.FC = () => {
                       const name = e.target.value;
                       const shouldSyncSlug =
                         !editingItem.slug || editingItem.slug === slugify(editingItem.name || '');
-                      setEditingItem({
-                        ...editingItem,
-                        name,
+                      updateEditingField('name', name, {
                         slug: shouldSyncSlug ? slugify(name) : editingItem.slug,
                       });
                     }}
