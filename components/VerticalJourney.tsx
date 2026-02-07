@@ -39,7 +39,11 @@ const MOCK_JOURNEY: JourneyItem[] = [
 const CV_URL =
   'https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/src/CV-Igor-MATOS.pdf';
 
-const VerticalJourney: React.FC = () => {
+interface VerticalJourneyProps {
+  items?: JourneyItem[];
+}
+
+const VerticalJourney: React.FC<VerticalJourneyProps> = ({ items: itemsProp }) => {
   const { t, language } = useI18n();
   const [items, setItems] = useState<JourneyItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -49,6 +53,11 @@ const VerticalJourney: React.FC = () => {
   const touchDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
+    if (itemsProp) {
+      setItems(itemsProp);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const data = await api.getJourney();
@@ -63,7 +72,7 @@ const VerticalJourney: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [itemsProp]);
 
   const changeSlide = useCallback((newIndex: number) => {
     if (newIndex === currentIndex) return;

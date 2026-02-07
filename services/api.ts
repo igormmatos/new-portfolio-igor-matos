@@ -168,7 +168,7 @@ export const api = {
       return cleaned.replace(/[\s\u200B\u200C\u200D\uFEFF]+/g, '');
     };
 
-    const normalizedUpdates: Partial<ProfileInfo> = { ...updates };
+    const normalizedUpdates: Record<string, any> = { ...updates };
     if ('display_name' in updates) normalizedUpdates.display_name = normalizeRequired(updates.display_name);
     if ('headline' in updates) normalizedUpdates.headline = normalizeRequired(updates.headline);
     if ('bio' in updates) normalizedUpdates.bio = sanitizeRichText(toDisplayHtml(updates.bio));

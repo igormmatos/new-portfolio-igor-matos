@@ -4,6 +4,7 @@ import { useI18n, Language, selectLocalizedColumn } from '../i18n';
 import { api } from '../services/api';
 import { ProfileInfo } from '../types';
 import { trackEvent } from '../services/analytics';
+import DemoFixedBadge from './DemoFixedBadge';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -80,6 +81,8 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isAdmin = location.pathname.includes('admin');
+  const isAdminDemo = location.pathname === '/admin-demo';
+  const backLabelKey = isAdminDemo ? 'nav.view_original' : 'nav.back';
   const { t, language, formatNumber } = useI18n();
 
   useEffect(() => {
@@ -156,14 +159,14 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
               to="/"
               className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden sm:block"
             >
-              <i className="fa-solid fa-arrow-left mr-2"></i> {t('nav.back')}
+              <i className="fa-solid fa-arrow-left mr-2"></i> {t(backLabelKey)}
             </Link>
           ) : (
             <Link
-              to="/admin"
-              className="px-5 py-2 text-sm font-semibold rounded-full border border-slate-700 hover:border-indigo-500 hover:text-indigo-400 transition-all duration-300 hidden sm:block"
+              to="/admin-demo"
+              className="px-5 py-2 text-sm font-semibold rounded-full border border-amber-500/40 text-amber-200 hover:bg-amber-500/10 transition-all duration-300 hidden sm:block"
             >
-              {t('nav.admin')}
+              {t('demo.view_cta')}
             </Link>
           )}
 
@@ -212,18 +215,18 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
                 >
                   <span>
                     <i className="fa-solid fa-arrow-left mr-2"></i>
-                    {t('nav.back')}
+                    {t(backLabelKey)}
                   </span>
                   <span className="text-xs text-slate-400">{t('nav.home')}</span>
                 </Link>
               ) : (
                 <Link
-                  to="/admin"
-                  className="w-full px-3 py-2 rounded-lg text-sm font-semibold border border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-slate-800/60 flex items-center justify-between transition-colors"
+                  to="/admin-demo"
+                  className="w-full px-3 py-2 rounded-lg text-sm font-semibold border border-amber-500/40 text-amber-200 hover:bg-amber-500/10 flex items-center justify-between transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span>{t('nav.admin')}</span>
-                  <i className="fa-solid fa-lock text-xs text-slate-400"></i>
+                  <span>{t('demo.view_cta')}</span>
+                  <i className="fa-solid fa-eye text-xs text-amber-200"></i>
                 </Link>
               )}
             </div>
@@ -236,9 +239,10 @@ const Navbar: React.FC<NavbarProps> = ({ profile }) => {
 
 interface FooterProps {
   profile: ProfileInfo | null;
+  showAdminAccess: boolean;
 }
 
-const Footer: React.FC<FooterProps> = ({ profile }) => {
+const Footer: React.FC<FooterProps> = ({ profile, showAdminAccess }) => {
   const { t, language, formatNumber } = useI18n();
   const profileName = selectLocalizedColumn(profile, 'display_name', language) || profile?.display_name;
   const footerTagline =
@@ -285,9 +289,14 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
           <p className="text-slate-600 text-xs">
             © {new Date().getFullYear()} {profileName || "Portfólio"}. {t('footer.rights')}
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
+          <div className="flex items-center space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-xs text-slate-600 hover:text-slate-400">{t('footer.privacy')}</a>
             <a href="#" className="text-xs text-slate-600 hover:text-slate-400">{t('footer.terms')}</a>
+            {showAdminAccess && (
+              <Link to="/login" className="text-[11px] text-slate-700 hover:text-slate-500 transition-colors">
+                {t('nav.admin_access')}
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -298,6 +307,8 @@ const Footer: React.FC<FooterProps> = ({ profile }) => {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { t } = useI18n();
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const location = useLocation();
+  const showAdminAccess = location.pathname !== '/admin' && location.pathname !== '/admin-demo';
 
   useEffect(() => {
     // Busca o perfil uma vez no nível do layout para compartilhar entre Navbar e Footer
@@ -307,6 +318,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar profile={profile} />
+      <DemoFixedBadge />
       <main className="flex-grow pt-20">
         {children}
       </main>
@@ -328,7 +340,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </a>
       )}
 
-      <Footer profile={profile} />
+      <Footer profile={profile} showAdminAccess={showAdminAccess} />
     </div>
   );
 };
