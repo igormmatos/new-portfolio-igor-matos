@@ -1,0 +1,177 @@
+{
+  "profile": {
+    "id": "demo-profile-001",
+    "display_name": "Igor Matos",
+    "headline": "Technology Strategist and Solutions Manager",
+    "bio": "Demo profile used to showcase the admin panel workflow. Changes in this route are local only and never persisted to the database.",
+    "badge": "Available for new projects",
+    "action_phrase": "Turning challenges into outcomes",
+    "whatsapp": "+5595991353797",
+    "linkedin_url": "https://www.linkedin.com/in/igor-mmatos/",
+    "git_url": "https://github.com/igormmatos",
+    "email_contact": "igorantonio50@gmail.com"
+  },
+  "projects": [
+    {
+      "id": "demo-project-001",
+      "slug": "architecture-modernization",
+      "title": "Architecture Modernization",
+      "role": "Solutions Architect",
+      "description": "Migration and modernization initiative with new CI/CD standards and service boundaries.",
+      "github_url": "https://github.com/igormmatos",
+      "live_url": "#",
+      "image_url": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1472&auto=format&fit=crop",
+      "display_order": 0,
+      "status": "published",
+      "skill_ids": ["demo-tech-001", "demo-tech-003", "demo-tech-004"]
+    },
+    {
+      "id": "demo-project-002",
+      "slug": "task-management-platform",
+      "title": "Task Management Platform",
+      "role": "Frontend Lead",
+      "description": "A planning and execution platform focused on process clarity and operational visibility.",
+      "github_url": "https://github.com/igormmatos",
+      "live_url": "#",
+      "image_url": "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1470&auto=format&fit=crop",
+      "display_order": 1,
+      "status": "published",
+      "skill_ids": ["demo-tech-001", "demo-tech-002", "demo-tech-005"]
+    },
+    {
+      "id": "demo-project-003",
+      "slug": "operations-dashboard",
+      "title": "Operations Dashboard",
+      "role": "Fullstack Developer",
+      "description": "Dashboard for operational KPIs with controlled access and resilient backend services.",
+      "github_url": "https://github.com/igormmatos",
+      "live_url": "#",
+      "image_url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1470&auto=format&fit=crop",
+      "display_order": 2,
+      "status": "published",
+      "skill_ids": ["demo-tech-001", "demo-tech-002", "demo-tech-003"]
+    }
+  ],
+  "journey": [
+    {
+      "id": "demo-journey-001",
+      "title": "Senior Technology Consultant",
+      "company": "Independent Projects",
+      "period": "2023 - Present",
+      "description": "Leading architecture and delivery initiatives, connecting business priorities with engineering execution.",
+      "type": "experience",
+      "display_order": 0
+    },
+    {
+      "id": "demo-journey-002",
+      "title": "Software Developer",
+      "company": "Product and Services Teams",
+      "period": "2018 - 2023",
+      "description": "Built internal and client-facing systems with focus on reliability, maintainability and speed of delivery.",
+      "type": "experience",
+      "display_order": 1
+    },
+    {
+      "id": "demo-journey-003",
+      "title": "Systems Analysis and Development",
+      "company": "Estacio",
+      "period": "2022 - 2024",
+      "description": "Formal training in software architecture, data modeling, OOP and product delivery workflows.",
+      "type": "education",
+      "display_order": 2
+    }
+  ],
+  "competencies": [
+    {
+      "id": "demo-competency-001",
+      "title": "Consulting and Strategy",
+      "subtitle": "Technology planning and governance",
+      "icon": "fa-solid fa-handshake",
+      "items": [
+        "Technology roadmap definition",
+        "Architecture assessments",
+        "Risk and dependency mapping"
+      ],
+      "color_theme": "indigo",
+      "display_order": 0
+    },
+    {
+      "id": "demo-competency-002",
+      "title": "Delivery and Leadership",
+      "subtitle": "Execution with operational clarity",
+      "icon": "fa-solid fa-users-gear",
+      "items": [
+        "Cross-team communication",
+        "Incremental delivery planning",
+        "Technical decision records"
+      ],
+      "color_theme": "green",
+      "display_order": 1
+    },
+    {
+      "id": "demo-competency-003",
+      "title": "Systems Engineering",
+      "subtitle": "Robust software solutions",
+      "icon": "fa-solid fa-laptop-code",
+      "items": [
+        "Backend and API design",
+        "Frontend architecture",
+        "Performance and observability"
+      ],
+      "color_theme": "slate",
+      "display_order": 2
+    }
+  ],
+  "techSkills": [
+    {
+      "id": "demo-tech-001",
+      "name": "React",
+      "slug": "react",
+      "category": "frontend",
+      "icon": "fa-brands fa-react",
+      "icon_key": "fa-brands fa-react",
+      "is_active": true,
+      "display_order": 0
+    },
+    {
+      "id": "demo-tech-002",
+      "name": "TypeScript",
+      "slug": "typescript",
+      "category": "frontend",
+      "icon": "fa-solid fa-code",
+      "icon_key": "fa-solid fa-code",
+      "is_active": true,
+      "display_order": 1
+    },
+    {
+      "id": "demo-tech-003",
+      "name": "Node.js",
+      "slug": "nodejs",
+      "category": "backend",
+      "icon": "fa-brands fa-node-js",
+      "icon_key": "fa-brands fa-node-js",
+      "is_active": true,
+      "display_order": 2
+    },
+    {
+      "id": "demo-tech-004",
+      "name": "Docker",
+      "slug": "docker",
+      "category": "infra",
+      "icon": "fa-brands fa-docker",
+      "icon_key": "fa-brands fa-docker",
+      "is_active": true,
+      "display_order": 3
+    },
+    {
+      "id": "demo-tech-005",
+      "name": "PostgreSQL",
+      "slug": "postgresql",
+      "category": "data",
+      "icon": "fa-solid fa-database",
+      "icon_key": "fa-solid fa-database",
+      "is_active": true,
+      "display_order": 4
+    }
+  ]
+}

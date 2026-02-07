@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import Layout from '../components/Layout';
@@ -8,8 +8,19 @@ import { authService } from '../services/auth';
 import { parseSkillsListInput } from '../services/richText';
 import { Project, ProfileInfo, JourneyItem, Competency, TechnicalSkill } from '../types';
 import { useI18n } from '../i18n';
+import adminDemoSnapshot from '../data/admin-demo-snapshot.json';
 
 type AdminTab = 'profile' | 'projects' | 'journey' | 'skills' | 'tech';
+export type AdminMode = 'full' | 'demo-local';
+type LocalProject = Project & { skill_ids?: string[] };
+
+interface AdminDemoSnapshot {
+  profile: ProfileInfo | null;
+  projects: LocalProject[];
+  journey: JourneyItem[];
+  competencies: Competency[];
+  techSkills: TechnicalSkill[];
+}
 
 const slugify = (value: string) =>
   value
@@ -28,6 +39,34 @@ interface DeleteModalState {
   deleteFn: ((id: string) => Promise<void>) | null;
   setListFn: React.Dispatch<React.SetStateAction<any[]>> | null;
 }
+
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+
+const EMPTY_DELETE_MODAL: DeleteModalState = {
+  isOpen: false,
+  id: null,
+  itemName: '',
+  typeLabel: '',
+  deleteFn: null,
+  setListFn: null
+};
+
+const sortByDisplayOrder = (a: any, b: any) => (a.display_order || 0) - (b.display_order || 0);
+
+const createLocalId = () =>
+  (globalThis.crypto?.randomUUID?.() || `demo-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+
+const getDemoSnapshot = (): AdminDemoSnapshot => {
+  const raw = JSON.parse(JSON.stringify(adminDemoSnapshot || {})) as Partial<AdminDemoSnapshot>;
+
+  return {
+    profile: raw.profile || null,
+    projects: ((raw.projects || []) as LocalProject[]).sort(sortByDisplayOrder),
+    journey: ((raw.journey || []) as JourneyItem[]).sort(sortByDisplayOrder),
+    competencies: ((raw.competencies || []) as Competency[]).sort(sortByDisplayOrder),
+    techSkills: ((raw.techSkills || []) as TechnicalSkill[]).sort(sortByDisplayOrder),
+  };
+};
 
 // --- Componentes de UI Reutilizáveis ---
 const FormInput = ({ label, value, onChange, placeholder, type = "text", min, max }: any) => (
@@ -62,12 +101,18 @@ const StrictModeDroppable = ({ children, ...props }: any) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
-const Admin: React.FC = () => {
+interface AdminProps {
+  mode?: AdminMode;
+}
+
+const Admin: React.FC<AdminProps> = ({ mode = 'full' }) => {
+  const isDemoLocal = mode === 'demo-local';
+  const inactivityTimeoutRef = useRef<number | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>('profile');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   // Data States
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<LocalProject[]>([]);
   const [journey, setJourney] = useState<JourneyItem[]>([]);
   const [competencies, setCompetencies] = useState<Competency[]>([]);
   const [techSkills, setTechSkills] = useState<TechnicalSkill[]>([]);
@@ -85,24 +130,23 @@ const Admin: React.FC = () => {
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   
   // Delete Modal State
-  const [deleteModal, setDeleteModal] = useState<DeleteModalState>({
-    isOpen: false,
-    id: null,
-    itemName: '',
-    typeLabel: '',
-    deleteFn: null,
-    setListFn: null
-  });
+  const [deleteModal, setDeleteModal] = useState<DeleteModalState>(EMPTY_DELETE_MODAL);
 
   const { t } = useI18n();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     if (!isDrawerOpen || activeTab !== 'projects') return;
+
+    if (isDemoLocal) {
+      setSelectedSkillIds((editingItem as LocalProject | null)?.skill_ids || []);
+      return;
+    }
+
     const loadProjectSkills = async () => {
       if (editingItem?.id) {
         const ids = await api.getProjectSkillIds(editingItem.id);
@@ -112,9 +156,20 @@ const Admin: React.FC = () => {
       }
     };
     loadProjectSkills();
-  }, [isDrawerOpen, activeTab, editingItem?.id]);
+  }, [isDrawerOpen, activeTab, editingItem?.id, isDemoLocal]);
 
   const fetchAllData = async () => {
+    if (isDemoLocal) {
+      const snapshot = getDemoSnapshot();
+      setProjects(snapshot.projects);
+      setJourney(snapshot.journey);
+      setCompetencies(snapshot.competencies);
+      setTechSkills(snapshot.techSkills);
+      setIsTechSkillsFallback(false);
+      setProfile(snapshot.profile);
+      return;
+    }
+
     const [pData, jData, cData, tData, profData] = await Promise.all([
       api.getProjects(),
       api.getJourney(),
@@ -139,7 +194,59 @@ const Admin: React.FC = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
+  const resetDemoSession = () => {
+    const snapshot = getDemoSnapshot();
+    setProjects(snapshot.projects);
+    setJourney(snapshot.journey);
+    setCompetencies(snapshot.competencies);
+    setTechSkills(snapshot.techSkills);
+    setProfile(snapshot.profile);
+    setIsTechSkillsFallback(false);
+    setActiveTab('profile');
+    setIsDrawerOpen(false);
+    setEditingItem(null);
+    setSelectedSkillIds([]);
+    setSkillSearch('');
+    setSkillsItemsInput('');
+    setDeleteModal(EMPTY_DELETE_MODAL);
+  };
+
+  useEffect(() => {
+    if (!isDemoLocal) return;
+
+    const resetInactivityTimer = () => {
+      if (inactivityTimeoutRef.current) {
+        window.clearTimeout(inactivityTimeoutRef.current);
+      }
+
+      inactivityTimeoutRef.current = window.setTimeout(() => {
+        setNotification({ message: 'Sessão de demonstração encerrada por inatividade.', type: 'error' });
+        window.setTimeout(() => {
+          resetDemoSession();
+          navigate('/');
+        }, 900);
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const events: Array<keyof WindowEventMap> = ['click', 'keydown', 'mousemove', 'touchstart', 'scroll'];
+    events.forEach((eventName) => window.addEventListener(eventName, resetInactivityTimer, { passive: true }));
+    resetInactivityTimer();
+
+    return () => {
+      if (inactivityTimeoutRef.current) {
+        window.clearTimeout(inactivityTimeoutRef.current);
+      }
+      events.forEach((eventName) => window.removeEventListener(eventName, resetInactivityTimer));
+    };
+  }, [isDemoLocal, navigate]);
+
   const handleLogout = async () => {
+    if (isDemoLocal) {
+      resetDemoSession();
+      navigate('/');
+      return;
+    }
+
     try {
       await authService.signOut();
       navigate('/login');
@@ -202,6 +309,11 @@ const Admin: React.FC = () => {
         tableName = 'technical_skills';
     }
 
+    if (isDemoLocal) {
+      showNotification('Ordem atualizada apenas nesta sessão de demonstração.', 'success');
+      return;
+    }
+
     // Persistir no backend (Batch Update)
     try {
         // CORREÇÃO: Enviamos o objeto completo (newItems) ao invés de apenas {id, order}
@@ -235,6 +347,9 @@ const Admin: React.FC = () => {
     } else {
       setSkillsItemsInput('');
     }
+    if (isDemoLocal && activeTab === 'projects') {
+      setSelectedSkillIds((item as LocalProject)?.skill_ids || []);
+    }
     setIsDrawerOpen(true);
   };
 
@@ -249,6 +364,11 @@ const Admin: React.FC = () => {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (profile) {
+      if (isDemoLocal) {
+        showNotification('Alteração aplicada apenas nesta sessão de demonstração.', 'success');
+        return;
+      }
+
       setIsSaving(true);
       try {
         await api.updateProfile(profile.id, profile);
@@ -283,10 +403,79 @@ const Admin: React.FC = () => {
       // Define display_order automaticamente para novos itens (final da lista)
       const getNextOrder = (listLength: number) => listLength;
 
+      if (isDemoLocal) {
+        if (activeTab === 'projects') {
+          const proj = editingItem as LocalProject;
+          const payload: LocalProject = {
+            ...proj,
+            id: proj.id || createLocalId(),
+            slug: proj.slug || slugify(proj.title || ''),
+            status: proj.status || 'published',
+            display_order: proj.display_order ?? getNextOrder(projects.length),
+            skill_ids: selectedSkillIds
+          };
+
+          setProjects((prev) => {
+            const exists = prev.some((item) => item.id === payload.id);
+            if (exists) return prev.map((item) => (item.id === payload.id ? payload : item));
+            return [...prev, payload];
+          });
+        } else if (activeTab === 'journey') {
+          const jour = editingItem as JourneyItem;
+          const payload: JourneyItem = {
+            ...jour,
+            id: jour.id || createLocalId(),
+            display_order: jour.display_order ?? getNextOrder(journey.length)
+          };
+
+          setJourney((prev) => {
+            const exists = prev.some((item) => item.id === payload.id);
+            if (exists) return prev.map((item) => (item.id === payload.id ? payload : item));
+            return [...prev, payload];
+          });
+        } else if (activeTab === 'skills') {
+          const comp = editingItem as Competency;
+          const payload: Competency = {
+            ...comp,
+            id: comp.id || createLocalId(),
+            items: parsedSkillItems,
+            display_order: comp.display_order ?? getNextOrder(competencies.length),
+          };
+
+          setCompetencies((prev) => {
+            const exists = prev.some((item) => item.id === payload.id);
+            if (exists) return prev.map((item) => (item.id === payload.id ? payload : item));
+            return [...prev, payload];
+          });
+        } else if (activeTab === 'tech') {
+          const tech = editingItem as TechnicalSkill;
+          const payload: TechnicalSkill = {
+            ...tech,
+            id: tech.id || createLocalId(),
+            slug: tech.slug || slugify(tech.name || ''),
+            category: tech.category || 'other',
+            icon_key: tech.icon_key || tech.icon,
+            is_active: tech.is_active ?? true,
+            display_order: tech.display_order ?? getNextOrder(techSkills.length)
+          };
+
+          setTechSkills((prev) => {
+            const exists = prev.some((item) => item.id === payload.id);
+            if (exists) return prev.map((item) => (item.id === payload.id ? payload : item));
+            return [...prev, payload];
+          });
+        }
+
+        showNotification('Alteração aplicada apenas nesta sessão de demonstração.', 'success');
+        closeDrawer();
+        return;
+      }
+
       if (activeTab === 'projects') {
-        const proj = editingItem as Project;
+        const proj = editingItem as LocalProject;
+        const { skill_ids: _skillIds, ...projectWithoutSkills } = proj;
         const payload = {
-          ...proj,
+          ...projectWithoutSkills,
           slug: proj.slug || slugify(proj.title || ''),
           status: proj.status || 'published',
           display_order: proj.display_order ?? getNextOrder(projects.length)
@@ -367,11 +556,17 @@ const Admin: React.FC = () => {
 
   const confirmDelete = async () => {
     const { id, deleteFn, setListFn } = deleteModal;
-    if (!id || !deleteFn || !setListFn) return;
+    if (!id || !setListFn || (!isDemoLocal && !deleteFn)) return;
     try {
       setListFn((prev: any[]) => prev.filter(item => item.id !== id));
-      setDeleteModal({ ...deleteModal, isOpen: false });
-      await deleteFn(id);
+      setDeleteModal(EMPTY_DELETE_MODAL);
+
+      if (isDemoLocal) {
+        showNotification('Alteração aplicada apenas nesta sessão de demonstração.', 'success');
+        return;
+      }
+
+      await deleteFn!(id);
       showNotification('Item removido com sucesso!', 'success');
     } catch (error) {
       console.error("Erro ao excluir:", error);
@@ -381,7 +576,7 @@ const Admin: React.FC = () => {
   };
 
   const closeDeleteModal = () => {
-    setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    setDeleteModal(EMPTY_DELETE_MODAL);
   };
 
   const menuItems = [
@@ -423,7 +618,7 @@ const Admin: React.FC = () => {
               className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all group"
             >
               <i className="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
-              <span className="font-medium">Sair do Sistema</span>
+              <span className="font-medium">{isDemoLocal ? 'Encerrar demonstração' : 'Sair do Sistema'}</span>
             </button>
           </div>
         </aside>
@@ -434,6 +629,11 @@ const Admin: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-slate-50 capitalize">{menuItems.find(i => i.id === activeTab)?.label}</h1>
               <p className="text-slate-500 mt-1">{t('admin.manage')}</p>
+              {isDemoLocal && (
+                <span className="mt-3 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+                  Modo Demonstracao (nao salva no banco)
+                </span>
+              )}
             </div>
             {activeTab !== 'profile' && (
               <button 
@@ -474,7 +674,7 @@ const Admin: React.FC = () => {
                   onClick={handleLogout}
                   className="w-full py-2 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/10"
                >
-                 Sair do Sistema
+                 {isDemoLocal ? 'Encerrar demonstracao' : 'Sair do Sistema'}
                </button>
             </div>
           </div>

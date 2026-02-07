@@ -22,7 +22,8 @@ const SeoAnalytics = () => {
   const lastLangRef = useRef<string | null>(null);
 
   const seoConfig = useMemo(() => {
-    const isAdmin = location.pathname.startsWith('/admin');
+    const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+    const isAdminDemo = location.pathname.startsWith('/admin-demo');
     const isLogin = location.pathname.startsWith('/login');
 
     const base = {
@@ -49,6 +50,22 @@ const SeoAnalytics = () => {
           'pt-BR': 'Painel administrativo do portfólio.',
           'en': 'Portfolio admin panel.',
           'fr': 'Panneau d\'administration du portfolio.'
+        },
+        robots: 'noindex,nofollow'
+      };
+    }
+
+    if (isAdminDemo) {
+      return {
+        title: {
+          'pt-BR': 'Admin Demo | Igor Matos',
+          'en': 'Admin Demo | Igor Matos',
+          'fr': 'Admin Demo | Igor Matos'
+        },
+        description: {
+          'pt-BR': 'Visualizacao demonstrativa do painel administrativo.',
+          'en': 'Demonstration view of the admin panel.',
+          'fr': 'Vue de demonstration du panneau d administration.'
         },
         robots: 'noindex,nofollow'
       };
@@ -202,6 +219,11 @@ const App: React.FC = () => {
             <Route 
               path="/login" 
               element={session ? <Navigate to="/admin" replace /> : <Login />} 
+            />
+
+            <Route
+              path="/admin-demo"
+              element={<Admin mode="demo-local" />}
             />
             
             {/* Rota Protegida de Admin: Redireciona para Login se não estiver logado */}
