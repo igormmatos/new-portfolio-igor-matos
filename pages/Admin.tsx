@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import Layout from '../components/Layout';
+import RichTextEditor from '../components/RichTextEditor';
 import { api } from '../services/api';
 import { authService } from '../services/auth';
+import { hasInvalidSkillsSeparator, parseSkillsListInput } from '../services/richText';
 import { Project, ProfileInfo, JourneyItem, Competency, TechnicalSkill } from '../types';
 import { useI18n } from '../i18n';
 
@@ -16,6 +18,8 @@ const slugify = (value: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
+
+const SKILLS_SEPARATOR_ERROR = 'Use apenas ponto e vírgula (;) para separar os itens.';
 
 // Interface para o estado do Modal de Exclusão
 interface DeleteModalState {
@@ -36,19 +40,6 @@ const FormInput = ({ label, value, onChange, placeholder, type = "text", min, ma
       min={min}
       max={max}
       className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-      placeholder={placeholder}
-      value={value || ''} 
-      onChange={onChange} 
-    />
-  </div>
-);
-
-const FormTextArea = ({ label, value, onChange, placeholder, rows = 3 }: any) => (
-  <div className="space-y-2">
-    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>
-    <textarea 
-      rows={rows}
-      className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-y min-h-[100px]"
       placeholder={placeholder}
       value={value || ''} 
       onChange={onChange} 
@@ -89,6 +80,8 @@ const Admin: React.FC = () => {
 
   // Editing States
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [skillsItemsInput, setSkillsItemsInput] = useState('');
+  const [skillsItemsError, setSkillsItemsError] = useState<string | null>(null);
   
   // UI States
   const [isSaving, setIsSaving] = useState(false);
@@ -229,8 +222,24 @@ const Admin: React.FC = () => {
   };
 
   // --- Handlers do Drawer de Edição ---
+  const syncSkillsInputState = (item: any) => {
+    const raw = Array.isArray(item?.items)
+      ? item.items.join('; ')
+      : typeof item?.items === 'string'
+        ? item.items
+        : '';
+    setSkillsItemsInput(raw);
+    setSkillsItemsError(hasInvalidSkillsSeparator(raw) ? SKILLS_SEPARATOR_ERROR : null);
+  };
+
   const handleOpenDrawer = (item: any = {}) => {
     setEditingItem(item);
+    if (activeTab === 'skills') {
+      syncSkillsInputState(item);
+    } else {
+      setSkillsItemsInput('');
+      setSkillsItemsError(null);
+    }
     setIsDrawerOpen(true);
   };
 
@@ -239,6 +248,8 @@ const Admin: React.FC = () => {
     setEditingItem(null);
     setSelectedSkillIds([]);
     setSkillSearch('');
+    setSkillsItemsInput('');
+    setSkillsItemsError(null);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -263,6 +274,23 @@ const Admin: React.FC = () => {
       showNotification('Não é possível editar tecnologias enquanto o fallback estiver ativo.', 'error');
       return;
     }
+
+    let parsedSkillItems: string[] = [];
+    if (activeTab === 'skills') {
+      if (hasInvalidSkillsSeparator(skillsItemsInput)) {
+        setSkillsItemsError(SKILLS_SEPARATOR_ERROR);
+        showNotification(SKILLS_SEPARATOR_ERROR, 'error');
+        return;
+      }
+
+      parsedSkillItems = parseSkillsListInput(skillsItemsInput);
+      if (parsedSkillItems.length === 0) {
+        showNotification('Adicione pelo menos um item de skill separado por ponto e vírgula (;).', 'error');
+        return;
+      }
+      setSkillsItemsError(null);
+    }
+
     setIsSaving(true);
     try {
       // Define display_order automaticamente para novos itens (final da lista)
@@ -296,7 +324,11 @@ const Admin: React.FC = () => {
 
       } else if (activeTab === 'skills') {
         const comp = editingItem as Competency;
-        const payload = { ...comp, display_order: comp.display_order ?? getNextOrder(competencies.length) };
+        const payload = {
+          ...comp,
+          items: parsedSkillItems,
+          display_order: comp.display_order ?? getNextOrder(competencies.length),
+        };
         if (comp.id) await api.updateCompetency(comp.id, payload);
         else await api.createCompetency(payload as any);
 
@@ -471,7 +503,12 @@ const Admin: React.FC = () => {
                    <FormInput label="Headline (Cargo)" value={profile.headline} onChange={(e: any) => setProfile({...profile, headline: e.target.value})} />
                    
                    <div className="md:col-span-2">
-                      <FormTextArea label="Biografia (Resumo)" value={profile.bio} onChange={(e: any) => setProfile({...profile, bio: e.target.value})} />
+                      <RichTextEditor
+                        label="Biografia (Resumo)"
+                        value={profile.bio}
+                        onChange={(next) => setProfile({ ...profile, bio: next })}
+                        placeholder="Escreva a biografia com formatação..."
+                      />
                    </div>
 
                    <FormInput label="Texto do Badge (Status)" value={profile.badge} onChange={(e: any) => setProfile({...profile, badge: e.target.value})} placeholder="Ex: Disponível para projetos" />
@@ -906,7 +943,12 @@ const Admin: React.FC = () => {
                     </select>
                   </div>
 
-                  <FormTextArea label="Descrição" value={editingItem.description} onChange={(e: any) => setEditingItem({...editingItem, description: e.target.value})} />
+                  <RichTextEditor
+                    label="Descrição"
+                    value={editingItem.description}
+                    onChange={(next) => setEditingItem({ ...editingItem, description: next })}
+                    placeholder="Descreva o projeto com formatação..."
+                  />
                   
                   <div className="space-y-3">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tecnologias utilizadas</label>
@@ -987,7 +1029,12 @@ const Admin: React.FC = () => {
                     </div>
                   </div>
                   
-                  <FormTextArea label="Descrição das Atividades" value={editingItem.description} onChange={(e: any) => setEditingItem({...editingItem, description: e.target.value})} />
+                  <RichTextEditor
+                    label="Descrição das Atividades"
+                    value={editingItem.description}
+                    onChange={(next) => setEditingItem({ ...editingItem, description: next })}
+                    placeholder="Descreva as atividades com formatação..."
+                  />
                 </>
               )}
 
@@ -999,13 +1046,26 @@ const Admin: React.FC = () => {
                   
                   <div className="space-y-2">
                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Lista de Skills</label>
-                     <p className="text-[10px] text-slate-500 mb-1">Separe os itens por vírgula</p>
+                     <p className="text-[10px] text-slate-500 mb-1">Separe os itens por ponto e vírgula (;)</p>
                      <textarea 
                          rows={4} 
-                         className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                         value={Array.isArray(editingItem.items) ? editingItem.items.join(', ') : (editingItem.items || '')} 
-                         onChange={e => setEditingItem({...editingItem, items: e.target.value.split(',').map((s: string) => s.trim())})} 
+                         className={`w-full bg-slate-950/50 border rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 transition-all ${
+                           skillsItemsError
+                             ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/20'
+                             : 'border-slate-800 focus:border-indigo-500/50 focus:ring-indigo-500/20'
+                         }`}
+                         value={skillsItemsInput}
+                         onChange={(e) => {
+                           const raw = e.target.value;
+                           const invalid = hasInvalidSkillsSeparator(raw);
+                           setSkillsItemsInput(raw);
+                           setSkillsItemsError(invalid ? SKILLS_SEPARATOR_ERROR : null);
+                           setEditingItem({ ...editingItem, items: parseSkillsListInput(raw) });
+                         }}
                      />
+                     {skillsItemsError && (
+                       <p className="text-xs text-red-400">{skillsItemsError}</p>
+                     )}
                   </div>
                 </>
               )}

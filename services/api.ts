@@ -9,6 +9,7 @@ import {
   SkillWithProjects
 } from '../types';
 import { skills as staticSkills } from '../data';
+import { sanitizeRichText, toDisplayHtml } from './richText';
 
 type TranslatableTable =
   | 'profile_info'
@@ -34,6 +35,27 @@ const TRANSLATABLE_FIELDS: Record<TranslatableTable, { fields: string[]; arrayFi
   technical_skills: {
     fields: ['name'],
   },
+};
+
+const RICH_TEXT_FIELDS: Record<TranslatableTable, string[]> = {
+  profile_info: ['bio'],
+  projects: ['description'],
+  journey_items: ['description'],
+  competencies: [],
+  technical_skills: [],
+};
+
+const sanitizeRichTextFields = (table: TranslatableTable, payload: Record<string, any>) => {
+  const fields = RICH_TEXT_FIELDS[table];
+  if (!fields || fields.length === 0) return payload;
+
+  const next = { ...payload };
+  fields.forEach((field) => {
+    if (typeof next[field] === 'string') {
+      next[field] = sanitizeRichText(toDisplayHtml(next[field]));
+    }
+  });
+  return next;
 };
 
 const buildLocalizedPayload = async (table: TranslatableTable, payload: any) => {
@@ -149,7 +171,7 @@ export const api = {
     const normalizedUpdates: Partial<ProfileInfo> = { ...updates };
     if ('display_name' in updates) normalizedUpdates.display_name = normalizeRequired(updates.display_name);
     if ('headline' in updates) normalizedUpdates.headline = normalizeRequired(updates.headline);
-    if ('bio' in updates) normalizedUpdates.bio = normalizeRequired(updates.bio);
+    if ('bio' in updates) normalizedUpdates.bio = sanitizeRichText(toDisplayHtml(updates.bio));
     if ('whatsapp' in updates) normalizedUpdates.whatsapp = normalizeRequired(updates.whatsapp);
     if ('email_contact' in updates) normalizedUpdates.email_contact = normalizeEmail(updates.email_contact);
     if ('linkedin_url' in updates) normalizedUpdates.linkedin_url = normalizeOptional(updates.linkedin_url);
@@ -157,7 +179,7 @@ export const api = {
     if ('action_phrase' in updates) normalizedUpdates.action_phrase = normalizeOptional(updates.action_phrase);
     if ('badge' in updates) normalizedUpdates.badge = normalizeOptional(updates.badge);
 
-    const localized = await buildLocalizedPayload('profile_info', normalizedUpdates);
+    const localized = await buildLocalizedPayload('profile_info', sanitizeRichTextFields('profile_info', normalizedUpdates as Record<string, any>));
     const { data, error } = await supabase.from('profile_info').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
@@ -178,14 +200,14 @@ export const api = {
   },
 
   createJourney: async (item: Omit<JourneyItem, 'id'>) => {
-    const localized = await buildLocalizedPayload('journey_items', item);
+    const localized = await buildLocalizedPayload('journey_items', sanitizeRichTextFields('journey_items', item as Record<string, any>));
     const { data, error } = await supabase.from('journey_items').insert([localized]).select();
     if (error) throw error;
     return data;
   },
 
   updateJourney: async (id: string, updates: Partial<JourneyItem>) => {
-    const localized = await buildLocalizedPayload('journey_items', updates);
+    const localized = await buildLocalizedPayload('journey_items', sanitizeRichTextFields('journey_items', updates as Record<string, any>));
     const { data, error } = await supabase.from('journey_items').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
@@ -225,14 +247,14 @@ export const api = {
   },
 
   createProject: async (project: Omit<Project, 'id'>) => {
-    const localized = await buildLocalizedPayload('projects', project);
+    const localized = await buildLocalizedPayload('projects', sanitizeRichTextFields('projects', project as Record<string, any>));
     const { data, error } = await supabase.from('projects').insert([localized]).select();
     if (error) throw error;
     return data;
   },
 
   updateProject: async (id: string, updates: Partial<Project>) => {
-    const localized = await buildLocalizedPayload('projects', updates);
+    const localized = await buildLocalizedPayload('projects', sanitizeRichTextFields('projects', updates as Record<string, any>));
     const { data, error } = await supabase.from('projects').update(localized).eq('id', id).select();
     if (error) throw error;
     return data;
