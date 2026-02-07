@@ -96,7 +96,7 @@ describe("api i18n CRUD", () => {
     expect(payload.title_pt).toBe("Titulo PT");
     expect(payload.title_en).toBe("Titulo PT");
     expect(payload.title_fr).toBe("Titulo PT");
-    expect(payload.description_fr).toBe("Desc PT");
+    expect(payload.description_fr).toBe("<p>Desc PT</p>");
   });
 
   it("preserves provided translations when translation fails", async () => {
@@ -142,5 +142,23 @@ describe("api i18n CRUD", () => {
     expect(payload.items_pt).toEqual(["Um", "Dois"]);
     expect(payload.items_en).toEqual(["One", "Two"]);
     expect(payload.items_fr).toEqual(["Un", "Deux"]);
+  });
+
+  it("sanitizes rich text fields before save", async () => {
+    const builder = makeBuilder({});
+    sb.from.mockReturnValue(builder);
+    sb.functions.invoke.mockResolvedValue({
+      data: null,
+      error: new Error("translation failed"),
+    });
+
+    await api.updateProject("11111111-1111-1111-1111-111111111111", {
+      description: `<script>alert('x')</script><p onclick="hack()">Texto <a href="javascript:alert(1)">link</a></p>`,
+    });
+
+    const payload = builder.update.mock.calls[0][0];
+    expect(payload.description).not.toContain("<script");
+    expect(payload.description).not.toContain("onclick=");
+    expect(payload.description).toContain('href="#"');
   });
 });

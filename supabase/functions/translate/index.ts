@@ -81,6 +81,7 @@ const translateTexts = async (
   const body = new URLSearchParams();
   body.append("source_lang", toDeepLSource(sourceLang));
   body.append("target_lang", toDeepLTarget(target));
+  body.append("tag_handling", "html");
   flat.forEach((item) => body.append("text", item.text));
 
   const response = await fetch(apiUrl, {

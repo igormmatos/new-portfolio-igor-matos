@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { JourneyItem } from '../types';
 import { api } from '../services/api';
 import ScrollReveal from './ScrollReveal';
+import RichTextContent from './RichTextContent';
 import { useI18n, selectLocalizedColumn } from '../i18n';
 
 // Dados de fallback caso a API não retorne nada
@@ -34,6 +35,9 @@ const MOCK_JOURNEY: JourneyItem[] = [
     display_order: 3
   }
 ];
+
+const CV_URL =
+  'https://iquantqgsrgwbqfwbhfq.supabase.co/storage/v1/object/public/media/src/CV-Igor-MATOS.pdf';
 
 const VerticalJourney: React.FC = () => {
   const { t, language } = useI18n();
@@ -274,9 +278,10 @@ const VerticalJourney: React.FC = () => {
 
                       {/* Descrição */}
                       <div className="relative border-t border-slate-800/50 pt-6">
-                         <p className="text-slate-400 text-base md:text-lg leading-relaxed">
-                            {activeDescription}
-                         </p>
+                         <RichTextContent
+                           html={activeDescription}
+                           className="text-slate-400 text-base md:text-lg leading-relaxed"
+                         />
                       </div>
                    </div>
                    
@@ -316,6 +321,22 @@ const VerticalJourney: React.FC = () => {
             </div>
 
         </div>
+
+        <ScrollReveal delay={260}>
+          <div className="mt-10 md:mt-12 flex justify-center">
+            <a
+              href={CV_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              download="CV-Igor-MATOS.pdf"
+              className="inline-flex items-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-6 py-3 text-sm md:text-base font-semibold text-indigo-200 hover:bg-indigo-500/20 hover:border-indigo-400/50 transition-all"
+              aria-label="Baixar currículo em PDF"
+            >
+              <i className="fa-solid fa-file-arrow-down"></i>
+              Baixar Currículo (PDF)
+            </a>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

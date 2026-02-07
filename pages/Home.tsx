@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import VerticalJourney from '../components/VerticalJourney';
 import ScrollReveal from '../components/ScrollReveal';
 import TechGroups from '../components/TechGroups';
+import RichTextContent from '../components/RichTextContent';
 import { useI18n, selectLocalizedArray, selectLocalizedColumn } from '../i18n';
 import { api } from '../services/api';
 import { trackEvent } from '../services/analytics';
@@ -82,9 +83,12 @@ const HeroSection = () => {
 
           {/* 6. Bio / Resumo (P) */}
           <ScrollReveal delay={400}>
-            <p className="text-base md:text-lg text-slate-400 mb-6 md:mb-10 max-w-xl leading-relaxed">
-              {profileBio || t('hero.description')}
-            </p>
+            <div className="mb-6 md:mb-10 max-w-xl">
+              <RichTextContent
+                html={profileBio || t('hero.description')}
+                className="text-base md:text-lg text-slate-400 leading-relaxed"
+              />
+            </div>
           </ScrollReveal>
 
           {/* 7. CTA Principal */}
@@ -280,7 +284,7 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
   const [itemsPerScreen, setItemsPerScreen] = useState(3);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [truncatedProjects, setTruncatedProjects] = useState<Record<string, boolean>>({});
-  const descMeasureRefs = useRef<Record<string, HTMLParagraphElement | null>>({});
+  const descMeasureRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const touchDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -482,22 +486,20 @@ const ProjectsSection = ({ highlightProjectId }: { highlightProjectId?: string |
                        )}
                     </div>
                     <div className="mb-3 md:mb-4 relative">
-                      <p
+                      <RichTextContent
                         id={`project-desc-${project.id}`}
-                        className={`text-justify text-slate-400 text-sm md:text-base leading-snug md:leading-relaxed ${
-                          expandedProjects.has(project.id) ? '' : 'line-clamp-3'
+                        html={selectLocalizedColumn(project, 'description', language) || project.description}
+                        className={`text-left text-slate-400 text-sm md:text-base leading-snug md:leading-relaxed ${
+                          expandedProjects.has(project.id) ? '' : 'rich-content-compact rich-content-clamp-3'
                         }`}
-                      >
-                        {selectLocalizedColumn(project, 'description', language) || project.description}
-                      </p>
-                      <p
-                        ref={(el) => {
+                      />
+                      <RichTextContent
+                        html={selectLocalizedColumn(project, 'description', language) || project.description}
+                        elementRef={(el) => {
                           descMeasureRefs.current[project.id] = el;
                         }}
-                        className="absolute inset-x-0 top-0 opacity-0 pointer-events-none text-justify text-slate-400 text-sm md:text-base leading-snug md:leading-relaxed line-clamp-3"
-                      >
-                        {selectLocalizedColumn(project, 'description', language) || project.description}
-                      </p>
+                        className="absolute inset-x-0 top-0 opacity-0 pointer-events-none text-left text-slate-400 text-sm md:text-base leading-snug md:leading-relaxed rich-content-compact rich-content-clamp-3"
+                      />
                       {truncatedProjects[project.id] && (
                         <button
                           type="button"
