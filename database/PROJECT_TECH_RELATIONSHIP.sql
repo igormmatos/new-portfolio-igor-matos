@@ -107,7 +107,8 @@ CREATE INDEX IF NOT EXISTS idx_project_technical_skills_skill_id
   ON public.project_technical_skills(technical_skill_id);
 
 -- Views
-CREATE OR REPLACE VIEW public.v_projects_with_skills AS
+CREATE OR REPLACE VIEW public.v_projects_with_skills
+WITH (security_invoker = true) AS
 SELECT
   p.id,
   p.created_at,
@@ -163,7 +164,8 @@ GROUP BY p.id, p.created_at, p.title, p.title_pt, p.title_en, p.title_fr, p.role
   p.description, p.description_pt, p.description_en, p.description_fr, p.github_url, p.live_url, p.image_url,
   p.display_order, p.slug, p.status, p.updated_at;
 
-CREATE OR REPLACE VIEW public.v_skills_with_projects AS
+CREATE OR REPLACE VIEW public.v_skills_with_projects
+WITH (security_invoker = true) AS
 SELECT
   ts.*,
   COALESCE(project_rows.projects_count, 0) AS projects_count,
