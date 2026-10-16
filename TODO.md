@@ -3,6 +3,12 @@
 ## Objetivo atual do projeto
 Manter e evoluir o portfólio profissional de Igor Matos (site público + admin), garantindo clareza da proposta, prova de competência e experiência, com conteúdo dinâmico via Supabase.
 
+### Iniciativa ativa aprovada pelo usuário — Identidade Visual
+- [x] Consolidar especificação estratégica da IDV em `docs/superpowers/specs/2026-10-16-identidade-visual-igor-matos-design.md`.
+- [x] Criar plano de execução em `docs/superpowers/plans/2026-10-16-identidade-visual-igor-matos-implementation.md`.
+- [ ] Executar a IDV em fase própria, sem alterar o site até a consolidação dos ativos finais.
+- [ ] Primeiro gate visual: explorar três alternativas controladas do símbolo `Direção Inteligente` e submeter à escolha explícita antes do refinamento final.
+
 ## Objective (EN)
 Maintain and evolve Igor Matos' professional portfolio (public site + admin), ensuring clarity of the value proposition, proof of competence and experience, with dynamic content via Supabase.
 
@@ -34,6 +40,7 @@ Maintain and evolve Igor Matos' professional portfolio (public site + admin), en
 - O menu segue a mesma ordem das seções da página.
 - O admin mobile usa tabs horizontais para trocar de seção.
 - O admin destaca o ícone de arraste para facilitar reordenação.
+- A IDV será consolidada antes de qualquer adaptação visual do site.
 
 ## Perguntas em aberto
 - Quais métricas ou provas rápidas (ex: anos de experiência, projetos entregues) devem aparecer no topo?
@@ -41,6 +48,7 @@ Maintain and evolve Igor Matos' professional portfolio (public site + admin), en
 - Quais projetos devem ser destacados como “top 3” para recrutadores?
 
 ## Próxima ação concreta
+Executar a Task 1 do plano da IDV após aprovação do método de execução e, em seguida, chegar ao gate humano da Task 2 com três explorações do símbolo `Direção Inteligente`.
 Validar swipe/touch nos carrosseis de Projetos e Jornada no mobile.
 Após alterações no TODO, rodar `npm run readme:gen`.
 Validar eventos do GA4 em produção (Realtime/DebugView) e configurar conversões relevantes. (concluído)
@@ -77,4 +85,4 @@ Atualizar imagem OG/Twitter global se o asset mudar.
 - [x] Realizar testes automatizados no CRUD.
 
 ## Última atualização
-2026-02-03
+2026-10-16
