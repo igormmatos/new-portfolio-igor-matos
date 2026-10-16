@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "brand": "Igor Matos",
+    "concept": "Direção Inteligente",
+    "personality": "Comando Contemporâneo",
+    "tagline": "Estratégia · Tecnologia · Execução",
+    "status": "approved-foundation"
+  },
+  "colors": {
+    "navy950": "#020617",
+    "navy900": "#0F172A",
+    "indigo600": "#4F46E5",
+    "indigo400": "#818CF8",
+    "blue500": "#3B82F6",
+    "green500": "#22C55E",
+    "offWhite": "#F8FAFC",
+    "slate400": "#94A3B8"
+  },
+  "typography": {
+    "heading": {
+      "family": "Space Grotesk",
+      "weights": [600, 700],
+      "usage": ["headings", "wordmark", "covers", "numbers", "labels"]
+    },
+    "body": {
+      "family": "Inter",
+      "weights": [400, 500, 600],
+      "usage": ["body", "interface", "documents", "proposals", "captions"]
+    }
+  },
+  "geometry": {
+    "preferredAngles": [45, 90],
+    "symbol": {
+      "approximateNodes": 6,
+      "density": "compact-solid",
+      "dominantAxis": "bottom-left_to_top-right",
+      "minimumReadabilityPx": 16,
+      "criticalReadabilityRangePx": [16, 24, 32]
+    }
+  },
+  "stroke": {
+    "status": "derived-provisional",
+    "thin": 1,
+    "regular": 2,
+    "strong": 3,
+    "rationale": "Derived for a restrained technical system; final optical adjustment depends on the selected symbol."
+  },
+  "radius": {
+    "status": "derived-provisional",
+    "small": 8,
+    "medium": 12,
+    "large": 16,
+    "pill": 9999,
+    "rationale": "Derived from the existing portfolio language of lightly rounded cards and controls; subject to application testing."
+  },
+  "usage": {
+    "navy950": { "role": "foundation-deep" },
+    "navy900": { "role": "foundation-surface" },
+    "indigo600": { "role": "primary" },
+    "indigo400": { "role": "primary-highlight" },
+    "blue500": { "role": "expansion" },
+    "green500": { "role": "functional", "allowedFor": ["action", "success", "availability", "conversion", "positive-status"] },
+    "offWhite": { "role": "text-primary" },
+    "slate400": { "role": "text-secondary" }
+  },
+  "gradient": {
+    "primary": {
+      "type": "linear",
+      "angleDeg": 90,
+      "from": "#4F46E5",
+      "to": "#3B82F6",
+      "greenExcludedByDefault": true
+    }
+  },
+  "distribution": {
+    "solidNeutralPercent": 70,
+    "indigoBluePercent": 20,
+    "digitalEffectsPercent": 10
+  }
+}
