@@ -3,14 +3,14 @@
 ## Objetivo atual do projeto
 Manter e evoluir o portfólio profissional de Igor Matos (site público + admin), garantindo clareza da proposta, prova de competência e experiência, com conteúdo dinâmico via Supabase.
 
-### Iniciativa ativa aprovada pelo usuário — Identidade Visual
+## Objective (EN)
+Maintain and evolve Igor Matos' professional portfolio (public site + admin), ensuring clarity of the value proposition, proof of competence and experience, with dynamic content via Supabase.
+
+## Iniciativa ativa aprovada pelo usuário — Identidade Visual
 - [x] Consolidar especificação estratégica da IDV em `docs/superpowers/specs/2026-10-16-identidade-visual-igor-matos-design.md`.
 - [x] Criar plano de execução em `docs/superpowers/plans/2026-10-16-identidade-visual-igor-matos-implementation.md`.
 - [ ] Executar a IDV em fase própria, sem alterar o site até a consolidação dos ativos finais.
 - [ ] Primeiro gate visual: explorar três alternativas controladas do símbolo `Direção Inteligente` e submeter à escolha explícita antes do refinamento final.
-
-## Objective (EN)
-Maintain and evolve Igor Matos' professional portfolio (public site + admin), ensuring clarity of the value proposition, proof of competence and experience, with dynamic content via Supabase.
 
 ## Backlog priorizado
 ### P0 (crítico)
